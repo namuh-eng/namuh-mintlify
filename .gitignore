@@ -1,0 +1,17 @@
+node_modules/
+.next/
+dist/
+.env
+*.log
+.omc/
+.omx/
+coverage/
+test-results/
+playwright-report/
+drizzle/
+packages/sdk/dist/
+clone-product-docs/
+screenshots/inspect/*
+screenshots/build/*
+screenshots/qa/*
+!screenshots/*/.gitkeep
