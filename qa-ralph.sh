@@ -1,6 +1,6 @@
 #!/bin/bash
 # Phase 3: QA evaluation using Codex as independent evaluator
-# Runs Playwright regression first (fast), then Ever CLI for visual/interaction QA
+# Passes ONE feature at a time to Codex to avoid context overflow
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -14,7 +14,6 @@ fi
 
 echo "=== RALPH-TO-RALPH: Phase 3 (QA with Codex) ==="
 echo "Target: ${TARGET_URL:-none}"
-echo "Iterations: $ITERATIONS"
 echo ""
 
 # Initialize
@@ -27,9 +26,9 @@ npm run dev &
 DEV_PID=$!
 echo "Dev server started (PID: $DEV_PID)"
 trap 'kill $DEV_PID 2>/dev/null; ever stop 2>/dev/null' EXIT
-sleep 5  # Wait for server to be ready
+sleep 5
 
-# Run Playwright regression suite first (fast, catches obvious bugs)
+# Run Playwright regression suite first
 if [ -f "playwright.config.ts" ] || [ -d "tests/e2e" ]; then
   echo "--- Running Playwright regression suite ---"
   npx playwright test --reporter=list 2>&1 || echo "Some Playwright tests failed — QA agent will investigate."
@@ -41,7 +40,7 @@ ever start --url http://localhost:3015
 echo "Ever CLI session started for QA."
 echo ""
 
-# Build target URL context for the prompt
+# Build target URL context
 TARGET_CONTEXT=""
 if [ -n "$TARGET_URL" ]; then
   TARGET_CONTEXT="
@@ -49,44 +48,91 @@ TARGET_URL: $TARGET_URL
 When confused about how a feature should work, use 'ever start --url $TARGET_URL' to check the original product."
 fi
 
-for ((i=1; i<=$ITERATIONS; i++)); do
-  echo "--- QA iteration $i/$ITERATIONS ---"
+# ── Helper: get next untested feature ──
+get_next_feature() {
+  python3 -c "
+import json
+prd = json.load(open('prd.json'))
+tested = set()
+try:
+    report = json.load(open('qa-report.json'))
+    tested = {r['feature_id'] for r in report}
+except: pass
+for item in prd:
+    if item['id'] not in tested:
+        print(json.dumps(item))
+        break
+else:
+    print('ALL_DONE')
+" 2>/dev/null
+}
 
-  # Use Codex as an independent evaluator (different model = different perspective)
+total_features() {
+  python3 -c "import json; print(len(json.load(open('prd.json'))))" 2>/dev/null || echo "0"
+}
+
+tested_count() {
+  python3 -c "import json; print(len(json.load(open('qa-report.json'))))" 2>/dev/null || echo "0"
+}
+
+for ((i=1; i<=$ITERATIONS; i++)); do
+  TESTED=$(tested_count)
+  TOTAL=$(total_features)
+  echo "--- QA iteration $i ($TESTED/$TOTAL tested) ---"
+
+  # Get next untested feature
+  FEATURE_JSON=$(get_next_feature)
+
+  if [ "$FEATURE_JSON" = "ALL_DONE" ]; then
+    echo "All features have been QA tested!"
+    break
+  fi
+
+  FEATURE_ID=$(echo "$FEATURE_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['id'])")
+  FEATURE_CAT=$(echo "$FEATURE_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('category',''))")
+  echo "Testing: $FEATURE_ID ($FEATURE_CAT)"
+
+  # Write current feature to a temp file so Codex reads only this one
+  echo "$FEATURE_JSON" > .current-feature.json
+
   result=$(timeout 1200 codex exec --dangerously-bypass-approvals-and-sandbox \
 "$(cat qa-prompt.md)
 
-Read these files before starting:
+CURRENT FEATURE TO TEST:
+$(cat .current-feature.json)
+
+Read these files as needed (do NOT read full prd.json — the feature above is your focus):
 @pre-setup.md
-@build-spec.md
-@prd.json
 @qa-report.json
 @ever-cli-reference.md
 
-ITERATION: $i of $ITERATIONS
+QA PROGRESS: $TESTED/$TOTAL features tested
+FEATURE: $FEATURE_ID (category: $FEATURE_CAT)
 ${TARGET_CONTEXT}
 
-Test exactly ONE feature, then commit, push, and stop.
-Output <promise>NEXT</promise> when done with this feature.
-If ALL features have been QA tested and all bugs fixed, output <promise>QA_COMPLETE</promise>.")
+Test this ONE feature thoroughly, then:
+1. Update qa-report.json with your findings
+2. Fix any bugs you find
+3. Run make check && make test
+4. git add -A && git commit && git push
+5. Output <promise>NEXT</promise> when done.")
 
   echo "$result"
-
-  if [[ "$result" == *"<promise>QA_COMPLETE</promise>"* ]]; then
-    echo ""
-    echo "--- Running final Playwright regression suite ---"
-    npx playwright test --reporter=list 2>&1 || echo "Some Playwright tests failed in final regression."
-    echo ""
-    echo "=== QA complete after $i iterations! ==="
-    exit 0
-  fi
+  rm -f .current-feature.json
 
   if [[ "$result" == *"<promise>NEXT</promise>"* ]]; then
-    echo "QA for feature done. Moving to next..."
+    echo "QA for $FEATURE_ID done. Moving to next..."
     continue
   fi
 
-  echo "WARNING: No promise found. Agent may have crashed. Restarting..."
+  # No promise = crash or context overflow. Add a skip entry so we don't retry forever
+  echo "WARNING: No promise from Codex for $FEATURE_ID. Recording as partial and moving on..."
+  python3 -c "
+import json
+report = json.load(open('qa-report.json'))
+report.append({'feature_id': '$FEATURE_ID', 'status': 'partial', 'tested_steps': ['Codex crashed or timed out'], 'bugs_found': []})
+json.dump(report, open('qa-report.json', 'w'), indent=2)
+"
   sleep 3
 done
 
@@ -95,6 +141,8 @@ echo "--- Running final Playwright regression suite ---"
 npx playwright test --reporter=list 2>&1 || echo "Some Playwright tests failed in final regression."
 echo ""
 
+TESTED=$(tested_count)
+TOTAL=$(total_features)
 echo ""
-echo "=== QA finished after $ITERATIONS iterations ==="
+echo "=== QA finished: $TESTED/$TOTAL features tested ==="
 echo "Check qa-report.json for results."
