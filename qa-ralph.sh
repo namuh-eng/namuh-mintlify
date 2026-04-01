@@ -114,13 +114,31 @@ for ((i=1; i<=$ITERATIONS; i++)); do
   # Write feature bundle to temp file
   echo "$FEATURE_BUNDLE" > .current-feature.json
 
+  # Extract qa-hints for this feature
+  QA_HINTS=$(python3 -c "
+import json
+try:
+    hints = json.load(open('qa-hints.json'))
+    for h in hints:
+        if h.get('feature_id') == '$FEATURE_ID':
+            print('Tests written by build agent: ' + ', '.join(h.get('tests_written', [])))
+            print('NEEDS DEEPER QA:')
+            for q in h.get('needs_deeper_qa', []):
+                print('  - ' + q)
+            break
+    else:
+        print('No QA hints from build agent for this feature.')
+except:
+    print('No qa-hints.json found.')
+" 2>/dev/null)
+
   result=$(timeout 1200 codex exec --dangerously-bypass-approvals-and-sandbox \
 "$(cat qa-prompt.md)
 
 == FEATURE TO TEST ==
 $(python3 -c "import json; d=json.load(open('.current-feature.json')); print(json.dumps(d['main'], indent=2))")
 
-== RELATED FEATURES (for context — these are dependencies of the feature above) ==
+== RELATED FEATURES (dependencies for context) ==
 $(python3 -c "
 import json
 d=json.load(open('.current-feature.json'))
@@ -132,6 +150,9 @@ else:
     print('No dependencies listed.')
 ")
 
+== BUILD AGENT QA HINTS ==
+$QA_HINTS
+
 Read these files as needed:
 @pre-setup.md
 @qa-report.json
@@ -141,7 +162,7 @@ QA PROGRESS: $TESTED/$TOTAL features tested
 FEATURE: $FEATURE_ID (category: $FEATURE_CAT)
 ${TARGET_CONTEXT}
 
-Test this ONE feature thoroughly. Use the dependency context to understand how it fits into the product.
+Test this ONE feature thoroughly. Focus on the NEEDS DEEPER QA items from the build agent's hints.
 Then:
 1. Update qa-report.json with your findings
 2. Fix any bugs you find

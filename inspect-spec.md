@@ -193,72 +193,25 @@ Array of feature entries, each with:
 ```json
 {
   "id": "feature-001",
-  "category": "ui|nav|auth|data|crud|search|settings|layout|interaction",
+  "category": "ui|nav|auth|data|crud|search|settings|layout|interaction|sdk|developer-experience",
   "description": "Clear description of the feature",
   "page": "Which page this belongs to",
   "ui_details": "Components, layout, colors, spacing",
   "behavior": "What happens when user interacts — observed by testing",
   "data_model": "Fields and types from forms/tables",
   "priority": 1,
+  "core": true,
   "passes": false,
-  "tests": {
-    "unit": [
-      {
-        "name": "descriptive test name",
-        "description": "what this test verifies",
-        "input": "what to provide",
-        "expected_output": "what should happen"
-      }
-    ],
-    "e2e": [
-      {
-        "name": "descriptive e2e test name",
-        "steps": [
-          "Navigate to /page",
-          "Click button X",
-          "Fill input Y with 'test data'",
-          "Click submit"
-        ],
-        "expected": "Toast appears saying 'Saved'. New item appears in list."
-      }
-    ],
-    "edge_cases": [
-      {
-        "name": "empty input submission",
-        "steps": ["Click submit without filling any fields"],
-        "expected": "Validation errors appear for required fields"
-      }
-    ]
-  }
+  "dependent_on": ["infra-001", "design-001"]
 }
 ```
 
-### Test Generation Rules — CRITICAL
-Testing is the most important part of the PRD. A feature without tests is an incomplete feature.
+**DO NOT include test specs in prd.json.** The build agent writes its own tests based on `behavior` and `ui_details`. After building, the build agent logs what it tested and what needs deeper QA in `qa-hints.json` — the QA agent reads those hints.
 
-For EVERY feature entry, you MUST include:
-
-**Unit tests** — test the logic in isolation:
-- Data transformation / formatting functions
-- Validation rules (what inputs are accepted/rejected?)
-- State transitions (what happens when X changes to Y?)
-- Computed values (filters, sorts, calculations)
-
-**E2E tests** — test the full user flow via Ever CLI:
-- Write step-by-step instructions using Ever CLI commands
-- Include exact element interactions: "click the 'Add' button", "type 'test' into the search input"
-- Include what the page should look like AFTER the action
-- Test the happy path AND at least one failure path
-
-**Edge case tests** — test what happens when things go wrong:
-- Empty inputs / missing data
-- Very long text
-- Special characters
-- Rapid repeated actions (double-click submit)
-- Empty states (no items in a list)
-- Boundary values (0, 1, max)
-
-The build loop will use these tests as its feedback loop. If the tests are vague, the build will produce vague code. Be SPECIFIC.
+**`dependent_on`** — list IDs of features this one depends on or shares components with (3-5 max). Examples:
+- A detail page depends on its list page and shared data table
+- An API route depends on the database schema and auth middleware
+- A filter component depends on the page it's used on
 
 ### PRD Item Sizing — CRITICAL
 Each PRD item must be small and focused. If a feature has too many steps, SPLIT it into multiple PRD items.

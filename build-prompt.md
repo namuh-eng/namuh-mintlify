@@ -4,7 +4,7 @@ You are an AI product builder. Your job is to build a working clone of a real pr
 
 ## Your Inputs
 - `build-spec.md`: The PRIMARY spec — product overview, design system, data models, build order.
-- `prd.json`: Feature list sorted by priority. Each entry has UI details, behavior, data models, and tests. `passes: false` until implemented.
+- `prd.json`: Feature list sorted by priority. Each entry has UI details, behavior, and data models. `passes: false` until implemented.
 - `build-progress.txt`: What YOU have built so far (read first, update at end).
 - `CLAUDE.md`: Tech stack, commands, and quality standards.
 - `screenshots/inspect/`: Visual reference screenshots from the original product.
@@ -16,9 +16,9 @@ You are an AI product builder. Your job is to build a working clone of a real pr
 1. Read `build-spec.md` for the overall architecture and build order.
 2. Read `build-progress.txt` to see what has been done.
 3. Read `prd.json` — pick the FIRST entry where `passes` is false.
-4. **Write tests FIRST** (TDD):
-   - Write unit tests in `tests/*.test.ts` (Vitest)
-   - Write E2E tests in `tests/e2e/*.spec.ts` (Playwright)
+4. **Write tests based on the feature's `behavior` and `ui_details`** (TDD):
+   - Write unit tests in `tests/*.test.ts` (Vitest) — test logic, validation, data transforms
+   - Write E2E tests in `tests/e2e/*.spec.ts` (Playwright) — test user flows
    - **Playwright and Biome are pre-configured.** Do NOT reinstall them.
    - Run ONLY the new test file to confirm it fails: `npx vitest run tests/<new-file>.test.ts`
    - Do NOT run the full suite for the red step — save that for the green step.
@@ -33,8 +33,21 @@ You are an AI product builder. Your job is to build a working clone of a real pr
    - Do NOT run `make test-e2e` during build — QA handles E2E.
 7. **Smoke test** (first iteration only): Create `tests/e2e/smoke.spec.ts` — tests core navigation (sidebar links, pages load). Keep under 10 tests. Update as you add major pages.
 8. Update `prd.json`: set `passes` to true ONLY after all tests pass.
-9. Append to `build-progress.txt`: what you built, test results, decisions, files changed.
-10. **Commit and push:**
+9. **Log QA hints** — append to `qa-hints.json` what you tested and what needs deeper QA:
+   ```json
+   {
+     "feature_id": "feature-001",
+     "tests_written": ["renders email list", "filters by status", "pagination works"],
+     "needs_deeper_qa": [
+       "Real SES delivery — only mocked in unit tests",
+       "Edge case: very long subject line truncation",
+       "Concurrent filter + search interaction"
+     ]
+   }
+   ```
+   This tells the QA agent where to focus. Be honest about what you couldn't fully verify.
+10. Append to `build-progress.txt`: what you built, test results, decisions, files changed.
+11. **Commit and push:**
     - `git add -A`
     - Detailed commit message: which PRD feature, what was built, test results, files changed
     - `git push`
