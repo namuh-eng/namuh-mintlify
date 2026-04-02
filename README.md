@@ -7,9 +7,6 @@
 An autonomous pipeline that inspects any SaaS product, builds a working clone with real cloud infrastructure, tests everything, and deploys it — no human in the loop.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)](https://nextjs.org/)
-[![Built at Ralphthon Seoul](https://img.shields.io/badge/Built_at-Ralphthon_Seoul_2026-orange)](https://ralphthon.team-attention.com)
 
 ![Architecture](docs/architecture-diagram.png)
 
@@ -296,7 +293,6 @@ Built at [Ralphthon Seoul 2026](https://ralphthon.team-attention.com).
 ---
 
 <div align="center">
-
 If you find this project interesting, consider giving it a star. It helps others discover it.
 
 </div>
