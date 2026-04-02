@@ -9,7 +9,7 @@ An autonomous pipeline that inspects any SaaS product, builds a working clone wi
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)](https://nextjs.org/)
-[![Built at Ralphthon Seoul](https://img.shields.io/badge/Built_at-Ralphthon_Seoul_2026-orange)](https://ralphthon.com)
+[![Built at Ralphthon Seoul](https://img.shields.io/badge/Built_at-Ralphthon_Seoul_2026-orange)](https://ralphthon.team-attention.com)
 
 ![Architecture](docs/architecture-diagram.png)
 
@@ -291,7 +291,7 @@ Ralph-to-Ralph was built by:
 - **Jaeyun Ha** — [github.com/jaeyunha](https://github.com/jaeyunha)
 - **Ashley Ha** — [github.com/ashley-ha](https://github.com/ashley-ha)
 
-Built at [Ralphthon Seoul 2026](https://ralphthon.com).
+Built at [Ralphthon Seoul 2026](https://ralphthon.team-attention.com).
 
 ---
 
