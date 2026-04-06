@@ -12,10 +12,6 @@ An autonomous pipeline that inspects any SaaS product, builds a working clone wi
 
 <br>
 
-<!-- Replace the src below with the GitHub CDN URL after dragging docs/demo.mp4 into a PR comment -->
-<video src="docs/demo.mp4" width="100%" autoplay loop muted playsinline>
-  Your browser doesn't support video — <a href="docs/demo.mp4">watch the demo here</a>.
-</video>
 
 </div>
 
@@ -75,14 +71,16 @@ The **watchdog orchestrator** ties it all together with auto-restart on failure,
 
 ### Prerequisites
 
-| Tool | Purpose |
-|------|---------|
-| [Node.js 20+](https://nodejs.org/) | Runtime |
-| [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) | Powers Inspect + Build phases |
-| [Codex CLI](https://github.com/openai/codex) | Powers QA phase |
-| [Ever CLI](https://foreverbrowsing.com) | Browser automation for inspection and E2E testing |
-| [AWS CLI](https://aws.amazon.com/cli/) | Cloud infrastructure (configured via `aws configure`) |
-| Docker | Deployment |
+| Tool | Used For | Setup |
+|------|----------|-------|
+| [Node.js 20+](https://nodejs.org/) | Runtime | `brew install node` or [download](https://nodejs.org/) |
+| [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) | Onboarding, Inspect, Build phases | `npm install -g @anthropic-ai/claude-code` then authenticate with your Anthropic API key |
+| [Codex CLI](https://github.com/openai/codex) | QA phase (independent evaluator) | `npm install -g @openai/codex` then set `OPENAI_API_KEY` |
+| [Ever CLI](https://foreverbrowsing.com) | Browser automation for Inspect + QA | Install from [foreverbrowsing.com](https://foreverbrowsing.com) — **required for Inspect and QA phases** |
+| Cloud CLI | Infrastructure provisioning | **AWS:** `brew install awscli && aws configure` / **GCP:** [install gcloud](https://cloud.google.com/sdk/docs/install) / **Azure:** `brew install azure-cli && az login` |
+| Docker | Deployment (optional) | [Install Docker](https://docs.docker.com/get-docker/) |
+
+> **Which phases need what:** Onboarding needs Claude Code + your cloud CLI. Inspect needs Claude Code + Ever CLI. Build needs Claude Code only. QA needs Codex + Ever CLI. You can run onboarding and build without Ever CLI, but Inspect and QA won't work without it.
 
 ### Run It
 
@@ -97,16 +95,25 @@ npx playwright install chromium
 
 # Configure
 cp .env.example .env
-# Edit .env with your AWS, Cloudflare, and other credentials
+# Edit .env with your credentials
 
-# Provision AWS infrastructure (RDS, SES, S3, ECR)
-bash scripts/preflight.sh
-
-# Go
-./scripts/start.sh https://your-target-product.com
+# Onboard — collects target info, researches the product, configures your stack
+./ralph/onboard.sh
 ```
 
-That's it. The system will inspect the target, build every feature with tests, QA everything independently, and deploy to AWS App Runner.
+That's it. The onboarding script asks what product to clone, scans its docs/API, recommends a tech stack, verifies your dependencies, configures the project, and automatically starts the build loop.
+
+> **Note:** `onboard.sh` calls `ralph-watchdog.sh` automatically on success. You don't need to run it directly.
+
+#### Prefer interactive onboarding?
+
+If you'd rather have a conversation — Claude researches the product live, explains what needs to be set up (AWS SES, Neon, etc.) in plain English, and walks you through each decision — just type this in any Claude Code session inside the repo:
+
+```
+/ralph-to-ralph-onboard
+```
+
+No install needed — the skill is included in the repo. Both paths produce the same `ralph-config.json` and project setup. Use `onboard.sh` for automation; use the skill for a guided experience.
 
 ## What Gets Built
 
@@ -212,20 +219,24 @@ The system is controlled by prompt files you can edit:
 
 ```
 ralph-to-ralph/
+├── ralph/onboard.sh                  # Entry point — onboards then starts the loop
+├── ralph/onboard-prompt.md           # Onboarding agent instructions
+├── skills/
+│   └── ralph-to-ralph-onboard/ # Interactive onboarding skill (Claude Code + Codex)
 ├── scripts/
-│   ├── start.sh                # Entry point — starts the loop
-│   ├── preflight.sh            # Provisions AWS infrastructure
+│   ├── start.sh                # Starts the build loop (called by onboard.sh)
+│   ├── preflight.sh            # Provisions cloud infrastructure
 │   └── generate-demo-keys.sh   # Generate API keys for demos
-├── ralph-watchdog.sh           # Orchestrator (inspect → build → QA loop)
-├── inspect-ralph.sh            # Phase 1 runner
-├── build-ralph.sh              # Phase 2 runner
-├── qa-ralph.sh                 # Phase 3 runner
-├── inspect-prompt.md           # Inspect agent instructions
-├── inspect-spec.md             # Inspection strategy
-├── build-prompt.md             # Build agent instructions
-├── qa-prompt.md                # QA agent instructions
-├── pre-setup.md                # Pre-configured setup (read by agents)
-├── ever-cli-reference.md       # Ever CLI command reference
+├── ralph/ralph-watchdog.sh           # Orchestrator (inspect → build → QA loop)
+├── ralph/inspect-ralph.sh            # Phase 1 runner
+├── ralph/build-ralph.sh              # Phase 2 runner
+├── ralph/qa-ralph.sh                 # Phase 3 runner
+├── ralph/inspect-prompt.md           # Inspect agent instructions
+├── ralph/inspect-spec.md             # Inspection strategy
+├── ralph/build-prompt.md             # Build agent instructions
+├── ralph/qa-prompt.md                # QA agent instructions
+├── ralph/pre-setup.md                # Pre-configured setup (read by agents)
+├── ralph/ever-cli-reference.md       # Ever CLI command reference
 ├── CLAUDE.md                   # Instructions for Claude agents
 ├── AGENTS.md                   # Instructions for Codex QA agent
 ├── prd.json                    # Product requirements (generated)
@@ -259,13 +270,13 @@ The watchdog orchestrator automatically restarts failed phases (up to 5 times fo
 <details>
 <summary><strong>Can I skip phases?</strong></summary>
 
-Yes. If you already have a `prd.json`, you can run the build and QA phases directly by calling `./build-ralph.sh` and `./qa-ralph.sh` individually. Each phase is a standalone script.
+Yes. If you already have a `prd.json`, you can run the build and QA phases directly by calling `./ralph/build-ralph.sh` and `./ralph/qa-ralph.sh` individually. Each phase is a standalone script.
 </details>
 
 <details>
 <summary><strong>Can I use this without AWS?</strong></summary>
 
-AWS is required for the full pipeline (RDS for database, SES for email, S3 for storage, App Runner for deployment). You could modify the prompts and `preflight.sh` to target a different cloud provider, but that's not supported out of the box.
+Yes! During onboarding, you can choose AWS (default), GCP, or Azure as your cloud provider. The onboarding script configures the project for your chosen provider. **Note:** GCP and Azure support is experimental — AWS is the most battle-tested path.
 </details>
 
 ## Contributing
