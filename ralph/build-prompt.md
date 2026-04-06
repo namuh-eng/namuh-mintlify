@@ -95,24 +95,37 @@ Cloud Services:
 Auth is **P1 priority** — build it before core product features.
 
 ### Stack
-- **Auth.js v5** (NextAuth) — `npm install next-auth@beta`
-- **Drizzle adapter** — `npm install @auth/drizzle-adapter` — stores sessions/users in Postgres
+- **Better Auth** — `npm install better-auth`
+- Built-in Drizzle adapter — no separate package needed
 - **Middleware** — `src/middleware.ts` — protect all routes except `/login`, `/signup`, `/api/auth/*`
 
 ### Implementation
 1. Read `target-docs/auth-flow.md` (from inspect phase) to understand what auth methods to build
-2. Configure `src/auth.ts` with the providers matching the target product:
-   - **Email/password**: use `Credentials` provider + bcrypt (`npm install bcryptjs`)
-   - **OAuth**: use built-in NextAuth providers (GoogleProvider, GitHubProvider, etc.) — add `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` etc. to `.env.example`
-   - **Magic link**: use `Resend` or `NodeMailer` email provider
-3. Add Drizzle schema tables: `users`, `accounts`, `sessions`, `verification_tokens`
-4. Build login/signup UI in `src/app/(auth)/login/page.tsx` and `src/app/(auth)/signup/page.tsx` — match the original product's design
-5. Add password reset flow if the target has one
-6. Protect all non-auth routes in `src/middleware.ts`
+2. Configure `src/lib/auth.ts` with Better Auth:
+   ```ts
+   import { betterAuth } from "better-auth"
+   import { drizzleAdapter } from "better-auth/adapters/drizzle"
+   import { db } from "@/lib/db"
+
+   export const auth = betterAuth({
+     database: drizzleAdapter(db, { provider: "pg" }),
+     emailAndPassword: { enabled: true },  // if target uses email/password
+     socialProviders: {
+       google: { clientId: process.env.AUTH_GOOGLE_ID!, clientSecret: process.env.AUTH_GOOGLE_SECRET! },
+       github: { clientId: process.env.AUTH_GITHUB_ID!, clientSecret: process.env.AUTH_GITHUB_SECRET! },
+     },
+   })
+   ```
+3. Add API route: `src/app/api/auth/[...all]/route.ts`
+4. Generate Drizzle schema with `npx @better-auth/cli generate` — adds `user`, `session`, `account`, `verification` tables
+5. Build login/signup UI in `src/app/(auth)/login/page.tsx` and `src/app/(auth)/signup/page.tsx` — match the original product's design, use Better Auth client (`createAuthClient`)
+6. Add password reset / email verification if the target has them (Better Auth plugins: `emailOTP`, `magicLink`)
+7. Protect all non-auth routes in `src/middleware.ts` using `auth.api.getSession`
 
 ### Environment variables to add to `.env.example`
 ```
-AUTH_SECRET=              # generate with: npx auth secret
+BETTER_AUTH_SECRET=       # generate with: openssl rand -base64 32
+BETTER_AUTH_URL=          # e.g. http://localhost:3015
 AUTH_GOOGLE_ID=           # if target uses Google OAuth
 AUTH_GOOGLE_SECRET=
 AUTH_GITHUB_ID=           # if target uses GitHub OAuth
