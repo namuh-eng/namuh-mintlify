@@ -1,16 +1,16 @@
 [
   {
     "id": "US-001",
-    "title": "ASCII flow diagram of ralph-watchdog.sh",
-    "description": "Visualize all phases and control flow of ralph/ralph-watchdog.sh as an ASCII diagram",
+    "title": "Clean up ralph/docs/ — remove stale docs, keep diagram",
+    "description": "Delete future-cloud-providers.md and onboarding-guide.md (stale, not needed during loop). Keep architecture-diagram.png as visual reference.",
     "acceptanceCriteria": [
-      "Phase 1 (Inspect) loop with restart logic is shown",
-      "Phase 2 (Build) loop with up to 10 restarts is shown",
-      "Phase 3 (QA) loop and cycle structure (max 5 cycles) is shown",
-      "Lock file check, cron_backup, and helper functions are referenced",
-      "DONE/ABORT terminal states are visible",
-      "Diagram was output to the user"
+      "ralph/docs/future-cloud-providers.md is deleted",
+      "ralph/docs/onboarding-guide.md is deleted",
+      "ralph/docs/architecture-diagram.png still exists",
+      "Changes committed and pushed"
     ],
-    "passes": true
+    "build_pass": false,
+    "qa_pass": false,
+    "passes": false
   }
 ]
