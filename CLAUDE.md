@@ -55,6 +55,11 @@ Phase 1: Inspect (Claude + Ever CLI) → Phase 2: Build (Claude) → Phase 3: QA
 - Protect routes via Next.js middleware (`src/middleware.ts`)
 - Store sessions in Postgres via Better Auth's built-in Drizzle adapter
 - Auth is **P1 priority** — build it before core features
+- **Google OAuth setup**: redirect URI must be registered in Google Cloud Console:
+  - Dev: `http://localhost:3015/api/auth/callback/google`
+  - Prod: `https://your-domain.com/api/auth/callback/google`
+  - OAuth consent screen must be "External" + Published, or test accounts must be added
+  - For Ever CLI QA: the browser's logged-in Google account must be an authorized test user
 
 ## Out of Scope — DO NOT build
 - Paywalls, billing, subscription management
