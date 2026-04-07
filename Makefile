@@ -1,18 +1,21 @@
 .PHONY: check test test-e2e typecheck lint format fix all dev build clean
+.PHONY: check-header test-header check-verbose test-verbose
 
 # Full validation: check + test
 all: check test
 
 # Static analysis: typecheck + lint/format
-check: typecheck lint
+check: check-header typecheck lint
 
 # TypeScript type checking
 typecheck:
-	@echo "→ TypeCheck..." && npx tsc --noEmit && echo "  ✓ TypeCheck passed"
+	@. ./hack/run_silent.sh && \
+	run_silent "TypeCheck passed" "npx tsc --noEmit"
 
 # Lint and format check (Biome)
 lint:
-	@echo "→ Lint & Format..." && npx biome check . && echo "  ✓ Lint & Format passed"
+	@. ./hack/run_silent.sh && \
+	run_silent "Lint & Format passed" "npx biome check ."
 
 # Auto-fix lint and format issues
 fix:
@@ -21,13 +24,31 @@ fix:
 format:
 	npx biome format --write .
 
-# Unit tests (Vitest)
-test:
-	@echo "→ Unit Tests..." && npx vitest run && echo "  ✓ Unit Tests passed"
+# Unit tests (Vitest) — only shows failures, summary on success
+test: test-header
+	@. ./hack/run_silent.sh && \
+	run_silent_with_test_count "Unit Tests passed" "npx vitest run" "vitest"
 
 # E2E tests (Playwright — requires dev server running)
 test-e2e:
-	@echo "→ E2E Tests..." && npx playwright test && echo "  ✓ E2E Tests passed"
+	@. ./hack/run_silent.sh && \
+	run_silent_with_test_count "E2E Tests passed" "npx playwright test" "playwright"
+
+# Headers
+check-header:
+	@sh -n ./hack/run_silent.sh || (echo "Shell script syntax error" && exit 1)
+	@. ./hack/run_silent.sh && print_main_header "Running Checks"
+
+test-header:
+	@sh -n ./hack/run_silent.sh || (echo "Shell script syntax error" && exit 1)
+	@. ./hack/run_silent.sh && print_main_header "Running Tests"
+
+# Verbose versions (show full output)
+check-verbose:
+	@VERBOSE=1 $(MAKE) check
+
+test-verbose:
+	@VERBOSE=1 $(MAKE) test
 
 # Dev server
 dev:
