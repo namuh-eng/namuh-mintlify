@@ -145,9 +145,16 @@ for ((cycle=1; cycle<=MAX_CYCLES; cycle++)); do
   done
 
   # ─── PHASE 3: QA ───
-  log "Phase 3: Starting QA..."
-  ./ralph/qa-ralph.sh "$TARGET_URL" || true
-  cron_backup
+  MAX_QA_RESTARTS=10
+  qa_restarts=0
+
+  while [ "$(qa_complete)" != "true" ] && [ "$qa_restarts" -lt "$MAX_QA_RESTARTS" ]; do
+    qa_restarts=$((qa_restarts + 1))
+    QA_SO_FAR=$(python3 -c "import json; print(sum(1 for x in json.load(open('prd.json')) if x.get('qa_pass', False)))" 2>/dev/null || echo "0")
+    log "Phase 3: Running QA... $QA_SO_FAR/$(total_tasks) passed (attempt $qa_restarts/$MAX_QA_RESTARTS)"
+    ./ralph/qa-ralph.sh "$TARGET_URL" || true
+    cron_backup
+  done
 
   QA_STATUS=$(qa_complete)
   QA_PASSED=$($PY -c "import json; print(sum(1 for x in json.load(open('prd.json')) if x.get('qa_pass', False)))" 2>/dev/null || echo "0")
