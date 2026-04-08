@@ -2457,3 +2457,39 @@ Date: 2026-04-09
 - CSS injected as <style> tag with data-custom-css attribute for identification
 - JS injected as <script> tag with data-custom-js attribute for identification
 - Both are cleaned up on unmount/change to prevent stale styles/scripts
+
+## Iteration 54 — feature-026: Reusable Snippets with Variables
+Date: 2026-04-09
+
+### What was built
+- New `src/lib/snippets.ts` module with three core functions:
+  - `resolveVariables(content, vars)` — replaces `{{variableName}}` syntax, preserves fenced code blocks
+  - `resolveSnippets(content, snippetPages)` — inlines `<Snippet file="snippets/path" />` tags
+  - `buildVariablesMap(frontmatter, projectVars)` — merges frontmatter and project-level variables
+  - `isSnippetPage(path)` — detects pages in `snippets/` directory
+- Updated `buildDocsNav` in `src/lib/mdx-renderer.ts` to skip snippet pages from sidebar navigation
+- Updated docs slug page (`src/app/docs/[subdomain]/[...slug]/page.tsx`) to:
+  - Collect snippet pages from all published pages
+  - Build variables map from frontmatter + project config
+  - Run snippet resolution then variable resolution before MDX rendering
+
+### Test results
+- 21 new unit tests (snippets.test.ts) — all passing
+- 4 new E2E tests (snippets.spec.ts) — written, QA will verify
+- 1360 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/snippets.ts — new, snippet + variable resolution logic
+- src/lib/mdx-renderer.ts — updated, filter snippet pages from buildDocsNav
+- src/app/docs/[subdomain]/[...slug]/page.tsx — updated, snippet/variable resolution before render
+- tests/snippets.test.ts — new, 21 unit tests
+- tests/e2e/snippets.spec.ts — new, 4 E2E tests
+
+### Decisions
+- Snippets identified by `snippets/` path prefix — no schema change needed
+- Variables inside fenced code blocks (``` ... ```) are preserved, not resolved
+- Unresolved variables left as `{{varName}}` — no error thrown
+- `.mdx` extension stripped from Snippet file prop for flexible authoring
+- Frontmatter variables override project-level variables (higher specificity wins)
+- Missing snippets render as a Note callout warning instead of breaking the page

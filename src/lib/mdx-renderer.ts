@@ -861,6 +861,8 @@ export function buildDocsNav(
   const groups = new Map<string, DocsNavItem[]>();
 
   for (const page of pageList) {
+    // Skip snippet pages — they are reusable content, not navigable pages
+    if (page.path.startsWith("snippets/")) continue;
     const segments = page.path.split("/");
 
     // Extract API method from frontmatter if present (e.g. "GET /plants" → "GET")

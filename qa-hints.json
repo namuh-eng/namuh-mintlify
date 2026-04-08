@@ -1492,5 +1492,26 @@
       "Verify JS is injected at end of body (load order)",
       "Test save and reload persistence of custom CSS/JS"
     ]
+  },
+  {
+    "feature_id": "feature-026",
+    "tests_written": [
+      "resolves {{variable}} syntax from variables map",
+      "preserves fenced code blocks from variable resolution",
+      "resolves <Snippet file=\"...\" /> tags by inlining content",
+      "handles .mdx extension and single quotes in Snippet file prop",
+      "snippet not found shows warning Note",
+      "multiple snippets in same content resolve correctly",
+      "snippet pages excluded from buildDocsNav",
+      "isSnippetPage detects snippets/ prefix",
+      "end-to-end: snippet + variable resolution then MDX render"
+    ],
+    "needs_deeper_qa": [
+      "Recursive snippet inclusion (snippet referencing another snippet) — not implemented, could cause infinite loops",
+      "Variable resolution with special characters in values (HTML entities, quotes)",
+      "Snippet content with frontmatter — currently includes raw frontmatter in output",
+      "Performance with many snippets on a single page",
+      "Snippet pages are correctly hidden in editor sidebar file tree (not just docs nav)"
+    ]
   }
 ]
