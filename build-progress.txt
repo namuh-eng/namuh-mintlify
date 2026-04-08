@@ -146,3 +146,41 @@ Date: 2026-04-08
 - Org creator automatically becomes admin member via orgMemberships insert
 - Onboarding page is client component with loading state while checking for existing orgs
 - Removed autoFocus from input (Biome accessibility rule)
+
+## Iteration 5 — auth-003: API Key Management
+Date: 2026-04-08
+
+### What was built
+- API key utility library (`src/lib/api-keys.ts`) with generate, hash (SHA-256), verify, mask, extract prefix, and validation functions
+- Key format: admin keys `mint_{32 hex chars}`, assistant keys `mint_dsc_{32 hex chars}`
+- API route `GET /api/api-keys` — list all API keys for the user's org (resolves org from session)
+- API route `POST /api/api-keys` — create new API key (admin role required), returns raw key once
+- API route `DELETE /api/api-keys/[id]` — revoke an API key (admin role required, scoped to org)
+- Settings page (`/settings/organization/api-keys`) — dark themed page matching Mintlify design:
+  - Two sections: Admin API keys and Assistant API keys
+  - Each section shows active keys in a table (name, masked prefix, created date, revoke button)
+  - Create button opens modal with name input, returns raw key shown once with copy button
+  - Delete button opens confirmation modal before revoking
+
+### Test results
+- 22 new unit tests (api-keys.test.ts) — all passing
+- 5 new E2E tests (api-keys.spec.ts) — written, QA will verify
+- 109 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/api-keys.ts — new, key generation/hashing/validation utilities
+- src/app/api/api-keys/route.ts — new, GET + POST API routes
+- src/app/api/api-keys/[id]/route.ts — new, DELETE API route
+- src/app/settings/organization/api-keys/page.tsx — new, settings page UI
+- tests/api-keys.test.ts — new, 22 unit tests
+- tests/e2e/api-keys.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Used SHA-256 for key hashing — standard, fast, irreversible
+- Key prefix stored in DB is prefix + first 8 random chars for identification
+- Masked display shows prefix + first 4 random chars + dots
+- Admin role required for create/delete operations (checked via orgMemberships)
+- Org resolved from user session → first org membership (single-org model for now)
+- Raw key shown once in creation modal with copy-to-clipboard button
+- API routes at /api/api-keys (not nested under orgs) — org resolved from session context

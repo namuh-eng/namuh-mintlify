@@ -88,5 +88,33 @@
       "User with existing org visits /onboarding — should redirect to /dashboard",
       "Org name with only special characters — slug would be empty, should return error"
     ]
+  },
+  {
+    "feature_id": "auth-003",
+    "tests_written": [
+      "generateApiKey produces admin keys with mint_ prefix",
+      "generateApiKey produces assistant keys with mint_dsc_ prefix",
+      "generateApiKey produces unique keys each call",
+      "hashApiKey returns consistent SHA-256 hex digest",
+      "verifyApiKey matches correct key/hash, rejects wrong key",
+      "maskKeyPrefix shows prefix + first 4 chars + dots",
+      "validateCreateApiKeyRequest accepts valid admin/assistant requests",
+      "validateCreateApiKeyRequest defaults type to admin",
+      "validateCreateApiKeyRequest rejects empty/missing/long names",
+      "validateCreateApiKeyRequest rejects invalid type",
+      "E2E: page loads with admin and assistant sections",
+      "E2E: create admin key via modal, shown once",
+      "E2E: create assistant key via modal",
+      "E2E: lists keys with masked prefix",
+      "E2E: delete/revoke a key"
+    ],
+    "needs_deeper_qa": [
+      "Full create+list+delete flow with real authenticated session",
+      "API key validation in API middleware — keys work for authenticating API requests",
+      "Only admin role can create/delete keys — viewer/editor should get 403",
+      "Concurrent key creation by multiple users in same org",
+      "Key prefix collision — extremely unlikely but no unique constraint on keyPrefix",
+      "Copy to clipboard on the 'shown once' modal — requires HTTPS or localhost"
+    ]
   }
 ]
