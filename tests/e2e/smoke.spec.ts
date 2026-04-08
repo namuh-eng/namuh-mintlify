@@ -22,4 +22,14 @@ test.describe("Smoke tests", () => {
     expect(response?.status()).toBe(200);
     await expect(page.locator("h1")).toBeVisible();
   });
+
+  test("dashboard page loads (authenticated)", async ({ page }) => {
+    const response = await page.goto("/dashboard");
+    expect(response?.status()).toBe(200);
+  });
+
+  test("settings page loads (authenticated)", async ({ page }) => {
+    const response = await page.goto("/settings/organization/api-keys");
+    expect(response?.status()).toBe(200);
+  });
 });
