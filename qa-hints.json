@@ -1121,5 +1121,22 @@
       "Visual match with original Mintlify MCP page styling",
       "Mobile responsive layout of URL bar and tool cards"
     ]
+  },
+  {
+    "feature_id": "settings-002",
+    "tests_written": [
+      "validateProjectName rejects empty/short/long names, accepts valid",
+      "validateSubdomain rejects uppercase/special chars, accepts lowercase-hyphen",
+      "validateUpdateProjectRequest handles name-only, subdomain-only, combined, and invalid bodies",
+      "E2E: general page loads with both fields and save button",
+      "E2E: inputs are editable",
+      "E2E: breadcrumb shows Settings / General"
+    ],
+    "needs_deeper_qa": [
+      "Save changes actually persists to DB and reflects in sidebar/topbar (requires auth session)",
+      "Subdomain uniqueness conflict handling — what happens if subdomain already taken",
+      "Empty name edge case — does the form prevent submit or show error?",
+      "Concurrent edits from multiple tabs"
+    ]
   }
 ]

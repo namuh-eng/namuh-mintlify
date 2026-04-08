@@ -1832,3 +1832,30 @@ Date: 2026-04-09
 - Copy button shows check icon + "Copied" text for 2s after click
 - Used emerald accent color for Beta badge and Learn more link, matching design system
 - Read-only page — no additional DB tables or API routes needed
+
+## Iteration 37 — settings-002: General Settings — Deployment Name Editing
+Date: 2026-04-09
+
+### What was built
+- Feature already existed from settings-001 shell: General settings page at `/settings/deployment/general` with Project name and Deployment name fields, Save changes button
+- API route `PUT /api/projects/[id]` handles name + subdomain updates with validation and role-based access (admin/editor only)
+- Validation via `validateUpdateProjectRequest` in `src/lib/projects.ts` — name trimming, subdomain format check, combined field updates
+- 19 new unit tests covering all validation paths
+- 5 new E2E tests covering page load, field editing, save button, navigation, breadcrumb
+
+### Test results
+- 19 new unit tests (settings-general.test.ts) — all passing
+- 5 new E2E tests (settings-general.spec.ts) — written, QA will verify
+- 974 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- tests/settings-general.test.ts — new, 19 unit tests
+- tests/e2e/settings-general.spec.ts — new, 5 E2E tests
+- prd.json — settings-002 build_pass set to true
+- qa-hints.json — appended settings-002 hints
+
+### Decisions
+- Page was already scaffolded in settings-001 iteration — this iteration adds dedicated test coverage and marks the feature complete
+- Tests focus on the validation logic (validateProjectName, validateSubdomain, validateUpdateProjectRequest) since the API route and page already work
+- E2E tests verify the UI renders correctly; deeper save-persistence tests require auth session (flagged for QA)
