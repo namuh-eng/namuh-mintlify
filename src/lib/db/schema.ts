@@ -308,6 +308,77 @@ export const agentSettings = pgTable(
   (table) => [t.uniqueIndex("agent_settings_org_idx").on(table.orgId)],
 );
 
+// ── Assistant Settings ────────────────────────────────────────────────────────
+
+export const assistantSettings = pgTable(
+  "assistant_settings",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    projectId: t
+      .uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    enabled: t.boolean().default(false).notNull(),
+    deflectionEnabled: t.boolean("deflection_enabled").default(false).notNull(),
+    deflectionEmail: t.varchar("deflection_email", { length: 256 }),
+    showHelpButton: t.boolean("show_help_button").default(false).notNull(),
+    searchDomainsEnabled: t
+      .boolean("search_domains_enabled")
+      .default(false)
+      .notNull(),
+    searchDomains: t.jsonb("search_domains").$type<string[]>().default([]),
+    starterQuestionsEnabled: t
+      .boolean("starter_questions_enabled")
+      .default(false)
+      .notNull(),
+    starterQuestions: t
+      .jsonb("starter_questions")
+      .$type<string[]>()
+      .default([]),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: t
+      .timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    t.uniqueIndex("assistant_settings_project_idx").on(table.projectId),
+  ],
+);
+
+// ── Assistant Usage ──────────────────────────────────────────────────────────
+
+export const assistantUsage = pgTable(
+  "assistant_usage",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    projectId: t
+      .uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    messagesUsed: t.integer("messages_used").default(0).notNull(),
+    messageLimit: t.integer("message_limit").default(250).notNull(),
+    billingCycleStart: t.timestamp("billing_cycle_start", {
+      withTimezone: true,
+    }),
+    billingCycleEnd: t.timestamp("billing_cycle_end", { withTimezone: true }),
+    monthlyPrice: t.integer("monthly_price").default(0).notNull(),
+    overageSpend: t.integer("overage_spend").default(0).notNull(),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: t
+      .timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [t.uniqueIndex("assistant_usage_project_idx").on(table.projectId)],
+);
+
 // ── Audit Logs ─────────────────────────────────────────────────────────────────
 
 export const auditLogs = pgTable(
