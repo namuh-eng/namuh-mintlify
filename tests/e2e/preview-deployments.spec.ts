@@ -10,9 +10,7 @@ test.describe("Preview Deployments", () => {
   test("clicking Previews tab shows preview section", async ({ page }) => {
     await page.goto("/dashboard");
     await page.getByRole("button", { name: "Previews" }).click();
-    await expect(
-      page.getByTestId("create-preview-btn"),
-    ).toBeVisible();
+    await expect(page.getByTestId("create-preview-btn")).toBeVisible();
   });
 
   test("Create custom preview button opens modal", async ({ page }) => {
