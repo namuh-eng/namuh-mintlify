@@ -1569,5 +1569,28 @@
       "SEO: sitemap entries for multi-language pages",
       "Edge case: page exists in only some languages — switcher shows correct options"
     ]
+  },
+  {
+    "feature_id": "feature-029",
+    "tests_written": [
+      "isValidVersionTag accepts/rejects various tag formats",
+      "validateVersionsConfig checks defaults, duplicates, empty arrays",
+      "mergeVersionsConfig returns defaults for null/undefined",
+      "getDefaultVersion / getVersionByTag lookup helpers",
+      "parseVersionFromSlug extracts version prefix from URL slugs",
+      "buildVersionedPath constructs URLs with/without version+locale prefixes",
+      "buildVersionPagePath adds version prefix for DB storage",
+      "filterPagesByVersion filters and strips version prefix from pages",
+      "getAvailableVersionsForPage finds versions that have a given page",
+      "E2E: docs pages load with version prefix, version+locale combo, no JS errors"
+    ],
+    "needs_deeper_qa": [
+      "Version switcher dropdown interaction (click to toggle, select version, navigate)",
+      "Version + i18n combination: URL parsing order with both prefixes active",
+      "Default badge rendering in version dropdown",
+      "Navigation tree swapping when version changes (requires real DB pages)",
+      "Close-on-click-outside behavior for version dropdown",
+      "Visual consistency with language switcher styling (dark + light themes)"
+    ]
   }
 ]

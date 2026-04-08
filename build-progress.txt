@@ -2580,3 +2580,39 @@ Date: 2026-04-09
 - Pages filtered by locale for navigation sidebar — each language gets its own nav tree
 - hreflang x-default always points to default language version
 - Used `<nav>` element for dropdown instead of listbox role to satisfy Biome a11y rules
+
+## Iteration 57 — feature-029: Multi-version documentation
+Date: 2026-04-09
+
+### What was built
+- Versions library (`src/lib/versions.ts`) with types, validation, URL helpers, page filtering — mirrors i18n pattern
+- Version switcher dropdown component (`src/components/docs/version-switcher.tsx`) — client component next to language switcher
+- URL structure: `/docs/{subdomain}/{version?}/{locale?}/{pagePath}` — version prefix comes first, then locale
+- Default version has no URL prefix; non-default versions get `/{tag}/` prefix
+- "Default" badge shown on the current/latest version in the dropdown
+- Pages filtered by version, then by locale for navigation tree
+- CSS for version switcher (dark + light themes) in globals.css
+- DocsTopbar updated to accept and render version switcher props
+- Docs page updated to parse version from slug before locale
+
+### Test results
+- 41 new unit tests (versions.test.ts) — all passing
+- 5 new E2E tests (versions.spec.ts) — written, QA will verify
+- 1474 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/versions.ts — new, versions config types + validation + URL helpers + page filtering
+- src/components/docs/version-switcher.tsx — new, version switcher dropdown component
+- src/components/docs/docs-topbar.tsx — updated, accepts version props, renders version switcher
+- src/app/docs/[subdomain]/[...slug]/page.tsx — updated, version-aware URL parsing + page filtering
+- src/app/globals.css — updated, version switcher CSS (dark + light themes)
+- tests/versions.test.ts — new, 41 unit tests
+- tests/e2e/versions.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Version prefix comes before locale in URL: `/docs/sub/v1/fr/page` — version is a more fundamental content division
+- Path-based version encoding (no schema change): default version pages stored without prefix, others as "{version}/{path}"
+- Version switcher only renders when versioning is enabled AND multiple versions are configured
+- Mirrors language switcher UX pattern: dropdown with icon, click outside to close, active highlight
+- "Default" badge uses green styling consistent with brand color
