@@ -1276,5 +1276,35 @@
       "Deploy script with real credentials — verify env vars reach the service",
       "Custom domain configuration — not implemented in deploy script yet"
     ]
+  },
+  {
+    "feature_id": "feature-003a",
+    "tests_written": [
+      "CONFIG_SECTIONS has 10 sections with id/label/description",
+      "mergeDocsConfig returns defaults for undefined/empty",
+      "mergeDocsConfig merges partial sections",
+      "mergeDocsConfig preserves arrays (topbarLinks, socialLinks, custom)",
+      "validateDocsConfig accepts valid defaults",
+      "validateDocsConfig rejects invalid hex colors",
+      "validateDocsConfig rejects invalid theme/codeTheme/iconLib",
+      "validateDocsConfig rejects invalid topbar links and social links",
+      "export/import round-trip works",
+      "import rejects invalid/non-object JSON",
+      "sectionIdToConfigKey maps all IDs correctly",
+      "E2E: Config tab visible in editor",
+      "E2E: Clicking Config tab shows panel",
+      "E2E: Panel has 10 accordion sections",
+      "E2E: Export/import buttons visible",
+      "E2E: Save button visible"
+    ],
+    "needs_deeper_qa": [
+      "Opening accordion sections and editing fields",
+      "Save persists changes to project.settings.docsConfig",
+      "Import JSON file uploads correctly",
+      "Export downloads valid JSON",
+      "Color pickers work with swatch preview",
+      "Adding/removing topbar links, social links, custom integrations",
+      "Real-time config preview (not implemented — save required)"
+    ]
   }
 ]

@@ -2095,3 +2095,51 @@ Date: 2026-04-09
 - App Runner health check configured at /api/health with 10s interval, 5s timeout
 - Docker image tagged with git SHA and "latest" for versioning
 - IAM role created on first deploy with AWSAppRunnerServicePolicyForECRAccess
+
+## Iteration 45 — feature-003a: Configurations Panel (docs.json GUI Editor)
+Date: 2026-04-09
+
+### What was built
+- Docs config utility library (`src/lib/docs-config.ts`) with:
+  - 10 config section definitions: Overview, Visual Branding, Typography, Header & Topbar, Footer, Content Features, Assistant & Search, Integrations, API Documentation, Advanced
+  - Full TypeScript interfaces for each section (OverviewConfig, VisualBrandingConfig, etc.)
+  - Default values for all sections
+  - `mergeDocsConfig()` deep-merge with defaults (handles nested arrays for topbarLinks, socialLinks, custom integrations)
+  - `validateDocsConfig()` validates hex colors, theme, code block theme, icon library, topbar link labels/URLs, social link types/URLs
+  - `exportDocsConfigJson()` / `importDocsConfigJson()` for JSON export/import with round-trip support
+  - Section ID to config key mapping, dropdown option constants
+- ConfigsPanel component (`src/components/editor/configs-panel.tsx`) with:
+  - Radix UI Accordion with 10 collapsible sections, each with description text
+  - Per-section forms: text inputs, color pickers (hex input + swatch + native picker), select dropdowns, toggle switches
+  - Dynamic list editors for topbar links, social links, and custom integrations (add/remove/edit)
+  - Export button (downloads docs-config.json), Import button (file input accepting .json/.json.gz)
+  - Save button that persists to project.settings.docsConfig via PUT /api/projects/{id}
+  - Success/error message display
+  - Loading skeleton state
+- Integrated into editor page as "Config" tab in left sidebar (alongside Navigation and Files tabs)
+  - Replaces nav tree when Configurations tab selected
+  - Settings2 icon + "Config" label
+
+### Test results
+- 35 new unit tests (docs-config.test.ts) — all passing
+- 5 new E2E tests (configs-panel.spec.ts) — written, QA will verify
+- 1140 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/docs-config.ts — new, types + defaults + validation + export/import
+- src/components/editor/configs-panel.tsx — new, 10-section accordion GUI editor
+- src/app/editor/main/page.tsx — updated, added Config tab and ConfigsPanel integration
+- tests/docs-config.test.ts — new, 35 unit tests
+- tests/e2e/configs-panel.spec.ts — new, 5 E2E tests
+- prd.json — feature-003a build_pass set to true
+- qa-hints.json — added feature-003a QA hints
+
+### Decisions
+- Used Radix UI Accordion (already in dependencies) for collapsible sections — accessible, animated
+- Panel embedded in left sidebar (replaces nav tree) rather than right panel — matches spec "sidebar panel replacing nav tree"
+- Config stored at project.settings.docsConfig JSONB — same pattern as appearance, addons, navigation settings
+- Color pickers use same pattern as appearance settings page (hex input + swatch + native picker)
+- Dynamic lists (topbar links, social links, custom integrations) use add/remove pattern with inline editing
+- Export/import in header bar, Save button in footer — clear separation of actions
+- Used span instead of label for field labels to satisfy Biome a11y lint (no associated control)
