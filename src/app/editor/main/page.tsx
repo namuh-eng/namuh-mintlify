@@ -1,9 +1,11 @@
 "use client";
 
+import { CommentsSidebar } from "@/components/editor/comments-sidebar";
 import { ConfigsPanel } from "@/components/editor/configs-panel";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
 import { MarkdownEditor } from "@/components/editor/markdown-editor";
 import { PageSettingsPanel } from "@/components/editor/page-settings-panel";
+import { SuggestionsPanel } from "@/components/editor/suggestions-panel";
 import { TocPanel } from "@/components/editor/toc-panel";
 import { VisualEditor } from "@/components/editor/visual-editor";
 import { EmptyState } from "@/components/empty-state";
@@ -323,6 +325,9 @@ export default function EditorPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>("visual");
   const [showSettings, setShowSettings] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [currentBranch, setCurrentBranch] = useState("main");
   const [cursorPos, setCursorPos] = useState(0);
 
   // Auto-save setup
@@ -515,8 +520,25 @@ export default function EditorPage() {
         onItalic={handleItalic}
         onHeading={handleHeading}
         onInsertSnippet={handleInsertSnippet}
-        onToggleSettings={() => setShowSettings(!showSettings)}
+        onToggleSettings={() => {
+          setShowSettings(!showSettings);
+          setShowComments(false);
+          setShowSuggestions(false);
+        }}
+        onToggleComments={() => {
+          setShowComments(!showComments);
+          setShowSettings(false);
+          setShowSuggestions(false);
+        }}
+        onToggleSuggestions={() => {
+          setShowSuggestions(!showSuggestions);
+          setShowSettings(false);
+          setShowComments(false);
+        }}
         onPublish={handleSaveContent}
+        projectId={projectId}
+        currentBranch={currentBranch}
+        onBranchChange={setCurrentBranch}
         isSaving={saving}
         hasUnsavedChanges={hasUnsavedChanges}
       />
@@ -754,7 +776,7 @@ export default function EditorPage() {
           )}
         </div>
 
-        {/* Right panel: Settings or TOC */}
+        {/* Right panel: Settings, Comments, Suggestions, or TOC */}
         {selectedPage && showSettings && (
           <PageSettingsPanel
             settings={{
@@ -768,11 +790,29 @@ export default function EditorPage() {
           />
         )}
 
-        {selectedPage && !showSettings && tocEntries.length > 0 && (
-          <div className="w-48 border-l border-white/[0.08] bg-[#0f0f0f] shrink-0 overflow-y-auto">
-            <TocPanel entries={tocEntries} />
-          </div>
+        {selectedPage && showComments && (
+          <CommentsSidebar
+            pageId={selectedPageId}
+            onClose={() => setShowComments(false)}
+          />
         )}
+
+        {selectedPage && showSuggestions && (
+          <SuggestionsPanel
+            pageId={selectedPageId}
+            onClose={() => setShowSuggestions(false)}
+          />
+        )}
+
+        {selectedPage &&
+          !showSettings &&
+          !showComments &&
+          !showSuggestions &&
+          tocEntries.length > 0 && (
+            <div className="w-48 border-l border-white/[0.08] bg-[#0f0f0f] shrink-0 overflow-y-auto">
+              <TocPanel entries={tocEntries} />
+            </div>
+          )}
       </div>
 
       {/* Modals */}

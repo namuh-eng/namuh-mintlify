@@ -2143,3 +2143,39 @@ Date: 2026-04-09
 - Dynamic lists (topbar links, social links, custom integrations) use add/remove pattern with inline editing
 - Export/import in header bar, Save button in footer — clear separation of actions
 - Used span instead of label for field labels to satisfy Biome a11y lint (no associated control)
+
+## Iteration 46 — feature-003b: Editor Collaboration (Comments, Suggestions, Branch Selector, Publish Workflow)
+Date: 2026-04-09
+
+### What was built
+- Comments system: DB tables (comments with parent_id for threading, suggestions with status enum), API routes (GET/POST/PATCH /api/pages/[pageId]/comments), comments sidebar component with thread view, reply support, resolve/reopen, filter (all/open/resolved), new comment input with Cmd+Enter
+- Suggestions system: DB table with pending/accepted/rejected status, API routes (GET/POST/PATCH /api/pages/[pageId]/suggestions), suggestions panel with diff view (red/green highlighting), accept/reject buttons, filter (pending/all)
+- Branch selector: Upgraded from static "main" label to functional Radix popover with search, branch list with "Default" badge, "Create new branch" button, DB table (branches with projectId, name, isDefault), API routes (GET/POST /api/projects/[id]/branches)
+- Publish workflow: Publish button now disabled when no unsaved changes (gray/cursor-not-allowed), popover Publish button also disabled, visual state feedback
+- Collaboration utility library (src/lib/collaboration.ts): validation (comment content, suggestion diff, branch name), diff parsing/creation, comment thread builder, role checks, relative date formatting
+
+### Test results
+- 30 new unit tests (collaboration.test.ts) — all passing
+- 7 new E2E tests (collaboration.spec.ts) — written, QA will verify
+- 1170 total unit tests — all passing
+- make check (typecheck + lint) — passing
+- Schema pushed to RDS Postgres via make db-push — success
+
+### Files changed
+- src/lib/db/schema.ts — added suggestionStatusEnum, comments table, suggestions table, branches table
+- src/lib/collaboration.ts — new, collaboration utility library
+- src/app/api/pages/[pageId]/comments/route.ts — new, comments CRUD API
+- src/app/api/pages/[pageId]/suggestions/route.ts — new, suggestions CRUD API
+- src/app/api/projects/[id]/branches/route.ts — new, branches list/create API
+- src/components/editor/comments-sidebar.tsx — new, comments sidebar with threading
+- src/components/editor/suggestions-panel.tsx — new, suggestions panel with diff view
+- src/components/editor/branch-selector.tsx — new, functional branch selector popover
+- src/components/editor/editor-toolbar.tsx — updated, added comments/suggestions buttons, branch selector component, publish disabled state
+- src/app/editor/main/page.tsx — updated, integrated comments sidebar, suggestions panel, branch selector state
+
+### Decisions
+- Comments use parentId for threading (null = top-level, non-null = reply) — simple and efficient
+- Suggestions use simple diff format (original\n---\nsuggested) — easy to parse and display
+- Branch selector creates a virtual "main" default if no branches exist in DB
+- Only admins/editors can resolve comments, review suggestions, and create branches
+- Publish button disabled state uses clsx for conditional styling

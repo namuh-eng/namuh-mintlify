@@ -1306,5 +1306,30 @@
       "Adding/removing topbar links, social links, custom integrations",
       "Real-time config preview (not implemented — save required)"
     ]
+  },
+  {
+    "feature_id": "feature-003b",
+    "tests_written": [
+      "validateCommentContent accepts/rejects correctly",
+      "validateSuggestionDiff validates length/empty",
+      "validateBranchName enforces git naming rules",
+      "parseSuggestionDiff and createSuggestionDiff round-trip",
+      "buildCommentThreads creates threads with replies",
+      "role checks for resolve/manage/create",
+      "formatCommentDate relative time formatting",
+      "comments API returns 401 without auth",
+      "suggestions API returns 401 without auth",
+      "branches API returns 401 without auth",
+      "branch selector popover opens with search",
+      "publish button disabled when no changes"
+    ],
+    "needs_deeper_qa": [
+      "Real comment CRUD with authenticated user — mocked auth in unit tests",
+      "Branch creation + switching actually persists across page reloads",
+      "Resolve/reopen comment permission enforcement (admin/editor only)",
+      "Suggestion accept/reject flow — applying diff to page content",
+      "Concurrent comments on same page from multiple users",
+      "Thread reply ordering with rapid successive posts"
+    ]
   }
 ]

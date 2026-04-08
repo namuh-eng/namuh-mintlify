@@ -1,5 +1,6 @@
 "use client";
 
+import { BranchSelector } from "@/components/editor/branch-selector";
 import type { EditorMode, MdxSnippetKey } from "@/lib/editor";
 import { mdxSnippets } from "@/lib/editor";
 import * as Popover from "@radix-ui/react-popover";
@@ -10,11 +11,12 @@ import {
   Code2,
   ExternalLink,
   Eye,
-  GitBranch,
+  FileText,
   Heading2,
   Image,
   Italic,
   Link,
+  MessageSquare,
   Plus,
   Redo2,
   Search,
@@ -36,8 +38,13 @@ interface EditorToolbarProps {
   onRedo?: () => void;
   onInsertSnippet?: (key: MdxSnippetKey) => void;
   onToggleSettings?: () => void;
+  onToggleComments?: () => void;
+  onToggleSuggestions?: () => void;
   onPublish?: () => void;
   siteUrl?: string;
+  projectId?: string | null;
+  currentBranch?: string;
+  onBranchChange?: (branch: string) => void;
   canUndo?: boolean;
   canRedo?: boolean;
   isSaving?: boolean;
@@ -57,8 +64,13 @@ export function EditorToolbar({
   onRedo,
   onInsertSnippet,
   onToggleSettings,
+  onToggleComments,
+  onToggleSuggestions,
   onPublish,
   siteUrl,
+  projectId,
+  currentBranch = "main",
+  onBranchChange,
   canUndo,
   canRedo,
   isSaving,
@@ -134,16 +146,12 @@ export function EditorToolbar({
         {/* Divider */}
         <div className="w-px h-5 bg-white/[0.08] mx-1" />
 
-        {/* Branch selector (static for now) */}
-        <button
-          type="button"
-          className="flex items-center gap-1.5 px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-white/[0.06] rounded transition-colors"
-          data-testid="branch-selector"
-        >
-          <GitBranch size={12} />
-          <span>main</span>
-          <ChevronDown size={10} />
-        </button>
+        {/* Branch selector */}
+        <BranchSelector
+          projectId={projectId ?? null}
+          currentBranch={currentBranch}
+          onBranchChange={onBranchChange ?? (() => {})}
+        />
       </div>
 
       {/* Center: Formatting toolbar (visible in both modes) */}
@@ -287,6 +295,26 @@ export function EditorToolbar({
 
         <button
           type="button"
+          onClick={onToggleComments}
+          className="p-1.5 rounded text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors"
+          aria-label="Comments"
+          data-testid="comments-btn"
+        >
+          <MessageSquare size={14} />
+        </button>
+
+        <button
+          type="button"
+          onClick={onToggleSuggestions}
+          className="p-1.5 rounded text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors"
+          aria-label="Suggestions"
+          data-testid="suggestions-btn"
+        >
+          <FileText size={14} />
+        </button>
+
+        <button
+          type="button"
           onClick={onToggleSettings}
           className="p-1.5 rounded text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors"
           aria-label="Page settings"
@@ -309,7 +337,13 @@ export function EditorToolbar({
             <button
               type="button"
               data-testid="publish-btn"
-              className="ml-1 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-500 transition-colors"
+              disabled={!hasUnsavedChanges && !isSaving}
+              className={clsx(
+                "ml-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                hasUnsavedChanges || isSaving
+                  ? "text-white bg-emerald-600 hover:bg-emerald-500"
+                  : "text-gray-500 bg-gray-800 cursor-not-allowed",
+              )}
             >
               Publish
             </button>
@@ -331,7 +365,13 @@ export function EditorToolbar({
                 <button
                   type="button"
                   onClick={onPublish}
-                  className="w-full px-3 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-500 transition-colors"
+                  disabled={!hasUnsavedChanges}
+                  className={clsx(
+                    "w-full px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                    hasUnsavedChanges
+                      ? "text-white bg-emerald-600 hover:bg-emerald-500"
+                      : "text-gray-500 bg-gray-800 cursor-not-allowed",
+                  )}
                 >
                   Publish
                 </button>
