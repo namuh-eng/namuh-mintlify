@@ -664,5 +664,30 @@
       "Message ordering in messages array",
       "Job status transition to 409 Conflict when sending message to succeeded/failed job"
     ]
+  },
+  {
+    "feature_id": "feature-007c",
+    "tests_written": [
+      "extractFirstUserMessage returns first user message",
+      "truncateMessage respects maxLen boundary",
+      "categorizeConversation detects 9 categories",
+      "formatConversationDate shows relative time",
+      "fillDailyConversationCounts fills gaps with zeroes",
+      "escapeCsvField handles commas/quotes/newlines",
+      "categoriesToCsv generates header + rows",
+      "chatHistoryToCsv generates header + rows with escaping",
+      "assistantSubTabs has Categories and Chat history",
+      "E2E: loads assistant page, shows sub-tabs, Export to CSV button",
+      "E2E: switches between Categories and Chat history tabs",
+      "E2E: preserves date range in URL"
+    ],
+    "needs_deeper_qa": [
+      "Real conversation data — only tested with empty state in E2E",
+      "CSV download in browser — downloadCsv triggers blob/link but not testable in unit tests",
+      "Category classification accuracy on real user messages",
+      "Large dataset performance — chatHistory limited to 50, categories computed from 200 conversations",
+      "Date range filtering edge cases (timezone boundaries)",
+      "Agent mode empty state rendering"
+    ]
   }
 ]

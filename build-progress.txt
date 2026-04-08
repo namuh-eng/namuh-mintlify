@@ -1060,3 +1060,42 @@ Date: 2026-04-09
 - Only pending/running jobs accept new messages (409 Conflict for succeeded/failed)
 - Background processing is simulated with setTimeout (pending→running at 500ms, running→succeeded at 5s)
 - PR URL is auto-generated during simulation for demo purposes
+
+## Iteration 18 — feature-007c: Analytics Assistant Tab
+Date: 2026-04-09
+
+### What was built
+- Analytics assistant utility library (`src/lib/analytics-assistant.ts`) with types (DailyConversationCount, AssistantCategory, ChatHistoryEntry, AssistantAnalyticsData), sub-tab config, message extraction, truncation, conversation categorization (9 categories), relative date formatting, daily count gap-filling, CSV export (escape, categories CSV, chat history CSV, browser download)
+- API route `GET /api/analytics/assistant?projectId=&from=&to=` — aggregates assistant_conversations into daily counts, auto-categorizes conversations by first user message keywords, returns chat history with message previews, total conversations/messages counts, with auth + org membership verification
+- Assistant analytics page (`/analytics/assistant`) — full implementation with:
+  - Categories and Chat history sub-tab toggle buttons
+  - Export to CSV button (downloads categories or chat history CSV based on active sub-tab)
+  - Categories table: category name + conversation count, sorted descending
+  - Chat history table: first message preview (truncated 80 chars), message count, relative date
+  - Empty state: "No assistant activity / When users ask questions, results will show up here" with MessageSquare icon
+  - Agent mode empty state variant
+  - Loading skeleton with animated pulse placeholders
+  - Summary line showing total conversations and messages
+
+### Test results
+- 33 new unit tests (analytics-assistant.test.ts) — all passing
+- 6 new E2E tests (analytics-assistant.spec.ts) — written, QA will verify
+- 584 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/analytics-assistant.ts — new, assistant analytics types, helpers, CSV export
+- src/app/api/analytics/assistant/route.ts — new, assistant analytics API endpoint
+- src/app/analytics/assistant/page.tsx — new, assistant analytics page with sub-tabs and CSV export
+- tests/analytics-assistant.test.ts — new, 33 unit tests
+- tests/e2e/analytics-assistant.spec.ts — new, 6 E2E tests
+- prd.json — feature-007c build_pass set to true
+- qa-hints.json — added feature-007c QA hints
+
+### Decisions
+- Conversation categorization uses keyword regex on first user message — 9 categories covering setup, API, troubleshooting, deployment, auth, general questions, guides, UI, and other
+- Categories computed server-side from up to 200 conversations — sufficient for analytics without heavy aggregation
+- Chat history limited to 50 most recent conversations — keeps response size manageable
+- CSV export is client-side (blob download) — no server endpoint needed, works offline
+- Sub-tabs are client-side state (not URL params) — keeps URL clean, Categories is default
+- Export CSV button disabled when no data — prevents empty file downloads
