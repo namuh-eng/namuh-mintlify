@@ -296,5 +296,39 @@
       "Pagination prev/next links navigate correctly between pages",
       "Docs site 404 page for non-existent subdomain/slug"
     ]
+  },
+  {
+    "feature_id": "feature-004a",
+    "tests_written": [
+      "Card renders SVG icon from icon prop (pencil, star, code, palette, etc.)",
+      "Card falls back to text when icon name unknown",
+      "Card renders without icon when icon prop absent",
+      "CardGroup renders correct grid columns with nested cards",
+      "Card hover class applied for linked cards",
+      "Steps render with step numbering and connector line",
+      "Steps render with icon prop support",
+      "Note/Warning/Tip/Check callouts render with title prop",
+      "Callout renders without title when prop missing",
+      "All callout types render with correct icon SVGs",
+      "Code block renders filename in header tab",
+      "Code block renders copy button and Ask AI button",
+      "Code block applies basic syntax highlighting (keywords, strings, comments)",
+      "CodeGroup renders with copy button in each panel",
+      "CodeGroup applies syntax highlighting in panels",
+      "Integration: mixed markdown + callouts + cards render correctly",
+      "Integration: steps + code blocks render correctly"
+    ],
+    "needs_deeper_qa": [
+      "Visual comparison of Card grid against Mintlify screenshots — icon size, spacing, hover effect",
+      "SVG icons for all icon names used in real Mintlify content — only 15 common icons mapped",
+      "Ask AI button dispatches custom event — verify parent component handles it",
+      "Syntax highlighting accuracy — basic regex-based, may mis-highlight in edge cases",
+      "Syntax highlighting inside code blocks with HTML entities — escaping order matters",
+      "Code block with very long filename — header tab overflow handling",
+      "CodeGroup copy button copies correct panel content (not other tab's content)",
+      "Callout title with special characters (quotes, angle brackets) — XSS safety",
+      "Steps with embedded code blocks inside step content",
+      "Dark mode color contrast — syntax highlighting colors readable on dark background"
+    ]
   }
 ]

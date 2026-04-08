@@ -456,3 +456,38 @@ Date: 2026-04-08
 - Content rendered server-side as HTML, client component adds interactivity (tabs, copy buttons)
 - Scroll spy for TOC uses IntersectionObserver with offset margins
 - Docs site served at /docs/[subdomain]/[...slug] — not separate domain, accessible within same app
+
+## Iteration 12 — feature-004a: MDX Component Library Enhancement
+Date: 2026-04-08
+
+### What was built
+- SVG icon map for Card components — 15 common icons (pencil, star, code, palette, terminal, book, rocket, settings, globe, compass, newspaper, layout, file-text, users, search, edit-3) rendered as inline SVG instead of plain text
+- Callout title prop support — Note, Warning, Tip, Info, Check callouts now accept a `title` prop rendered as bold heading above body content
+- Code block enhancements: filename support (```lang filename syntax), Ask AI button alongside copy button, syntax highlighting for keywords/strings/comments
+- Syntax highlighting engine — regex-based highlighter for keywords (const, function, class, etc.), double/single-quoted strings, single-line comments (// and #), with safe HTML tag boundary detection
+- CodeGroup enhancement — copy buttons added to each code panel
+- Client-side interactivity — Ask AI buttons dispatch custom `ask-ai-code` events with code content and language; copy buttons work in both code-block and code-group contexts
+- CSS enhancements — code-actions layout, code-ask-ai button (green accent), code-panel-actions, callout-title styling, card-icon SVG sizing, syntax highlighting colors (purple keywords, green strings, gray italic comments)
+
+### Test results
+- 26 new unit tests (mdx-components.test.ts) — all passing
+- 5 new E2E tests (mdx-components.spec.ts) — written, QA will verify
+- 1 existing test updated (mdx-renderer.test.ts — code block test updated for syntax highlighting)
+- 287 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/mdx-renderer.ts — enhanced: SVG icon map, syntax highlighting engine, callout title prop, filename parsing, Ask AI button, CodeGroup copy buttons
+- src/components/docs/mdx-content.tsx — enhanced: Ask AI event dispatching, copy button for code-group panels
+- src/app/globals.css — enhanced: code-actions, code-ask-ai, code-panel-actions, callout-title, card-icon SVG, syntax highlighting classes
+- tests/mdx-components.test.ts — new, 26 unit tests
+- tests/e2e/mdx-components.spec.ts — new, 5 E2E tests
+- tests/mdx-renderer.test.ts — updated, 1 test adjusted for syntax highlighting
+
+### Decisions
+- SVG icons stored as inline SVG strings in a lookup map — avoids external icon library dependency, keeps bundle small
+- Unknown icon names fall back to text display (not empty) — graceful degradation
+- Syntax highlighting is regex-based with HTML tag boundary detection — splits content by `<[^>]+>` tags and only applies keyword replacement to text nodes
+- Keywords set covers JS/TS, Python, Go, Java common keywords — intentionally broad but not language-specific
+- Ask AI button dispatches a CustomEvent ("ask-ai-code") rather than direct navigation — allows parent component to handle the interaction (e.g., open assistant panel)
+- Code block filename parsed from meta string: ```lang filename — matches common MDX convention
