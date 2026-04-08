@@ -32,3 +32,11 @@ qa-report.json
 test-a.txt
 test-b.txt
 test.txt
+
+# OS files
+.DS_Store
+
+# Ever CLI / Ralph runtime
+.ever-session-id
+.inspect-complete
+.ralph_to_ralph_source/
