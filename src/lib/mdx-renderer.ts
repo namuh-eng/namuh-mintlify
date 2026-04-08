@@ -429,6 +429,14 @@ const KNOWN_COMPONENTS = new Set([
   "Column",
   "Dropdown",
   "ApiPlayground",
+  "Mermaid",
+  "Expandable",
+  "Tooltip",
+  "Update",
+  "View",
+  "ViewPanel",
+  "Banner",
+  "Badge",
 ]);
 
 /** Known wrapper components that contain other components. */
@@ -439,6 +447,8 @@ const WRAPPER_COMPONENTS = new Set([
   "AccordionGroup",
   "CodeGroup",
   "Columns",
+  "Expandable",
+  "View",
 ]);
 
 /** Parse JSX-like props from an opening tag string. */
@@ -737,6 +747,83 @@ export function renderComponentBlock(block: ContentBlock): string {
       const method = props.method || "GET";
       const path = props.path || props.endpoint || "";
       return `<div class="api-playground-marker" data-method="${escapeHtml(method)}" data-path="${escapeHtml(path)}"></div>`;
+    }
+
+    // Mermaid — rendered client-side from text definition
+    case "Mermaid": {
+      return `<pre class="mermaid">${escapeHtml(content.trim())}</pre>`;
+    }
+
+    // Expandable — collapsible nested property sections
+    case "Expandable": {
+      const title = props.title || "Properties";
+      const nestedBlocks = extractComponentBlocks(content);
+      const innerHtml = nestedBlocks
+        .map((b) => renderComponentBlock(b))
+        .join("");
+      return `<details class="expandable"><summary class="expandable-summary">${escapeHtml(title)}</summary><div class="expandable-content">${innerHtml}</div></details>`;
+    }
+
+    // Tooltip — inline hover definition
+    case "Tooltip": {
+      const tip = props.tip || "";
+      return `<span class="tooltip">${parseMdxToHtml(content).replace(/<\/?p>/g, "")}<span class="tooltip-text">${escapeHtml(tip)}</span></span>`;
+    }
+
+    // Update — changelog timeline entry
+    case "Update": {
+      const date = props.date || "";
+      const title = props.title || "";
+      const dateHtml = date
+        ? `<div class="update-date">${escapeHtml(date)}</div>`
+        : "";
+      const titleHtml = title
+        ? `<h3 class="update-title">${escapeHtml(title)}</h3>`
+        : "";
+      return `<div class="update-entry">${dateHtml}${titleHtml}<div class="update-body">${parseMdxToHtml(content)}</div></div>`;
+    }
+
+    // View — tab-like switcher for language/framework variants
+    case "View": {
+      const panelRegex =
+        /<ViewPanel\s+title="([^"]*)"[^>]*>\s*([\s\S]*?)(?=<ViewPanel\s|$)/g;
+      const panels: Array<{ title: string; content: string }> = [];
+      let panelMatch = panelRegex.exec(content);
+      while (panelMatch) {
+        const panelContent = panelMatch[2].replace(/<\/ViewPanel>/g, "").trim();
+        panels.push({ title: panelMatch[1], content: panelContent });
+        panelMatch = panelRegex.exec(content);
+      }
+
+      if (panels.length === 0) {
+        return `<div class="view">${parseMdxToHtml(content)}</div>`;
+      }
+
+      const viewHeaders = panels
+        .map(
+          (p, idx) =>
+            `<button class="tab-button${idx === 0 ? " active" : ""}" data-tab="${idx}">${escapeHtml(p.title)}</button>`,
+        )
+        .join("");
+      const viewPanels = panels
+        .map(
+          (p, idx) =>
+            `<div class="tab-panel${idx === 0 ? " active" : ""}" data-tab="${idx}">${parseMdxToHtml(p.content)}</div>`,
+        )
+        .join("");
+      return `<div class="view"><div class="tab-bar">${viewHeaders}</div><div class="tab-panels">${viewPanels}</div></div>`;
+    }
+
+    // Banner — dismissible announcement bar
+    case "Banner": {
+      const variant = props.variant || "info";
+      return `<div class="banner banner-${escapeHtml(variant)}"><div class="banner-content">${parseMdxToHtml(content)}</div><button class="banner-dismiss" aria-label="Dismiss">&times;</button></div>`;
+    }
+
+    // Badge — inline colored status pill
+    case "Badge": {
+      const color = props.color || "default";
+      return `<span class="badge badge-${escapeHtml(color)}">${parseMdxToHtml(content).replace(/<\/?p>/g, "")}</span>`;
     }
 
     default:
