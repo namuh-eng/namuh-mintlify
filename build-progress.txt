@@ -401,3 +401,58 @@ Date: 2026-04-08
 - MDX component snippets (Tab, Dropdown, Anchor, Card, Columns) match Mintlify's "Add new" dropdown
 - Branch selector is static "main" for now — git branching feature planned for later
 - Publish popover uses Radix Popover component for accessibility
+
+## Iteration 11 — feature-004: MDX Renderer & Docs Site
+Date: 2026-04-08
+
+### What was built
+- MDX renderer library (`src/lib/mdx-renderer.ts`) with parseMdxToHtml, extractComponentBlocks, renderComponentBlock, renderMdxContent, buildDocsNav, resolvePageFromSlug
+- Custom markdown-to-HTML parser: headings with slugified IDs, bold/italic/code/links/images inline, code blocks with language labels + copy buttons, lists, blockquotes, tables (GFM), horizontal rules
+- MDX component extraction: parses JSX-like custom components from content, handles nesting (CardGroup > Card), self-closing tags, props parsing
+- Component rendering for all Mintlify component types:
+  - Callouts: Note, Warning, Tip, Info, Check — with colored borders and SVG icons
+  - Cards/CardGroup: grid layout, optional href links, icon + title + description
+  - Steps: numbered steps with vertical connector line
+  - Tabs: switchable tab panels with active state
+  - Accordion/AccordionGroup: details/summary expandable sections
+  - CodeGroup: tabbed code blocks with language tabs
+  - Frame: figure with optional caption
+  - Columns/Column: CSS grid layout
+  - Dropdown: alias for accordion
+- Docs site layout (`/docs/[subdomain]/[...slug]`): sticky top bar with logo + search, left sidebar nav (260px) with grouped pages, center content area (768px max), right TOC panel (220px) with scroll spy
+- Docs sidebar component (`docs-sidebar.tsx`): collapsible nav groups, active page highlighting (green)
+- Docs TOC component (`docs-toc.tsx`): auto-generated from headings, IntersectionObserver for active tracking
+- Docs pagination component (`docs-pagination.tsx`): prev/next page links at bottom
+- MDX content client component (`mdx-content.tsx`): wires tab switching, code copy interactivity via event listeners
+- Docs index page (`/docs/[subdomain]`): redirects to first published page
+- Docs API route (`GET /api/docs/[subdomain]`): returns project + all published pages
+- Full CSS styles in globals.css for all docs components matching Mintlify dark theme
+
+### Test results
+- 40 unit tests (mdx-renderer.test.ts) — all passing
+- 5 E2E tests (docs-site.spec.ts) — written, QA will verify
+- 261 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/mdx-renderer.ts — new, MDX rendering engine
+- src/components/docs/mdx-content.tsx — new, client-side MDX content with interactivity
+- src/components/docs/docs-sidebar.tsx — new, docs site sidebar navigation
+- src/components/docs/docs-toc.tsx — new, table of contents with scroll spy
+- src/components/docs/docs-pagination.tsx — new, prev/next page links
+- src/app/docs/[subdomain]/layout.tsx — new, docs layout
+- src/app/docs/[subdomain]/page.tsx — new, docs index redirect
+- src/app/docs/[subdomain]/[...slug]/page.tsx — new, docs page with full layout
+- src/app/api/docs/[subdomain]/route.ts — new, docs API endpoint
+- src/app/globals.css — updated, added comprehensive docs site + component styles
+- tests/mdx-renderer.test.ts — new, 40 unit tests
+- tests/e2e/docs-site.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Custom markdown parser (no external dependency) — keeps bundle small, handles all standard markdown + GFM tables
+- Component extraction via regex-based parser — handles nested components, self-closing tags, JSX-like props
+- Docs navigation auto-generated from page paths — root pages become items, pages with path segments form groups
+- Dark theme matching Mintlify: #090d0d background, #16a34a green accents, Inter font, JetBrains Mono for code
+- Content rendered server-side as HTML, client component adds interactivity (tabs, copy buttons)
+- Scroll spy for TOC uses IntersectionObserver with offset margins
+- Docs site served at /docs/[subdomain]/[...slug] — not separate domain, accessible within same app

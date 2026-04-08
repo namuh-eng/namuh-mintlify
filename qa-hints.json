@@ -31,11 +31,11 @@
       "API route GET /api/uploads/presign returns download URL"
     ],
     "needs_deeper_qa": [
-      "Real S3 upload via presigned URL \u2014 unit tests mock the SDK",
-      "CORS headers on S3 bucket \u2014 verify browser can PUT directly",
-      "Large file upload (near 50MB limit) \u2014 only validated client-side",
-      "Concurrent uploads to same key \u2014 race condition handling",
-      "Presigned URL expiry \u2014 verify 15-minute window works correctly"
+      "Real S3 upload via presigned URL — unit tests mock the SDK",
+      "CORS headers on S3 bucket — verify browser can PUT directly",
+      "Large file upload (near 50MB limit) — only validated client-side",
+      "Concurrent uploads to same key — race condition handling",
+      "Presigned URL expiry — verify 15-minute window works correctly"
     ]
   },
   {
@@ -55,11 +55,11 @@
       "E2E: auth API session endpoint returns null for unauthenticated"
     ],
     "needs_deeper_qa": [
-      "Full Google OAuth flow \u2014 requires real Google account login via browser",
-      "Session persistence after OAuth callback \u2014 verify cookie is set and session created in DB",
-      "Session expiry and refresh \u2014 Better Auth cookie cache set to 5 minutes",
-      "Middleware redirect with return URL \u2014 currently redirects to /login without preserving original URL",
-      "Concurrent session handling \u2014 multiple tabs/devices",
+      "Full Google OAuth flow — requires real Google account login via browser",
+      "Session persistence after OAuth callback — verify cookie is set and session created in DB",
+      "Session expiry and refresh — Better Auth cookie cache set to 5 minutes",
+      "Middleware redirect with return URL — currently redirects to /login without preserving original URL",
+      "Concurrent session handling — multiple tabs/devices",
       "Test-only /api/test/create-session route is NOT accessible in production (NODE_ENV guard)"
     ]
   },
@@ -82,11 +82,11 @@
       "E2E: validates empty org name"
     ],
     "needs_deeper_qa": [
-      "Full flow: Google OAuth \u2192 first login \u2192 onboarding \u2192 create org \u2192 dashboard",
-      "Slug collision handling \u2014 if org name produces duplicate slug, suffix is appended",
-      "Concurrent org creation by same user \u2014 race condition on membership",
-      "User with existing org visits /onboarding \u2014 should redirect to /dashboard",
-      "Org name with only special characters \u2014 slug would be empty, should return error"
+      "Full flow: Google OAuth → first login → onboarding → create org → dashboard",
+      "Slug collision handling — if org name produces duplicate slug, suffix is appended",
+      "Concurrent org creation by same user — race condition on membership",
+      "User with existing org visits /onboarding — should redirect to /dashboard",
+      "Org name with only special characters — slug would be empty, should return error"
     ]
   },
   {
@@ -110,11 +110,11 @@
     ],
     "needs_deeper_qa": [
       "Full create+list+delete flow with real authenticated session",
-      "API key validation in API middleware \u2014 keys work for authenticating API requests",
-      "Only admin role can create/delete keys \u2014 viewer/editor should get 403",
+      "API key validation in API middleware — keys work for authenticating API requests",
+      "Only admin role can create/delete keys — viewer/editor should get 403",
       "Concurrent key creation by multiple users in same org",
-      "Key prefix collision \u2014 extremely unlikely but no unique constraint on keyPrefix",
-      "Copy to clipboard on the 'shown once' modal \u2014 requires HTTPS or localhost"
+      "Key prefix collision — extremely unlikely but no unique constraint on keyPrefix",
+      "Copy to clipboard on the 'shown once' modal — requires HTTPS or localhost"
     ]
   },
   {
@@ -135,12 +135,12 @@
     ],
     "needs_deeper_qa": [
       "Sidebar collapse animation and state persistence across navigations",
-      "Org switcher dropdown \u2014 creating new org from dropdown",
+      "Org switcher dropdown — creating new org from dropdown",
       "Profile menu logout actually clears session and redirects",
-      "Theme switcher (System/Light/Dark) \u2014 currently visual only, no state management",
-      "Mobile responsiveness \u2014 sidebar should collapse on small screens",
-      "Settings layout shares same shell \u2014 verify settings pages show sidebar",
-      "Products pages layout shares same shell \u2014 verify products pages show sidebar",
+      "Theme switcher (System/Light/Dark) — currently visual only, no state management",
+      "Mobile responsiveness — sidebar should collapse on small screens",
+      "Settings layout shares same shell — verify settings pages show sidebar",
+      "Products pages layout shares same shell — verify products pages show sidebar",
       "Trial banner dismiss persists (currently resets on page reload)"
     ]
   },
@@ -261,6 +261,40 @@
       "Markdown line numbers — scroll sync between gutter and textarea",
       "Large document performance — visual editor with 500+ lines",
       "MDX component rendering in visual mode — Card, Note, Tab components"
+    ]
+  },
+  {
+    "feature_id": "feature-004",
+    "tests_written": [
+      "parseMdxToHtml converts headings with slugified IDs",
+      "parseMdxToHtml converts bold, italic, inline code, links, images",
+      "parseMdxToHtml converts code blocks with language labels",
+      "parseMdxToHtml converts lists, blockquotes, horizontal rules, tables",
+      "extractComponentBlocks extracts Note, Warning, Tip, Card, Steps, Tabs, Accordion, CodeGroup, Frame",
+      "extractComponentBlocks handles CardGroup with nested Cards",
+      "extractComponentBlocks handles self-closing components",
+      "renderComponentBlock renders all callout types with correct styling",
+      "renderComponentBlock renders Cards with title, icon, href",
+      "renderComponentBlock renders Steps with numbered steps",
+      "renderComponentBlock renders Tabs with tab switching",
+      "renderComponentBlock renders Accordion with details/summary",
+      "renderComponentBlock renders CodeGroup with tabbed code blocks",
+      "buildDocsNav builds navigation groups from flat page list",
+      "resolvePageFromSlug resolves pages by slug including nested paths",
+      "docs site page renders with sidebar, content, TOC, pagination",
+      "docs API returns project and published pages"
+    ],
+    "needs_deeper_qa": [
+      "Visual rendering of MDX components matches Mintlify screenshots closely",
+      "Tab switching interactivity works correctly in browser",
+      "Code copy button works with clipboard API",
+      "TOC scroll spy highlights correctly when scrolling",
+      "Accordion open/close animation is smooth",
+      "Nested components (CardGroup > Card, AccordionGroup > Accordion) render correctly",
+      "Long content pages with many headings generate correct TOC",
+      "Dark mode colors match Mintlify design system exactly",
+      "Pagination prev/next links navigate correctly between pages",
+      "Docs site 404 page for non-existent subdomain/slug"
     ]
   }
 ]
