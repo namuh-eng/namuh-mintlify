@@ -171,5 +171,36 @@
       "Sidebar project selector — shows list of projects, active project highlighted",
       "New project page — full form submission and redirect to dashboard"
     ]
+  },
+  {
+    "feature_id": "onboard-001",
+    "tests_written": [
+      "step 1: validates org name (empty, too short, valid)",
+      "step 2: GitHub step is skippable",
+      "step 3: validates project name (empty, too short, valid)",
+      "step 3: generates subdomain from org + project slug",
+      "step 3: slugifies project name correctly",
+      "wizard has 4 steps in correct order: org, github, project, success",
+      "progress indicator has labels for all 4 steps",
+      "progress percentage computed correctly per step",
+      "back/forward navigation bounds checking",
+      "E2E: step 1 shows org creation form with Continue button",
+      "E2E: progress indicator shows all 4 step labels",
+      "E2E: validates empty org name on step 1",
+      "E2E: step 2 shows GitHub connection with skip option",
+      "E2E: step 3 shows project creation after skipping GitHub",
+      "E2E: validates empty project name on step 3",
+      "E2E: full wizard flow org → skip GitHub → project → success",
+      "E2E: back button navigates to previous step"
+    ],
+    "needs_deeper_qa": [
+      "Full wizard flow with real Google OAuth session — end-to-end from login to dashboard",
+      "GitHub repository URL validation — currently accepts any URL, needs GitHub-specific check",
+      "Subdomain preview live update as user types project name",
+      "Step 2 Connect repository button with actual GitHub repo URL — verify it's stored on project",
+      "Wizard state lost on page refresh — user must restart from step 1",
+      "Race condition: rapid clicking Continue creates duplicate orgs",
+      "Org/project created but wizard fails at later step — orphaned records"
+    ]
   }
 ]

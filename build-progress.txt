@@ -280,3 +280,37 @@ Date: 2026-04-08
 - Project selector in sidebar dropdown lists all org projects with active checkmark
 - Settings General matches Mintlify screenshot: "Project name" + "Deployment name" fields with save button
 - DashboardShell now directly queries DB instead of using getUserOrg helper (needs projects in same query scope)
+
+## Iteration 8 — onboard-001: Onboarding Wizard
+Date: 2026-04-08
+
+### What was built
+- Transformed single-step org creation page into 4-step onboarding wizard at `/onboarding`
+- Step 1: Create organization — name input with validation, creates org via POST /api/orgs
+- Step 2: Connect GitHub — optional repository URL input with Skip option, stores URL for project creation
+- Step 3: Create project — name input with validation, subdomain preview (live as user types), creates project via POST /api/projects
+- Step 4: Success screen — shows created project subdomain, "Go to dashboard" button
+- Progress indicator with numbered circles, step labels, and connecting lines showing completion state
+- Back button navigation on steps 2 and 3
+- Loading spinners during API calls
+- Form validation at each step using existing validators (validateOrgName, validateProjectName)
+
+### Test results
+- 20 new unit tests (onboarding-wizard.test.ts) — all passing
+- 8 new E2E tests (onboarding.spec.ts) — rewritten for wizard flow, QA will verify
+- 164 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/app/onboarding/page.tsx — rewritten, multi-step wizard with 4 steps
+- tests/onboarding-wizard.test.ts — new, 20 unit tests for wizard step logic
+- tests/e2e/onboarding.spec.ts — rewritten, 8 E2E tests for wizard flow
+
+### Decisions
+- Reused existing validators (validateOrgName, validateProjectName) and API routes (POST /api/orgs, POST /api/projects) — no new API routes needed
+- GitHub step stores repo URL locally and passes it to project creation — no separate GitHub connection API
+- Progress indicator uses emerald green for completed steps, matching Mintlify brand
+- Subdomain preview shown live on step 3 using generateSubdomain + slugifyProject
+- Wizard state is client-side only — refreshing the page restarts the wizard
+- Used lucide-react GitBranch icon for GitHub step (no GitHub logo icon in lucide-react)
+- Back navigation preserves previously entered data (state not cleared)
