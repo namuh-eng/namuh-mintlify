@@ -38,10 +38,79 @@
   color: #f9fafb;
 }
 
+.docs-topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .docs-topbar-right {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* Ask AI button */
+.docs-topbar-ask-ai {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #9ca3af;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.docs-topbar-ask-ai:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e5e7eb;
+}
+
+/* Support + text links */
+.docs-topbar-link {
+  font-size: 13px;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.docs-topbar-link:hover {
+  color: #e5e7eb;
+}
+
+/* Icon links (GitHub) */
+.docs-topbar-icon-link {
+  display: flex;
+  align-items: center;
+  color: #9ca3af;
+  transition: color 0.15s;
+}
+
+.docs-topbar-icon-link:hover {
+  color: #e5e7eb;
+}
+
+/* Dashboard button (green) */
+.docs-topbar-dashboard-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: #16a34a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.docs-topbar-dashboard-btn:hover {
+  background: #15803d;
 }
 
 .docs-search-btn {
@@ -1059,6 +1128,19 @@
   .docs-search-btn kbd {
     display: none;
   }
+
+  .docs-topbar-ask-ai-text {
+    display: none;
+  }
+
+  .docs-topbar-link {
+    display: none;
+  }
+
+  .docs-topbar-dashboard-btn {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
 }
 
 /* ── Light Theme ──────────────────────────────────────────────────────────── */
@@ -1105,6 +1187,33 @@
 [data-theme="light"] .docs-theme-toggle:hover {
   color: #374151;
   border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .docs-topbar-ask-ai {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  color: #6b7280;
+}
+
+[data-theme="light"] .docs-topbar-ask-ai:hover {
+  color: #374151;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .docs-topbar-link {
+  color: #6b7280;
+}
+
+[data-theme="light"] .docs-topbar-link:hover {
+  color: #374151;
+}
+
+[data-theme="light"] .docs-topbar-icon-link {
+  color: #6b7280;
+}
+
+[data-theme="light"] .docs-topbar-icon-link:hover {
+  color: #374151;
 }
 
 [data-theme="light"] .docs-sidebar {

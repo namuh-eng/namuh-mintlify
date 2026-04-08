@@ -102,7 +102,11 @@ export default async function DocsPage({ params }: DocsPageProps) {
 
   return (
     <div className="docs-layout">
-      <DocsTopbar projectName={project.name} subdomain={subdomain} />
+      <DocsTopbar
+        projectName={project.name}
+        subdomain={subdomain}
+        settings={project.settings as Record<string, unknown>}
+      />
 
       <SearchModal pages={searchablePages} subdomain={subdomain} />
       <MobileSidebar
