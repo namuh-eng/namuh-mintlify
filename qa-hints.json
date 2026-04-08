@@ -1081,5 +1081,23 @@
       "Concurrent domain updates — race condition if two users save simultaneously",
       "Edge case: domain already used by another project"
     ]
+  },
+  {
+    "feature_id": "feature-014d",
+    "tests_written": [
+      "SOCIAL_LINK_TYPES defines x/github/linkedin with labels and aria labels",
+      "getFooterSettings extracts footer from project settings",
+      "getValidSocialLinks filters invalid/empty links",
+      "getBrandName falls back from settings to projectName to Mintlify",
+      "getBrandUrl defaults to / when not set",
+      "getPoweredByTooltip generates correct tooltip text"
+    ],
+    "needs_deeper_qa": [
+      "Visual check: footer centered below pagination on real docs page",
+      "Tooltip positioning on small viewports — may overflow",
+      "Social icons match expected brand icons (X, GitHub, LinkedIn)",
+      "Light theme footer styling — colors, borders, tooltip shadow",
+      "Footer with 0 social links — only powered-by should show"
+    ]
   }
 ]

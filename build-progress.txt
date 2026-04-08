@@ -1757,3 +1757,38 @@ Date: 2026-04-09
 - CNAME target format: {subdomain}.mintlify-hosting.app
 - Validation rejects protocols, paths, spaces, single-label domains, and domains > 253 chars
 - Empty string for customDomain clears the domain (removes configuration)
+
+## Iteration 35 — feature-014d: Docs Site Footer
+Date: 2026-04-09
+
+### What was built
+- Footer utility library (`src/lib/docs-footer.ts`) with FooterSettings/FooterSocialLink types, getFooterSettings, getValidSocialLinks (filters empty/invalid URLs and unknown types), getBrandName (cascade: settings > projectName > "Mintlify"), getBrandUrl (defaults to "/"), getPoweredByTooltip
+- DocsFooter client component (`src/components/docs/docs-footer.tsx`) with:
+  - Social icon links (X/Twitter, GitHub, LinkedIn) — each as SVG icon, opens in new tab with noopener
+  - "Powered by {brand}" text link with hover tooltip showing "This documentation is built and hosted on {brand}"
+  - Social links section hidden when no valid links configured
+  - data-testid attributes for E2E testability
+- CSS styles in globals.css: centered footer layout, social icon hover states, powered-by link, tooltip positioning, full light theme overrides
+- Integrated into docs page after DocsPagination component
+- Footer settings read from project.settings.footer JSON field
+
+### Test results
+- 20 new unit tests (docs-footer.test.ts) — all passing
+- 5 new E2E tests (docs-footer.spec.ts) — written, QA will verify
+- 942 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/docs-footer.ts — new, footer utilities and types
+- src/components/docs/docs-footer.tsx — new, DocsFooter component with social icons + powered-by
+- src/app/docs/[subdomain]/[...slug]/page.tsx — updated, imports and renders DocsFooter
+- src/app/globals.css — updated, added footer CSS + light theme overrides
+- tests/docs-footer.test.ts — new, 20 unit tests
+- tests/e2e/docs-footer.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Footer placed after DocsPagination inside docs-main (not full-width) — matches content column width
+- Social icons are inline SVGs (not icon library) — consistent with topbar pattern, no external deps
+- Tooltip uses hover state (not a separate tooltip library) — lightweight, sufficient for single tooltip
+- Footer settings at project.settings.footer — extensible for future customization (e.g. custom links)
+- Brand name fallback: settings.brandName > projectName > "Mintlify" — always shows something meaningful
