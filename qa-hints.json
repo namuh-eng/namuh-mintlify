@@ -1235,5 +1235,28 @@
       "Profile image update not implemented (user table has image field)",
       "Concurrent save + toggle race condition"
     ]
+  },
+  {
+    "feature_id": "settings-006",
+    "tests_written": [
+      "validateDeleteReason rejects empty, short, non-string, over-limit reasons",
+      "validateDeleteReason accepts valid reasons and trims whitespace",
+      "validateDeleteProjectRequest requires projectId and reason",
+      "validateDeleteOrgRequest requires orgId and reason",
+      "UI canDelete logic requires min reason length + exact name confirmation",
+      "Confirmation text is case-sensitive",
+      "E2E: page loads with heading, both sections visible",
+      "E2E: delete button disabled without reason, enabled with reason",
+      "E2E: confirmation dialog opens/closes, requires name typing"
+    ],
+    "needs_deeper_qa": [
+      "Actual DELETE /api/orgs/[id] — requires real org + admin session",
+      "Actual DELETE /api/projects/[id] with reason body — project deletion flow",
+      "Redirect to /dashboard after project deletion",
+      "Redirect to /login after org deletion",
+      "Cascade delete verification — all child data removed",
+      "Non-admin users should see 403 on delete attempts",
+      "Last project deletion edge case (prevented by existing API logic)"
+    ]
   }
 ]

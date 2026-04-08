@@ -2024,3 +2024,33 @@ Date: 2026-04-09
 - Created separate `user_preferences` table rather than modifying Better Auth's user table
 - Email notifications toggle uses optimistic update with rollback on failure
 - GitHub authorize button is UI-only — actual OAuth flow deferred to GitHub app integration feature
+
+## Iteration 43 — settings-006: Danger Zone
+Date: 2026-04-09
+
+### What was built
+- Danger zone settings page (`src/app/settings/advanced/danger/page.tsx`) — replaced placeholder with full implementation
+- Two destructive action sections: Delete deployment (project) and Delete organization
+- Each section has warning text, reason textarea, and red delete button (disabled until reason >= 3 chars)
+- Confirmation dialogs require typing the exact name (case-sensitive) before deletion proceeds
+- Organization section has prominent CRITICAL ACTION warning banner
+- DELETE /api/orgs/[id] API route — admin-only, requires reason (3-1000 chars), cascading deletes
+- Redirects: project deletion → /dashboard, org deletion → /login
+
+### Test results
+- 19 new unit tests (danger-zone.test.ts) — validation helpers + UI behavior logic
+- 8 new E2E tests (danger-zone.spec.ts) — page render, sections, button states, dialog flow
+- 1087 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/app/settings/advanced/danger/page.tsx — replaced placeholder with full danger zone UI
+- src/app/api/orgs/[id]/route.ts — new, DELETE handler for org deletion
+- tests/danger-zone.test.ts — new, 19 unit tests
+- tests/e2e/danger-zone.spec.ts — new, 8 E2E tests
+
+### Decisions
+- Used existing nav path `/settings/advanced/danger` (already registered in settings-nav.ts)
+- Reused existing DELETE /api/projects/[id] for deployment deletion (adds reason in body)
+- Confirmation requires exact case-sensitive name match — standard destructive action UX pattern
+- Reason field enforces 3-1000 character limits both client-side and server-side
