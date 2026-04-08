@@ -4,7 +4,7 @@ const url = process.env.DATABASE_URL ?? "";
 const needsSsl = process.env.DB_SSL === "true";
 
 export default defineConfig({
-  schema: "./src/lib/db/schema.ts",
+  schema: ["./src/lib/db/schema.ts", "./src/lib/db/auth-schema.ts"],
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {

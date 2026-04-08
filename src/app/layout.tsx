@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Resend Clone",
-  description: "Email API for developers",
+  title: "Mintlify Clone",
+  description: "AI-native documentation platform",
 };
 
 export default function RootLayout({
