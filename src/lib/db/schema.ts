@@ -423,6 +423,39 @@ export const workflows = pgTable(
   (table) => [t.index("workflow_project_idx").on(table.projectId)],
 );
 
+// ── GitHub Connections ────────────────────────────────────────────────────────
+
+export const githubConnections = pgTable(
+  "github_connections",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    orgId: t
+      .uuid("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    installationId: t.varchar("installation_id", { length: 64 }).notNull(),
+    repos: t
+      .jsonb()
+      .$type<
+        Array<{
+          fullName: string;
+          branch: string;
+          permissions: string;
+        }>
+      >()
+      .default([]),
+    autoUpdateEnabled: t.boolean("auto_update_enabled").default(true).notNull(),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    t.index("github_conn_org_idx").on(table.orgId),
+    t.uniqueIndex("github_conn_installation_idx").on(table.installationId),
+  ],
+);
+
 // ── Audit Logs ─────────────────────────────────────────────────────────────────
 
 export const auditLogs = pgTable(
