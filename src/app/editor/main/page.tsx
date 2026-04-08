@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfigsPanel } from "@/components/editor/configs-panel";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
 import { MarkdownEditor } from "@/components/editor/markdown-editor";
 import { PageSettingsPanel } from "@/components/editor/page-settings-panel";
@@ -27,6 +28,7 @@ import {
   Folder,
   FolderOpen,
   Plus,
+  Settings2,
   Trash2,
   X,
 } from "lucide-react";
@@ -53,7 +55,7 @@ interface PageListItem {
   updatedAt: string;
 }
 
-type ActiveTab = "navigation" | "files";
+type ActiveTab = "navigation" | "files" | "configurations";
 
 // ── File Tree Node Component ─────────────────────────────────────────────
 
@@ -549,89 +551,114 @@ export default function EditorPage() {
             >
               Files
             </button>
-          </div>
-
-          {/* Panel header with Add button */}
-          <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {activeTab === "navigation" ? "Navigation" : "File Explorer"}
-            </span>
             <button
               type="button"
-              onClick={() => setShowCreateModal(true)}
-              className="p-1 rounded hover:bg-white/[0.06] text-gray-400 hover:text-white transition-colors"
-              aria-label="Add new page"
-              data-testid="add-page-btn"
+              onClick={() => setActiveTab("configurations")}
+              data-testid="configs-tab"
+              className={clsx(
+                "flex-1 px-2 py-2.5 text-xs font-medium transition-colors flex items-center justify-center gap-1",
+                activeTab === "configurations"
+                  ? "text-white border-b-2 border-emerald-500"
+                  : "text-gray-500 hover:text-gray-300",
+              )}
             >
-              <Plus size={16} />
+              <Settings2 size={12} />
+              Config
             </button>
           </div>
 
-          {/* Tree / File list */}
-          <div className="flex-1 overflow-y-auto px-1 py-1">
-            {activeTab === "navigation" ? (
-              tree.length > 0 ? (
-                <div data-testid="page-tree">
-                  {tree.map((node) => (
-                    <TreeNodeItem
-                      key={node.path}
-                      node={node}
-                      depth={0}
-                      selectedPageId={selectedPageId}
-                      onSelectPage={setSelectedPageId}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="px-3 py-8 text-center text-sm text-gray-600">
-                  No pages yet.{" "}
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(true)}
-                    className="text-emerald-500 hover:underline"
-                  >
-                    Add new
-                  </button>
-                </div>
-              )
-            ) : (
-              <div data-testid="file-list">
-                {pages.map((page) => (
-                  <button
-                    type="button"
-                    key={page.id}
-                    onClick={() => setSelectedPageId(page.id)}
-                    className={clsx(
-                      "flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded-md transition-colors",
-                      selectedPageId === page.id
-                        ? "bg-emerald-600/20 text-emerald-400"
-                        : "text-gray-400 hover:bg-white/[0.06] hover:text-gray-200",
+          {activeTab === "configurations" ? (
+            <div className="flex-1 overflow-y-auto">
+              <ConfigsPanel
+                projectId={projectId}
+                onClose={() => setActiveTab("navigation")}
+              />
+            </div>
+          ) : (
+            <>
+              {/* Panel header with Add button */}
+              <div className="flex items-center justify-between px-3 py-2">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {activeTab === "navigation" ? "Navigation" : "File Explorer"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(true)}
+                  className="p-1 rounded hover:bg-white/[0.06] text-gray-400 hover:text-white transition-colors"
+                  aria-label="Add new page"
+                  data-testid="add-page-btn"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+
+              {/* Tree / File list */}
+              <div className="flex-1 overflow-y-auto px-1 py-1">
+                {activeTab === "navigation" ? (
+                  tree.length > 0 ? (
+                    <div data-testid="page-tree">
+                      {tree.map((node) => (
+                        <TreeNodeItem
+                          key={node.path}
+                          node={node}
+                          depth={0}
+                          selectedPageId={selectedPageId}
+                          onSelectPage={setSelectedPageId}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="px-3 py-8 text-center text-sm text-gray-600">
+                      No pages yet.{" "}
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateModal(true)}
+                        className="text-emerald-500 hover:underline"
+                      >
+                        Add new
+                      </button>
+                    </div>
+                  )
+                ) : (
+                  <div data-testid="file-list">
+                    {pages.map((page) => (
+                      <button
+                        type="button"
+                        key={page.id}
+                        onClick={() => setSelectedPageId(page.id)}
+                        className={clsx(
+                          "flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded-md transition-colors",
+                          selectedPageId === page.id
+                            ? "bg-emerald-600/20 text-emerald-400"
+                            : "text-gray-400 hover:bg-white/[0.06] hover:text-gray-200",
+                        )}
+                      >
+                        <File size={14} className="shrink-0 text-gray-500" />
+                        <span className="truncate">{page.path}</span>
+                      </button>
+                    ))}
+                    {pages.length === 0 && (
+                      <div className="px-3 py-8 text-center text-sm text-gray-600">
+                        No files yet.
+                      </div>
                     )}
-                  >
-                    <File size={14} className="shrink-0 text-gray-500" />
-                    <span className="truncate">{page.path}</span>
-                  </button>
-                ))}
-                {pages.length === 0 && (
-                  <div className="px-3 py-8 text-center text-sm text-gray-600">
-                    No files yet.
                   </div>
                 )}
               </div>
-            )}
-          </div>
 
-          {/* Add new link at bottom */}
-          <div className="border-t border-white/[0.08] p-2">
-            <button
-              type="button"
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 w-full px-2 py-1.5 text-sm text-gray-500 hover:bg-white/[0.06] hover:text-gray-300 rounded-md transition-colors"
-            >
-              <Plus size={14} />
-              <span>Add new</span>
-            </button>
-          </div>
+              {/* Add new link at bottom */}
+              <div className="border-t border-white/[0.08] p-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-2 w-full px-2 py-1.5 text-sm text-gray-500 hover:bg-white/[0.06] hover:text-gray-300 rounded-md transition-colors"
+                >
+                  <Plus size={14} />
+                  <span>Add new</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Center: Editor content */}
