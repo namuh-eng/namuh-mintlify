@@ -923,3 +923,33 @@ Date: 2026-04-09
 - More actions dropdown uses click-outside pattern with useRef for closing
 - Anchor click uses smooth scroll + replaceState for clean URL hash updates without page jump
 - SVG link icon encoded as data URI in CSS to avoid extra network requests
+
+## Iteration 15 — feature-014c: Docs Site TOC (Table of Contents)
+Date: 2026-04-09
+
+### What was built
+- Enhanced `DocsToc` component to filter entries to H2 and H3 headings only (per feature spec)
+- Added smooth scroll on TOC link click via `scrollIntoView({ behavior: "smooth", block: "start" })`
+- URL hash updated on click via `history.pushState` without page jump
+- Active heading highlighted via IntersectionObserver with rootMargin "-20% 0% -80% 0%"
+- Padding adjusted: H2 at 8px, H3 at 20px (uses `(level - 2) * 12 + 8`)
+- Added `data-testid` attributes for E2E testability (docs-toc, toc-link-{id})
+- Sticky positioning at top: 88px (below topbar + breadcrumb)
+- Hidden on viewports ≤1024px via CSS media query
+
+### Test results
+- 11 new unit tests (docs-toc.test.ts) — all passing
+- 5 new E2E tests (docs-toc.spec.ts) — written, QA will verify
+- 493 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/components/docs/docs-toc.tsx — enhanced: H2/H3 filter, smooth scroll, data-testid, padding fix
+- tests/docs-toc.test.ts — new, 11 unit tests
+- tests/e2e/docs-toc.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Filtered to H2/H3 in the component (not in extractToc) so the extraction function remains general-purpose for other consumers
+- Smooth scroll uses native scrollIntoView API — no polyfill needed for modern browsers
+- pushState used instead of replaceState to preserve back-button navigation through anchors
+- Padding relative to level-2 baseline (H2=8px, H3=20px) for clean visual hierarchy

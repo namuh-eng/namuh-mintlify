@@ -572,5 +572,32 @@
       "Light theme styling for page action buttons and dropdown",
       "Mobile responsive layout of title row with action buttons"
     ]
+  },
+  {
+    "feature_id": "feature-014c",
+    "tests_written": [
+      "extracts H2 and H3 headings from markdown",
+      "generates correct slug IDs for headings",
+      "returns empty for content with no headings",
+      "handles empty content",
+      "preserves heading level numbers correctly",
+      "filters to only H2 and H3 entries",
+      "H3 indented relative to H2",
+      "TOC entries have required fields",
+      "IDs are URL-safe anchors",
+      "anchor href format matches heading IDs",
+      "E2E: TOC visible on docs pages",
+      "E2E: TOC contains only H2/H3 headings",
+      "E2E: clicking TOC link scrolls to heading",
+      "E2E: TOC has sticky positioning",
+      "E2E: TOC hidden on narrow viewports"
+    ],
+    "needs_deeper_qa": [
+      "Scroll spy active state tracking with IntersectionObserver — rootMargin thresholds may need tuning",
+      "Smooth scroll behavior across browsers (Safari quirks)",
+      "TOC with very many headings — overflow scroll behavior",
+      "URL hash update on click — back button behavior",
+      "Light theme TOC styling contrast"
+    ]
   }
 ]
