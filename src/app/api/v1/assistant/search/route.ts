@@ -16,7 +16,7 @@ import {
 } from "@/lib/assistant";
 import { db } from "@/lib/db";
 import { pages, projects } from "@/lib/db/schema";
-import { and, eq, ilike, or, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, or } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -24,6 +24,12 @@ export async function POST(request: NextRequest) {
   const auth = await authenticateApiKey(request.headers.get("authorization"));
   if (!auth) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+  if (auth.type !== "assistant") {
+    return NextResponse.json(
+      { message: "Forbidden — assistant API key required" },
+      { status: 403 },
+    );
   }
 
   // ── Parse body ──────────────────────────────────────────────────────────────
@@ -63,7 +69,7 @@ export async function POST(request: NextRequest) {
     .from(pages)
     .where(
       and(
-        sql`${pages.projectId} = ANY(${projectIds})`,
+        inArray(pages.projectId, projectIds),
         eq(pages.isPublished, true),
         or(
           ilike(pages.title, pattern),

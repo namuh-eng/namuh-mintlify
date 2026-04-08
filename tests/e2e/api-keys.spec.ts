@@ -21,7 +21,11 @@ test.describe("API Keys Settings Page", () => {
     // Key should be displayed once
     await expect(page.getByText(/^mint_[a-f0-9]+$/)).toBeVisible();
     // Copy hint should be visible
-    await expect(page.getByText(/copy.*key|key.*shown.*once/i)).toBeVisible();
+    await expect(
+      page.getByText(
+        "Copy this key now. It will only be shown once and cannot be retrieved later.",
+      ),
+    ).toBeVisible();
   });
 
   test("can create an assistant API key", async ({ page }) => {
@@ -49,8 +53,26 @@ test.describe("API Keys Settings Page", () => {
     await page.getByRole("button", { name: /Done|Close/i }).click();
 
     // Should see the key in the list with masked prefix
-    await expect(page.getByText("Visible Key")).toBeVisible();
-    await expect(page.getByText(/mint_[a-f0-9]{4}\.\.\.\./)).toBeVisible();
+    const row = page.getByRole("row").filter({
+      has: page.getByText("Visible Key"),
+    });
+    await expect(row.getByText("Visible Key")).toBeVisible();
+    await expect(row.getByText(/mint_[a-f0-9]{8}\.\.\.\./)).toBeVisible();
+  });
+
+  test("shows last-used metadata for stored keys", async ({ page }) => {
+    await page.goto("/settings/organization/api-keys");
+    await page.getByRole("button", { name: /Create Admin API Key/i }).click();
+    await page.getByLabel("Key name").fill("Last Used Key");
+    await page.getByRole("button", { name: /^Create$/i }).click();
+    await page.getByRole("button", { name: /Done|Close/i }).click();
+
+    await expect(page.getByRole("columnheader", { name: "Last used" })).toHaveCount(2);
+
+    const row = page.getByRole("row").filter({
+      has: page.getByText("Last Used Key"),
+    });
+    await expect(row.getByText("Never")).toBeVisible();
   });
 
   test("can delete an API key", async ({ page }) => {
@@ -73,5 +95,63 @@ test.describe("API Keys Settings Page", () => {
 
     // Key should be gone
     await expect(page.getByText("Delete Me Key")).not.toBeVisible();
+  });
+
+  test("assistant routes require assistant keys and accept real assistant auth", async ({
+    page,
+    request,
+  }) => {
+    await page.goto("/settings/organization/api-keys");
+
+    const adminCreation = await page.evaluate(async () => {
+      const response = await fetch(`${window.location.origin}/api/api-keys`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Assistant Auth Admin", type: "admin" }),
+      });
+
+      return {
+        status: response.status,
+        body: await response.json(),
+      };
+    });
+    expect(adminCreation.status).toBe(201);
+
+    const assistantCreation = await page.evaluate(async () => {
+      const response = await fetch(`${window.location.origin}/api/api-keys`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Assistant Auth Assistant",
+          type: "assistant",
+        }),
+      });
+
+      return {
+        status: response.status,
+        body: await response.json(),
+      };
+    });
+    expect(assistantCreation.status).toBe(201);
+
+    const assistantResponse = await request.post("/api/v1/assistant/search", {
+      headers: {
+        Authorization: `Bearer ${assistantCreation.body.rawKey}`,
+      },
+      data: { query: "getting started", pageSize: 3 },
+    });
+    expect(assistantResponse.status()).toBe(200);
+    await expect(assistantResponse.json()).resolves.toEqual(expect.any(Array));
+
+    const adminResponse = await request.post("/api/v1/assistant/search", {
+      headers: {
+        Authorization: `Bearer ${adminCreation.body.rawKey}`,
+      },
+      data: { query: "getting started", pageSize: 3 },
+    });
+    expect(adminResponse.status()).toBe(403);
+    await expect(adminResponse.json()).resolves.toEqual({
+      message: "Forbidden — assistant API key required",
+    });
   });
 });
