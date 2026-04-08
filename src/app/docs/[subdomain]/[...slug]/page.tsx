@@ -1,7 +1,10 @@
 import { DocsPagination } from "@/components/docs/docs-pagination";
 import { DocsSidebar } from "@/components/docs/docs-sidebar";
 import { DocsToc } from "@/components/docs/docs-toc";
+import { DocsTopbar } from "@/components/docs/docs-topbar";
 import { MdxContent } from "@/components/docs/mdx-content";
+import { MobileSidebar } from "@/components/docs/mobile-nav";
+import { SearchModal } from "@/components/docs/search-modal";
 import { db } from "@/lib/db";
 import { pages, projects } from "@/lib/db/schema";
 import { extractToc } from "@/lib/editor";
@@ -91,57 +94,23 @@ export default async function DocsPage({ params }: DocsPageProps) {
       .join(" "),
   );
 
+  // Build searchable pages list
+  const searchablePages = allPages.map((p) => ({
+    path: p.path,
+    title: p.title,
+  }));
+
   return (
     <div className="docs-layout">
-      <div className="docs-topbar">
-        <div className="docs-topbar-left">
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="Logo"
-          >
-            <title>Logo</title>
-            <path d="M12 2L2 7l10 5 10-5-10-5Z" fill="#16A34A" opacity="0.8" />
-            <path
-              d="M2 17l10 5 10-5"
-              stroke="#16A34A"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M2 12l10 5 10-5"
-              stroke="#16A34A"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="docs-topbar-title">{project.name}</span>
-        </div>
-        <div className="docs-topbar-right">
-          <button type="button" className="docs-search-btn">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-label="Search"
-            >
-              <title>Search</title>
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <span>Search...</span>
-            <kbd>&#8984;K</kbd>
-          </button>
-        </div>
-      </div>
+      <DocsTopbar projectName={project.name} subdomain={subdomain} />
+
+      <SearchModal pages={searchablePages} subdomain={subdomain} />
+      <MobileSidebar
+        nav={nav}
+        activePath={targetPath}
+        subdomain={subdomain}
+        projectName={project.name}
+      />
 
       <div className="docs-body">
         <DocsSidebar
