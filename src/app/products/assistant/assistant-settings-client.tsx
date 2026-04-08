@@ -607,32 +607,43 @@ export function AssistantSettingsClient({
                 </div>
               </div>
 
-              {/* Stats grid */}
-              <div className="grid grid-cols-2 gap-y-3 text-sm">
-                <span className="text-gray-400">Message Range</span>
-                <span className="text-white text-right">
-                  0 - {usage.messageLimit}
-                </span>
+              {/* Stats grid — two-column side-by-side layout */}
+              <div className="grid grid-cols-2 gap-x-8 text-sm">
+                {/* Left column */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Message Range</span>
+                    <span className="text-white">0 - {usage.messageLimit}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Messages Remaining</span>
+                    <span className="text-white">
+                      {Math.max(0, usage.messageLimit - usage.messagesUsed)}
+                    </span>
+                  </div>
+                </div>
 
-                <span className="text-gray-400">Messages Remaining</span>
-                <span className="text-white text-right">
-                  {Math.max(0, usage.messageLimit - usage.messagesUsed)}
-                </span>
-
-                <span className="text-gray-400">Next Billing</span>
-                <span className="text-white text-right">
-                  {formatBillingDate(usage.billingCycleEnd)}
-                </span>
-
-                <span className="text-gray-400">Monthly Price</span>
-                <span className="text-white text-right">
-                  {formatCents(usage.monthlyPrice)}/mo
-                </span>
-
-                <span className="text-gray-400">Overage Spend</span>
-                <span className="text-white text-right">
-                  +{formatCents(usage.overageSpend)}
-                </span>
+                {/* Right column */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Next Billing</span>
+                    <span className="text-white">
+                      {formatBillingDate(usage.billingCycleEnd)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Monthly Price</span>
+                    <span className="text-white">
+                      {formatCents(usage.monthlyPrice)}/mo
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Overage Spend</span>
+                    <span className="text-white">
+                      +{formatCents(usage.overageSpend)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
