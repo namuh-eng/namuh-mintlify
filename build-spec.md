@@ -1,6 +1,6 @@
 # Build Spec — Mintlify Clone (namuh-mintlify)
 
-**Status: PARTIAL** — Docs extraction complete. UI inspection pending.
+**Status: PARTIAL** — Docs extraction complete. Site map complete. Feature deep-dives pending.
 
 ## Product Overview
 
@@ -26,46 +26,66 @@ Mintlify is an AI-native documentation platform. Users create organizations, con
 - **Container Registry**: AWS ECR
 - **Dev Port**: 3015
 
-## Site Map (partial — needs UI inspection)
+## Site Map (verified via UI inspection 2026-04-08)
 
-### Dashboard (dashboard.mintlify.com equivalent)
-- `/` — Overview (deployment status, site URL, quick links)
-- `/editor` — Web editor (MDX editing, live preview, comments)
-- `/editor/[page]` — Edit specific page
-- `/settings` — Project settings
-  - `/settings/general` — Project name, description
-  - `/settings/navigation` — Sidebar/nav config
-  - `/settings/appearance` — Theme, colors, logo, fonts
-  - `/settings/custom-domain` — Custom domain setup
-  - `/settings/integrations` — Analytics, support integrations
-  - `/settings/seo` — Meta tags, indexing
-- `/settings/organization` — Org settings
-  - `/settings/organization/members` — Team management, invite
-  - `/settings/organization/roles` — RBAC
-  - `/settings/organization/api-keys` — API key management
-  - `/settings/organization/sso` — SSO config (Enterprise)
-  - `/settings/organization/audit-logs` — Activity logs (Enterprise)
-  - `/settings/organization/security-contact` — Security contact
-- `/analytics` — Analytics dashboard
-  - Page views, visitors, searches, feedback, assistant conversations
-- `/products/agent` — Agent management
-  - Agent settings, Slack/Linear/Notion connections
-  - Agent jobs list, job details
-- `/products/assistant` — Assistant config
-- `/products/authentication` — Docs site auth config
-- `/products/addons` — CI checks, add-ons
-- `/deployments` — Deployment history
+### URL Pattern
+Dashboard: `dashboard.mintlify.com/{orgSlug}/{projectSlug}/...`
+Docs site: `{projectSlug}.mintlify.app/...`
+
+### Dashboard Layout
+- **Sidebar** (~240px): Org/project switcher, main nav, "Agents" group, collapse button
+- **Top bar**: Search (Cmd+K), notifications bell, chat button, profile avatar
+- **Right panel**: Notifications inbox (slide-over)
+- **Trial banner**: Shown for free-tier orgs
+
+### Dashboard Pages
+| Page | URL | Type |
+|------|-----|------|
+| Home | `/{org}/{project}` | Overview — greeting, project card, deployment status, activity table (Live/Previews), domain, "Things to do" |
+| Editor | `/{org}/{project}/editor/main` | Rich MDX editor — Navigation/Files tree, visual+markdown modes, toolbar, live preview, publish, comments, branch selector |
+| Analytics | `/{org}/{project}/analytics/v2` | Charts + tables — sub-tabs: Visitors, Views, Assistant, Searches, Feedback; Humans/Agents toggle, date range picker |
+
+### Settings Pages
+| Page | URL |
+|------|-----|
+| Domain setup | `/settings/deployment/custom-domain` |
+| Authentication | `/settings/deployment/authentication` |
+| Add-ons | `/settings/deployment/addons` |
+| General | `/settings/deployment/general` |
+| Git settings | `/settings/deployment/git-settings` |
+| GitHub app | `/settings/organization/github-app` |
+| API keys | `/settings/organization/api-keys` |
+| Members | `/settings/organization/members` |
+| Billing | `/settings/organization/billing` |
+| My profile | `/settings/account` |
+| Exports | `/settings/deployment/export-docs` |
+| Danger zone | `/settings/organization/danger-zone` |
+
+### Agents (Products) Pages
+| Page | URL | Description |
+|------|-----|-------------|
+| Agent | `/products/agent` | Enable agent, Slack + GitHub app connections, repo permissions |
+| Assistant | `/products/assistant` | Usage stats, status toggle, deflection config, search domains, starter questions; General/Billing tabs |
+| Workflows | `/products/workflows` | Template picker: Changelog, API docs sync, Draft docs, Translations, Style guide, Typo check, Broken links, SEO audit, Custom |
+| MCP | `/products/mcp` | Hosted MCP server URL, available tools (search + get_page) |
 
 ### Auth Pages
-- `/login` — Login (Google OAuth, email)
+- `/login` — Login (Google OAuth)
 - `/signup` — Signup → org creation → onboarding
 - `/onboarding` — GitHub connection, project setup
 
-### Docs Site (*.mintlify.app equivalent)
-- `/` — Docs homepage
-- `/[...slug]` — Rendered MDX pages
-- `/api-playground` — Interactive API testing
-- Built-in search + AI assistant widget
+### Docs Site (*.mintlify.app)
+- **Top bar**: Logo, search, "Ask AI" button, Support, GitHub, Dashboard link, dark mode toggle
+- **Tab nav**: Guides | API reference (configurable)
+- **Left sidebar**: Navigation tree from docs.json
+- **Center content**: MDX-rendered pages with components
+- **Right panel**: AI Assistant chat panel (slide-over)
+- **Pages**: `/` (index), `/[...slug]` (any doc page)
+
+### Global UI Elements
+- **Profile menu**: Your profile, Invite members, Billing, Theme (System/Light/Dark), Documentation, Contact support, Log Out
+- **Org switcher**: Current org dropdown + "New documentation" option
+- **Notifications inbox**: Slide-over with filter, empty state
 
 ## Design System (partial — needs screenshot inspection)
 
@@ -81,10 +101,11 @@ Mintlify is an AI-native documentation platform. Users create organizations, con
 - Body: Inter or similar
 - Code: JetBrains Mono or Fira Code
 
-### Layout
-- Dashboard: Sidebar navigation + main content area
-- Docs site: Left sidebar nav + center content + optional right panel
-- Editor: Sidebar file tree + editor + live preview split
+### Layout (verified)
+- **Dashboard**: Fixed sidebar (~240px) + scrollable main content. Sidebar has org switcher, nav groups, collapse button. Top bar has search, notifications, chat, profile.
+- **Editor**: 3-panel — left (file tree/nav ~280px, resizable up to 550px), center (visual/markdown editor), right (comments/TOC)
+- **Docs site**: 3-column — left sidebar nav (~260px), center content (~720px), right panel (AI assistant/TOC ~240px)
+- **Settings**: Left sidebar (settings nav groups) + main content area
 
 ### Shared Components (to be built)
 - Sidebar navigation with groups, pages, icons

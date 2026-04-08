@@ -27,3 +27,43 @@
 - Iteration 2: Navigate the Mintlify dashboard UI with Ever CLI to map the complete site structure
 - Take screenshots of all dashboard pages
 - Deep-dive into each feature area in subsequent iterations
+
+## Iteration 2 — Site Map (2026-04-08)
+
+### What was done:
+- Navigated to dashboard.mintlify.com (was on marketing site initially)
+- Mapped complete site structure including all navigation items and sub-pages
+- Captured URLs for every page using JS eval (18 unique dashboard URLs)
+- Explored sidebar navigation: Home, Editor, Analytics, Settings (12 sub-pages), Agents (4 sub-pages: Agent, Assistant, Workflows, MCP)
+- Visited and inspected each main section:
+  - **Home**: Greeting, project card, deployment activity table, domain section
+  - **Editor**: Navigation/Files tree, visual+markdown modes, toolbar, publish, comments, branch selector
+  - **Analytics**: Sub-tabs (Visitors/Views/Assistant/Searches/Feedback), Humans/Agents toggle, date range picker
+  - **Settings**: 12 sub-pages across 5 groups (Project Settings, Deployment, Security & Access, Workspace, Advanced)
+  - **Agent**: Enable agent, Slack/GitHub connections
+  - **Assistant**: Usage stats, status toggle, deflection, search domains, starter questions
+  - **Workflows**: 9 template cards (Changelog, API docs sync, Draft docs, Translations, Style guide, Typo check, Broken links, SEO audit, Custom)
+  - **MCP**: Hosted MCP server URL, available tools
+- Visited docs site (namuh.mintlify.app): 3-column layout, AI assistant chat panel, search, navigation
+- Checked profile menu: Your profile, Invite members, Billing, Theme toggle, Log Out
+- Checked org switcher: Current org + "New documentation" option
+- Took 8 screenshots: dashboard-home, settings-domain-setup, editor-overview, analytics-overview, agent-page, assistant-page, workflows-page, mcp-page, docs-site-home
+- Created sitemap.md with complete site structure
+- Updated build-spec.md with verified site map, layout details, URL patterns
+
+### Key findings:
+- URL pattern: `dashboard.mintlify.com/{orgSlug}/{projectSlug}/...`
+- Settings pages split into 5 groups with 12 sub-pages total
+- "Agents" group contains 4 products: Agent, Assistant, Workflows, MCP
+- Editor has dual mode: Navigation tree view + Files view, Visual + Markdown editing modes
+- Analytics has 5 sub-tabs and a Humans/Agents traffic toggle
+- Workflows page is a template picker (9 templates)
+- MCP page shows hosted MCP server with 2 tools (search + get_page)
+- Docs site has AI assistant chat panel integrated
+- Trial banner shown for free-tier users
+- Notifications inbox is a right-side slide-over panel
+
+### What's next:
+- Iteration 3+: Deep-dive into each page/feature one at a time
+- Start with Home page (detailed interaction testing)
+- Then Editor, Analytics, Settings sub-pages, Agents sub-pages
