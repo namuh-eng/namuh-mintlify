@@ -126,7 +126,7 @@ export function TopBar({ userName, userEmail, userImage }: TopBarProps) {
               </DropdownMenu.Item>
               <DropdownMenu.Item asChild>
                 <Link
-                  href="/settings/organization/members"
+                  href="/settings/workspace/members"
                   className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-300 hover:bg-white/[0.06] hover:text-white cursor-pointer outline-none"
                 >
                   <UserPlus size={14} />
@@ -135,7 +135,7 @@ export function TopBar({ userName, userEmail, userImage }: TopBarProps) {
               </DropdownMenu.Item>
               <DropdownMenu.Item asChild>
                 <Link
-                  href="/settings/organization/billing"
+                  href="/settings"
                   className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-300 hover:bg-white/[0.06] hover:text-white cursor-pointer outline-none"
                 >
                   <CreditCard size={14} />

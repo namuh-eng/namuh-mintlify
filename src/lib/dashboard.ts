@@ -38,7 +38,7 @@ export function buildQuickActionCards(projectId: string): QuickActionCard[] {
       id: "settings",
       title: "Settings",
       description: "Configure project settings",
-      href: "/settings/deployment/general",
+      href: "/settings/project/general",
       icon: "settings",
     },
   ];

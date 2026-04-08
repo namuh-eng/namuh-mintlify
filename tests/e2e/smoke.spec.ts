@@ -29,7 +29,7 @@ test.describe("Smoke tests", () => {
   });
 
   test("settings page loads (authenticated)", async ({ page }) => {
-    const response = await page.goto("/settings/organization/api-keys");
+    const response = await page.goto("/settings/security/api-keys");
     expect(response?.status()).toBe(200);
   });
 

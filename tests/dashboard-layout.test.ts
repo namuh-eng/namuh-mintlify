@@ -119,8 +119,8 @@ describe("Dashboard Layout — Sidebar Collapse", () => {
 describe("Dashboard Layout — User Menu Items", () => {
   const menuItems = [
     { label: "Your profile", href: "/settings/account" },
-    { label: "Invite members", href: "/settings/organization/members" },
-    { label: "Billing", href: "/settings/organization/billing" },
+    { label: "Invite members", href: "/settings/workspace/members" },
+    { label: "Billing", href: "/settings" },
     { label: "Documentation", href: "/docs", external: true },
     { label: "Contact support", href: "mailto:support@example.com" },
     { label: "Log Out", action: "logout" },

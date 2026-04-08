@@ -36,11 +36,11 @@ describe("buildQuickActionCards", () => {
     expect(analytics?.icon).toBe("bar-chart");
   });
 
-  it("includes settings card linking to /settings/deployment/general", () => {
+  it("includes settings card linking to /settings/project/general", () => {
     const cards = buildQuickActionCards("proj-123");
     const settings = cards.find((c) => c.id === "settings");
     expect(settings).toBeDefined();
-    expect(settings?.href).toBe("/settings/deployment/general");
+    expect(settings?.href).toBe("/settings/project/general");
     expect(settings?.icon).toBe("settings");
   });
 

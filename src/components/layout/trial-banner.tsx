@@ -23,7 +23,7 @@ export function TrialBanner() {
       </p>
       <div className="flex items-center gap-3 shrink-0">
         <Link
-          href="/settings/organization/billing"
+          href="/settings"
           className="text-amber-200 hover:text-amber-100 font-medium underline underline-offset-2"
         >
           Explore upgrades
