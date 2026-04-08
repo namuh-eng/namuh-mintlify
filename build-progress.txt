@@ -237,3 +237,46 @@ Date: 2026-04-08
 - Used Radix DropdownMenu for profile menu — accessible keyboard navigation built-in
 - Used lucide-react for all icons — consistent with Mintlify's icon style
 - Dark theme colors: bg-[#0f0f0f] for sidebar/topbar, bg-[#1a1a1a] for elevated surfaces, emerald accents
+
+## Iteration 7 — feature-001: Project CRUD
+Date: 2026-04-08
+
+### What was built
+- Project utility library (`src/lib/projects.ts`) with slugifyProject, generateSubdomain, validateProjectName, validateCreateProjectRequest, validateUpdateProjectRequest
+- API route `GET /api/projects` — list all projects for the user's org
+- API route `POST /api/projects` — create a new project with auto-generated slug and subdomain (admin/editor role required)
+- API route `GET /api/projects/[id]` — get single project details (org-scoped)
+- API route `PUT /api/projects/[id]` — update project name, subdomain, repoUrl, customDomain (admin/editor role required)
+- API route `DELETE /api/projects/[id]` — delete a project (admin only, cannot delete last project in org)
+- Settings General page (`/settings/deployment/general`) — edit project name and deployment name (subdomain), matches Mintlify dark theme
+- New project page (`/dashboard/new-project`) — create documentation project with name and optional GitHub repo URL
+- Updated sidebar (`sidebar.tsx`) — project selector in org switcher dropdown, shows list of projects with active indicator, "New documentation" link
+- Updated DashboardShell to fetch projects from DB and pass to layout
+- Updated DashboardLayoutClient to accept and forward projects prop
+
+### Test results
+- 22 new unit tests (projects.test.ts) — all passing
+- 5 new E2E tests (projects.spec.ts) — written, QA will verify
+- 144 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/projects.ts — new, project slug/validation/subdomain utilities
+- src/app/api/projects/route.ts — new, GET + POST project API routes
+- src/app/api/projects/[id]/route.ts — new, GET + PUT + DELETE project API routes
+- src/app/settings/deployment/general/page.tsx — new, settings general page
+- src/app/dashboard/new-project/page.tsx — new, create project page
+- src/components/layout/sidebar.tsx — updated, project selector in dropdown
+- src/components/layout/dashboard-layout-client.tsx — updated, accepts projects prop
+- src/components/layout/dashboard-shell.tsx — updated, fetches projects from DB
+- tests/projects.test.ts — new, 22 unit tests
+- tests/e2e/projects.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Subdomain = `{orgSlug}-{projectSlug}` unless org and project slug are the same (then just project slug)
+- Slug collision within org: appends base-36 timestamp suffix (same pattern as org slug collision)
+- Admin/editor can create and update projects; only admin can delete
+- Cannot delete the org's last project (prevents orphaned org)
+- Project selector in sidebar dropdown lists all org projects with active checkmark
+- Settings General matches Mintlify screenshot: "Project name" + "Deployment name" fields with save button
+- DashboardShell now directly queries DB instead of using getUserOrg helper (needs projects in same query scope)

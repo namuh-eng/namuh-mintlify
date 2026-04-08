@@ -143,5 +143,33 @@
       "Products pages layout shares same shell \u2014 verify products pages show sidebar",
       "Trial banner dismiss persists (currently resets on page reload)"
     ]
+  },
+  {
+    "feature_id": "feature-001",
+    "tests_written": [
+      "slugifyProject converts name to lowercase kebab-case",
+      "slugifyProject strips special chars, collapses hyphens, trims edges",
+      "generateSubdomain combines org slug + project slug",
+      "generateSubdomain returns just project slug when same as org slug",
+      "validateProjectName accepts valid names, rejects empty/short/long",
+      "validateCreateProjectRequest validates name, optional repoUrl",
+      "validateCreateProjectRequest rejects missing name, invalid URL",
+      "validateUpdateProjectRequest validates name, subdomain, repoUrl fields",
+      "validateUpdateProjectRequest rejects empty body, invalid subdomain chars",
+      "E2E: GET /api/projects returns projects array",
+      "E2E: POST /api/projects creates a project with slug and subdomain",
+      "E2E: POST /api/projects rejects empty name",
+      "E2E: settings general page loads",
+      "E2E: new project page loads"
+    ],
+    "needs_deeper_qa": [
+      "Full create project flow with authenticated session — requires Google OAuth login",
+      "Settings General page save — verify PUT /api/projects/:id updates name and subdomain in DB",
+      "Project slug collision within same org — timestamp suffix appended",
+      "DELETE /api/projects/:id — cannot delete last project (400 response)",
+      "DELETE /api/projects/:id — only admin role allowed (editor/viewer get 403)",
+      "Sidebar project selector — shows list of projects, active project highlighted",
+      "New project page — full form submission and redirect to dashboard"
+    ]
   }
 ]

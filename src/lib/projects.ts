@@ -1,0 +1,133 @@
+/**
+ * Project utilities — slug generation, subdomain, validation, request parsing.
+ */
+
+/** Convert a project name to a URL-safe slug (lowercase, hyphens, no special chars). */
+export function slugifyProject(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/** Generate a subdomain from org slug + project slug. */
+export function generateSubdomain(
+  orgSlug: string,
+  projectSlug: string,
+): string {
+  if (orgSlug === projectSlug) return projectSlug;
+  return `${orgSlug}-${projectSlug}`;
+}
+
+/** Validate a project name. Returns error string or null if valid. */
+export function validateProjectName(name: string): string | null {
+  const trimmed = name.trim();
+  if (!trimmed) return "Project name is required";
+  if (trimmed.length < 2) return "Name must be at least 2 characters";
+  if (trimmed.length > 128) return "Name must be at most 128 characters";
+  return null;
+}
+
+/** Validate a subdomain string. */
+export function validateSubdomain(subdomain: string): string | null {
+  if (!/^[a-z0-9-]+$/.test(subdomain)) {
+    return "Subdomain must contain only lowercase letters, numbers, and hyphens";
+  }
+  return null;
+}
+
+/** Check if a string is a valid URL. */
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Validate a create-project request body. */
+export function validateCreateProjectRequest(
+  body: unknown,
+):
+  | { valid: true; name: string; repoUrl?: string }
+  | { valid: false; error: string } {
+  if (
+    !body ||
+    typeof body !== "object" ||
+    !("name" in body) ||
+    typeof (body as Record<string, unknown>).name !== "string"
+  ) {
+    return { valid: false, error: "Project name is required" };
+  }
+
+  const name = ((body as Record<string, unknown>).name as string).trim();
+  const error = validateProjectName(name);
+  if (error) return { valid: false, error };
+
+  const repoUrl = (body as Record<string, unknown>).repoUrl;
+  if (repoUrl !== undefined && repoUrl !== null && repoUrl !== "") {
+    if (typeof repoUrl !== "string" || !isValidUrl(repoUrl)) {
+      return { valid: false, error: "Invalid repository URL" };
+    }
+    return { valid: true, name, repoUrl };
+  }
+
+  return { valid: true, name };
+}
+
+/** Validate an update-project request body. */
+export function validateUpdateProjectRequest(
+  body: unknown,
+):
+  | { valid: true; fields: Record<string, string> }
+  | { valid: false; error: string } {
+  if (!body || typeof body !== "object") {
+    return { valid: false, error: "No fields to update" };
+  }
+
+  const raw = body as Record<string, unknown>;
+  const fields: Record<string, string> = {};
+
+  if (raw.name !== undefined) {
+    if (typeof raw.name !== "string") {
+      return { valid: false, error: "Name must be a string" };
+    }
+    const nameError = validateProjectName(raw.name);
+    if (nameError) return { valid: false, error: nameError };
+    fields.name = raw.name.trim();
+  }
+
+  if (raw.subdomain !== undefined) {
+    if (typeof raw.subdomain !== "string") {
+      return { valid: false, error: "Subdomain must be a string" };
+    }
+    const subdomainError = validateSubdomain(raw.subdomain);
+    if (subdomainError) return { valid: false, error: subdomainError };
+    fields.subdomain = raw.subdomain;
+  }
+
+  if (raw.repoUrl !== undefined) {
+    if (typeof raw.repoUrl !== "string") {
+      return { valid: false, error: "Repository URL must be a string" };
+    }
+    if (raw.repoUrl !== "" && !isValidUrl(raw.repoUrl)) {
+      return { valid: false, error: "Invalid repository URL" };
+    }
+    fields.repoUrl = raw.repoUrl;
+  }
+
+  if (raw.customDomain !== undefined) {
+    if (typeof raw.customDomain !== "string") {
+      return { valid: false, error: "Custom domain must be a string" };
+    }
+    fields.customDomain = raw.customDomain;
+  }
+
+  if (Object.keys(fields).length === 0) {
+    return { valid: false, error: "No fields to update" };
+  }
+
+  return { valid: true, fields };
+}

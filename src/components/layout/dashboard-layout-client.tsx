@@ -5,6 +5,12 @@ import { Sidebar } from "./sidebar";
 import { TopBar } from "./top-bar";
 import { TrialBanner } from "./trial-banner";
 
+interface ProjectInfo {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
   orgName: string;
@@ -12,6 +18,7 @@ interface DashboardLayoutProps {
   userName?: string;
   userEmail?: string;
   userImage?: string;
+  projects?: ProjectInfo[];
 }
 
 export function DashboardLayoutClient({
@@ -21,6 +28,7 @@ export function DashboardLayoutClient({
   userName,
   userEmail,
   userImage,
+  projects = [],
 }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -31,6 +39,7 @@ export function DashboardLayoutClient({
         orgSlug={orgSlug}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        projects={projects}
       />
       <div className="flex flex-col flex-1 min-w-0">
         <TrialBanner />
