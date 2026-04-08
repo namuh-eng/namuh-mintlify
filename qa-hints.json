@@ -711,5 +711,34 @@
       "Performance with large number of search events (1000+)",
       "Chart rendering with many data points (90 day range)"
     ]
+  },
+  {
+    "feature_id": "feature-007e",
+    "tests_written": [
+      "feedbackSubTabs has 3 sub-tabs in correct order",
+      "feedbackStatuses defines 4 statuses with labels and colors",
+      "parseFeedbackStatus returns valid status or defaults to pending",
+      "formatFeedbackDate formats ISO date string",
+      "truncateFeedback truncates long text with ellipsis",
+      "filterByStatus filters by single and multiple statuses",
+      "filterByStatus hides abusive entries when showAbusive is false",
+      "filterBySubTab filters by contextual and code_snippet types",
+      "feedbackToCsv generates CSV with header and data rows",
+      "ratingsToCsv generates CSV with ratings data",
+      "E2E: renders 3 feedback sub-tabs",
+      "E2E: shows empty state or ratings table",
+      "E2E: filters button opens filter dialog",
+      "E2E: sub-tab switching updates active state",
+      "E2E: agent mode shows agent empty state"
+    ],
+    "needs_deeper_qa": [
+      "Bulk actions — select all / individual checkboxes work but no batch actions implemented yet",
+      "Filter dialog outside-click-to-close not implemented — uses Close button",
+      "Status badges use JSONB data.status field — verify with real feedback events",
+      "Abusive flag filtering — only testable with real flagged entries",
+      "CSV export with special characters in comment text",
+      "Very long page paths truncation in tables",
+      "Concurrent filter + sub-tab interaction edge cases"
+    ]
   }
 ]

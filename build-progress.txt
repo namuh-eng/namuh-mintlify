@@ -1134,3 +1134,46 @@ Date: 2026-04-09
 - Case-insensitive query grouping via LOWER() in SQL for better deduplication
 - Empty state text matches PRD spec exactly
 - Followed Views tab pattern closely for consistency
+
+## Iteration 20 — feature-007e: Analytics Feedback Tab
+Date: 2026-04-09
+
+### What was built
+- Analytics feedback utility library (`src/lib/analytics-feedback.ts`) with types (FeedbackEntry, RatingsByPage, FeedbackStatus, FeedbackSubTab), sub-tab configuration (Ratings by page, Detailed feedback, Code snippets), status definitions with labels/colors (Pending/In Progress/Resolved/Dismissed), filter helpers (filterByStatus, filterBySubTab), CSV export (feedbackToCsv, ratingsToCsv, downloadCsv), formatting (formatFeedbackDate, truncateFeedback, parseFeedbackStatus)
+- API route `GET /api/analytics/feedback?projectId=&from=&to=` — returns individual feedback entries with status/type/abusive flag, aggregated ratingsByPage (helpful/notHelpful/total per page), and totalCount. Auth + org membership verification. Feedback type stored in data.feedbackType JSONB field
+- Feedback tab page (`/analytics/feedback`) — full implementation with:
+  - 3 sub-tabs: Ratings by page (table with helpful/not_helpful/total columns), Detailed feedback (type=contextual entries table), Code snippets (type=code_snippet entries table)
+  - Filters button → dialog with 4 Status checkboxes (Pending/In Progress/Resolved/Dismissed) + Show abusive toggle
+  - Active filters indicator (emerald highlight + count badge on Filters button)
+  - Feedback entries table: checkbox, feedback text, status badge (colored), page path, date
+  - Select all checkbox in header + individual row checkboxes for bulk select
+  - Bulk actions bar showing count of selected items
+  - Ratings table: page path, helpful (emerald), not helpful (red), total columns
+  - CSV export button for both ratings and feedback entries
+  - Loading skeleton state with animated pulse placeholders
+  - Agent mode empty state: "No feedback activity"
+  - Empty state: "No feedback yet" when no data
+
+### Test results
+- 22 new unit tests (analytics-feedback.test.ts) — all passing
+- 5 new E2E tests (analytics-feedback.spec.ts) — written, QA will verify
+- 622 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/analytics-feedback.ts — new, feedback types, sub-tabs, statuses, filters, CSV export
+- src/app/api/analytics/feedback/route.ts — new, internal feedback analytics API endpoint
+- src/app/analytics/feedback/page.tsx — new, feedback tab with sub-tabs, filters, bulk select
+- tests/analytics-feedback.test.ts — new, 22 unit tests
+- tests/e2e/analytics-feedback.spec.ts — new, 5 E2E tests
+- prd.json — feature-007e build_pass set to true
+- qa-hints.json — added feature-007e QA hints
+
+### Decisions
+- Sub-tabs switch content client-side (no URL param for type) — simpler than separate routes, matches Assistant tab pattern
+- Status stored in JSONB data.status field on analytics_events — avoids schema migration for a new column
+- Feedback type stored in data.feedbackType — "contextual" for detailed feedback, "code_snippet" for code snippets, "rating" default
+- Ratings by page uses SQL FILTER (WHERE ...) aggregation for helpful/not_helpful counts — efficient single query
+- Filter dialog is positioned absolute from Filters button — no portal needed
+- Bulk select clears when switching sub-tabs — prevents stale selections across different entry sets
+- CSV export adapts to active sub-tab: ratings tab exports page aggregates, other tabs export filtered entries
