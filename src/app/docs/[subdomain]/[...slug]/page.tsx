@@ -28,6 +28,7 @@ import {
   mergeLanguagesConfig,
   parseLocaleFromSlug,
 } from "@/lib/i18n";
+import { KATEX_CSS_URL, renderLatex } from "@/lib/latex";
 import { buildDocsNav, renderMdxContent } from "@/lib/mdx-renderer";
 import {
   type VirtualApiPage,
@@ -402,6 +403,11 @@ export default async function DocsPage({ params }: DocsPageProps) {
     contentToRender = resolveVariables(contentToRender, variables);
     renderedHtml = renderMdxContent(contentToRender);
 
+    // Apply LaTeX rendering if enabled in project settings
+    if (docsConfig.contentFeatures.latex) {
+      renderedHtml = renderLatex(renderedHtml);
+    }
+
     // Check if this DB page also matches an OpenAPI endpoint
     const isApiReferencePage = pagePath.startsWith("api-reference");
     if (isApiReferencePage && spec) {
@@ -567,6 +573,9 @@ export default async function DocsPage({ params }: DocsPageProps) {
       </div>
 
       <ChatWidget subdomain={subdomain} currentPath={targetPath} />
+      {docsConfig.contentFeatures.latex && (
+        <link rel="stylesheet" href={KATEX_CSS_URL} crossOrigin="anonymous" />
+      )}
       <CustomCodeInjection
         customCSS={docsConfig.advanced.customCSS}
         customJS={docsConfig.advanced.customJS}
