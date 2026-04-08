@@ -214,3 +214,35 @@
 
 ### What's next:
 - Iteration 7: Agents sub-pages deep dive (Agent, Assistant, Workflows, MCP)
+
+## Iteration 7 — Agents Sub-Pages Deep Dive (2026-04-08)
+
+### What was done:
+- Navigated to all 4 Agents sub-pages and inspected each with Ever CLI
+- Tested interactive elements: toggle switches, trigger type radio buttons, repo selector dropdown, tab navigation
+- Took 6 screenshots across all Agents pages
+
+### Agents pages inspected:
+
+1. **Agent** (`/products/agent`): Enable Agent section (plan-gated, requires Pro). Agent settings: Slack workspace connection (Connected to "Engineering"). GitHub app: shows 3 connected repos (org/docs, org/api, org/sdk) with branch (main) and "All permissions". Linear Agent promo card in sidebar with "New" badge.
+
+2. **Assistant** (`/products/assistant`): Two tabs — General and Billing.
+   - **General**: Usage stats bar (monthly spend $0, renewal date, question counts). Status & Control (Active toggle). Response Handling (deflection toggle with email input + help button checkbox). Search Domains (domain list with add input). Starter Questions (toggle + /3 count).
+   - **Billing**: Usage & Credits Overview — progress bar (0% of 250 messages), message range, remaining, billing dates, overage spend.
+
+3. **Workflows** (`/products/workflows`): Template picker with 9 cards (Changelog, API docs sync, Draft feature docs, Translations, Enforce style guide, Typo check, Broken link detection, SEO & metadata audit, Custom workflow). Clicked Changelog template → workflow creation form with: Name input (pre-filled "Changelog"), Trigger type radio (PR merge shows repo selector dropdown, Schedule shows Daily/Weekly/Monthly/Custom + time picker), Prompt textarea (markdown supported), Settings (context repos toggle, auto-merge toggle default on), Notifications (Slack integration).
+
+4. **MCP** (`/products/mcp`): "Beta" badge. Hosted MCP server URL with copy button (`{project}.mintlify.app/mcp`). Available tools section: 2 tools auto-named from project slug — `search_mint_starter_kit` (search docs) and `get_page_mint_starter_kit` (get full page content).
+
+### Key findings:
+- Agent page is mostly a settings/connection page — the actual agent functionality (creating jobs, sending prompts) was already captured in feature-010
+- Assistant has a full configuration panel with usage metrics, deflection, search domains, and starter questions
+- Workflows system is powerful: 9 templates, two trigger types (PR merge + cron schedule), prompt-driven, auto-merge, Slack notifications
+- MCP server is auto-generated per project — tools are dynamically named from project slug
+- Multiple features are plan-gated: Agent (Pro), admin API keys (Pro), deflection add-ons (Pro/Custom)
+- Workflow trigger types have conditional UI: PR merge shows repo selector, schedule shows frequency + time
+- 7 new PRD entries added (feature-018 through feature-021)
+
+### What's next:
+- Iteration 8: Docs site deep dive — public-facing documentation site layout, navigation, components, search, AI assistant chat
+- Then: Final iteration — finalize build-spec.md with all sections complete

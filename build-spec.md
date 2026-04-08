@@ -1,6 +1,6 @@
 # Build Spec — Mintlify Clone (namuh-mintlify)
 
-**Status: PARTIAL** — Docs extraction complete. Site map complete. Feature deep-dives pending.
+**Status: PARTIAL** — Docs extraction complete. Site map complete. All dashboard pages inspected. Docs site deep dive pending.
 
 ## Product Overview
 
@@ -516,6 +516,111 @@ Each tab shows its metric count in a badge (e.g., "Visitors 7", "Views 13", "Fee
 | Deployment builds | Local build + Docker → ECR → deploy |
 | Search/AI | Postgres full-text search + OpenAI/Anthropic API |
 | Analytics | Postgres aggregation queries |
+
+### Agents Pages — COMPLETE
+**URL**: `/{org}/{project}/products/...`
+**Layout**: Same dashboard layout — sidebar nav + full-width main content area
+
+#### Agent Page (`/products/agent`):
+- **Header**: "Agents / Agent"
+- **Enable the Agent section**:
+  - Description: "Enable the agent to keep your docs up-to-date by leveraging AI"
+  - "Upgrade plan" button (plan-gated — requires Pro)
+  - "Learn more" link → docs
+- **Agent settings section**:
+  - "Connect your Slack workspace" — shows connection status
+    - Connected state: "Agent is connected to {workspaceName}" (e.g., "Engineering")
+  - **GitHub app section**:
+    - "Enable repository access" heading
+    - "Configure GitHub app" link
+    - Connected state: Lists connected repos with org/repo, branch, and permissions
+      - Each repo shows: `{org}/{repo}` + `{branch}` + "All permissions"
+    - "Install the GitHub app" button when not connected
+- **Linear Agent promo** (sidebar card):
+  - "New" badge, "Linear Agent" title
+  - "Manage your docs directly from your Linear workspace"
+  - "Configure Linear" link → same Agent page
+  - "Close" button to dismiss
+
+#### Assistant Page (`/products/assistant`):
+- **Header**: "Agents / Assistant"
+- **Usage stats bar** (top):
+  - "Current monthly spend" — "$0.00"
+  - "May 5 next renewal" date
+  - Stats: Total questions, Answered properly, Not Answered (with counts/percentages)
+  - "View more" button → navigates to analytics assistant tab
+- **Tab navigation**: "General" | "Billing"
+
+**General tab**:
+- **Status & Control section**:
+  - "Assistant Status" — Active/Inactive toggle switch (currently Active/checked)
+  - "Enable or disable your assistant"
+- **Response Handling section**:
+  - "Assistant Deflection" toggle with "Recommended" badge
+    - When enabled: deflect unanswered questions to support
+    - Email input: `support@example.com` placeholder for deflection target
+    - "Show help button on AI chat" checkbox — display "Contact support" button
+  - "Save Changes" button
+  - "Add-ons only available for Pro and Custom plans" — "Upgrade Plan" button
+- **Search Domains section**:
+  - Toggle to enable/disable
+  - "Add new domain" with text input (`docs.mintlify.com` placeholder, disabled when plan-gated)
+  - "Add domain" button
+  - Domains list for AI assistant to search for context
+- **Starter questions section**:
+  - "Starter Questions /3" — shows count of configured questions
+  - Toggle switch (currently off) — enable/disable starter suggestions
+  - "Suggestions currently available for chat" — list of pre-configured questions
+
+**Billing tab**:
+- **Usage & Credits Overview**:
+  - Progress bar: "0% (0 of 250) messages used"
+  - Details: Used count, Overage Kick In threshold, Message Range (0-250), Messages Remaining (250)
+  - Next Billing date (May 5, 2026), Monthly Price, Overage Spend
+
+#### Workflows Page (`/products/workflows`):
+- **Header**: "Agents / Workflows" + "New workflow" link
+- **Template picker**: "What do you want to automate? Pick a workflow template to get started, or build a custom one from scratch."
+- **9 template cards** (clickable links):
+  1. **Changelog** — "Generate changelog entries from merged PRs and commit messages"
+  2. **API docs sync** — "Update API reference when OpenAPI spec or source code changes"
+  3. **Draft feature docs** — "Draft documentation for new features when code ships"
+  4. **Translations** — "Translate documentation into other languages when content changes"
+  5. **Enforce style guide** — "Use this to enforce consistent writing style and tone"
+  6. **Typo check** — "Scan docs for spelling errors and broken formatting"
+  7. **Broken link detection** — "Find and flag broken links across documentation"
+  8. **SEO & metadata audit** — "Check and fix page titles, descriptions, and OG metadata"
+  9. **Custom workflow** — "Build a workflow from scratch with your own configuration"
+
+**Workflow creation form** (after clicking a template):
+- **Breadcrumb**: Back arrow to template list
+- **"Create workflow"** heading + "Set up your trigger, instructions, and notifications"
+- **Name**: Text input (pre-filled from template, e.g., "Changelog"), placeholder "e.g. API docs sync"
+- **Trigger type**: Radio button group
+  - "On pull request merge" — "Runs when a pull request is merged"
+    - Shows: **Trigger repos** — "Repositories to watch for pull request merges." + repo selector dropdown ("Search or select a repository")
+  - "On schedule" — "Runs on a recurring schedule"
+    - Shows: **Schedule** — frequency buttons: Daily | Weekly | Monthly | Custom
+    - Time picker dropdown (e.g., "9:00 AM")
+    - Description: "Runs weekly on Mondays at 9:00 AM GMT+9"
+- **Prompt**: Large textarea, "Tell the agent what to do..." placeholder, "Supports markdown" note
+- **Settings**:
+  - "Additional context repos" toggle — "Repositories that the agent can reference during the workflow"
+  - "Auto-merge" toggle (default on) — "Automatically merge the PR when checks pass"
+- **Notifications**:
+  - Slack — "Send a Slack message when a workflow finishes" + "Install Slack App" button
+
+#### MCP Page (`/products/mcp`):
+- **Header**: "Agents / MCP" + "Beta" badge
+- **Hosted MCP server section**:
+  - "Access your MCP server and preview available tools"
+  - "Learn more" link → docs
+  - **Server URL**: Read-only input with "https://" prefix + `{project}.mintlify.app/mcp` + Copy button
+  - "Use the above URL to connect AI applications to your content"
+- **Available tools section**:
+  - "Tools exposed to connected AI clients"
+  - **search_{project_slug}**: "Search across the {project} knowledge base to find relevant information, code examples, API references, and guides. Use this tool when you need to answer questions about {project}, find specific documentation, understand how features work, or locate implementation details. The search returns contextual content with titles and direct links to the documentation pages. If you need the full content of a specific page, use the get_page tool with the page path from the search results."
+  - **get_page_{project_slug}**: "Retrieve the full content of a specific documentation page from {project} by its path. Use this tool when you already know the page path (e.g., from search results) and need the complete content of that page rather than just a snippet."
 
 ## SDK / DX (TypeScript only)
 
