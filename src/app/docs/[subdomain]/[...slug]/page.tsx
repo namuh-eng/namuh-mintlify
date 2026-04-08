@@ -29,6 +29,11 @@ import {
 } from "@/lib/openapi-parser";
 import { getGroupName } from "@/lib/page-chrome";
 import { buildPageMetadata } from "@/lib/seo";
+import {
+  buildVariablesMap,
+  resolveSnippets,
+  resolveVariables,
+} from "@/lib/snippets";
 import { and, eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -191,8 +196,24 @@ export default async function DocsPage({ params }: DocsPageProps) {
   }));
   const nav = buildDocsNav(navPages);
 
+  // Resolve snippets and variables before rendering
+  const snippetPages = allPages
+    .filter((p) => p.path.startsWith("snippets/"))
+    .map((p) => ({ path: p.path, content: p.content || "" }));
+
+  const projectVars = (docsConfig as unknown as Record<string, unknown>)
+    .variables as Record<string, string> | undefined;
+  const variables = buildVariablesMap(
+    currentPage.frontmatter as Record<string, unknown> | null,
+    projectVars,
+  );
+
+  let contentToRender = currentPage.content || "";
+  contentToRender = resolveSnippets(contentToRender, snippetPages);
+  contentToRender = resolveVariables(contentToRender, variables);
+
   // Render content
-  const renderedHtml = renderMdxContent(currentPage.content || "");
+  const renderedHtml = renderMdxContent(contentToRender);
 
   // Check if this is an API reference page and render playground
   const isApiReferencePage = targetPath.startsWith("api-reference");
