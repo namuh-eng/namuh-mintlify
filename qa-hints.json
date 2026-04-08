@@ -740,5 +740,29 @@
       "Very long page paths truncation in tables",
       "Concurrent filter + sub-tab interaction edge cases"
     ]
+  },
+  {
+    "feature_id": "feature-009",
+    "tests_written": [
+      "validateInviteRequest accepts valid email/role",
+      "validateInviteRequest defaults role to viewer",
+      "validateInviteRequest rejects missing/empty/invalid email",
+      "validateInviteRequest rejects invalid role",
+      "validateInviteRequest trims and lowercases email",
+      "validateRoleUpdate accepts/rejects roles",
+      "canManageRole admin-only permission check",
+      "formatMemberForResponse formats member data",
+      "E2E: members page navigation and table display",
+      "E2E: invite modal opens and validates",
+      "E2E: role badges visible",
+      "E2E: breadcrumb navigation"
+    ],
+    "needs_deeper_qa": [
+      "Invite flow with real second user account — only tested validation logic",
+      "Role change via dropdown — needs real multi-user scenario",
+      "Remove member confirmation + cascading effects on projects",
+      "Cannot change own role / cannot remove self guards",
+      "Edge case: inviting already-member email returns 409"
+    ]
   }
 ]

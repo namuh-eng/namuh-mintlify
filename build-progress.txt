@@ -1177,3 +1177,43 @@ Date: 2026-04-09
 - Filter dialog is positioned absolute from Filters button — no portal needed
 - Bulk select clears when switching sub-tabs — prevents stale selections across different entry sets
 - CSV export adapts to active sub-tab: ratings tab exports page aggregates, other tabs export filtered entries
+
+## Iteration 21 — feature-009: Team Management
+Date: 2026-04-09
+
+### What was built
+- Members utility library (`src/lib/members.ts`) with invite validation (email format, role check, trim/lowercase), role update validation, admin-only permission check (`canManageRole`), and response formatting
+- Members API routes:
+  - `GET /api/members` — lists all org members with user details (name, email, image) via join on Better Auth user table
+  - `POST /api/members` — invite user by email (must have existing account), validates email/role, checks for duplicates (409), admin-only
+  - `PATCH /api/members/[membershipId]/role` — update member role, admin-only, cannot change own role
+  - `DELETE /api/members/[membershipId]` — remove member, admin-only, cannot remove self
+- Members settings page (`/settings/organization/members`) with:
+  - Member table: avatar (image or initials fallback), name, email, role badge (colored: emerald=admin, blue=editor, gray=viewer), joined date, actions
+  - Invite modal: email input + role select dropdown, validates on submit, shows success/error messages
+  - Inline role editing: click "Edit role" → select dropdown with Save/Cancel
+  - Remove member: confirmation modal with member name, red delete button
+  - Member count display, breadcrumb navigation (Settings / Members)
+
+### Test results
+- 17 new unit tests (members.test.ts) — all passing
+- 5 new E2E tests (members.spec.ts) — written, QA will verify
+- 639 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/members.ts — new, validation + permission + formatting utilities
+- src/app/api/members/route.ts — new, GET list + POST invite
+- src/app/api/members/[membershipId]/route.ts — new, DELETE remove member
+- src/app/api/members/[membershipId]/role/route.ts — new, PATCH update role
+- src/app/settings/organization/members/page.tsx — new, members management UI
+- tests/members.test.ts — new, 17 unit tests
+- tests/e2e/members.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Members added by email lookup (must have existing account) — no email invite delivery system needed
+- Role changes admin-only — editors and viewers cannot modify team
+- Cannot change own role or remove self — prevents accidental lockout
+- User table joined via Better Auth's `user` table for name/email/image
+- Avatar shows profile image if available, initials fallback otherwise
+- Role badges color-coded: emerald (admin), blue (editor), gray (viewer)
