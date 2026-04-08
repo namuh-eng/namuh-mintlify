@@ -18,17 +18,17 @@ describe("auth middleware logic", () => {
     return PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
   }
 
-  function getRedirect(pathname: string, hasSession: boolean): string | null {
-    // Authenticated user on auth page → dashboard
-    if (hasSession && (pathname === "/login" || pathname === "/signup")) {
-      return "/dashboard";
-    }
-    // Unauthenticated user on protected route or onboarding → login
+  function getRedirect(
+    pathname: string,
+    hasSession: boolean,
+    search = "",
+  ): string | null {
+    // Unauthenticated user on protected route or onboarding → login with returnTo
     if (
       !hasSession &&
       (isProtectedPath(pathname) || pathname === "/onboarding")
     ) {
-      return "/login";
+      return `/login?returnTo=${encodeURIComponent(`${pathname}${search}`)}`;
     }
     return null;
   }
@@ -51,10 +51,18 @@ describe("auth middleware logic", () => {
   });
 
   it("redirects unauthenticated user from dashboard to login", () => {
-    expect(getRedirect("/dashboard", false)).toBe("/login");
-    expect(getRedirect("/dashboard/org/proj", false)).toBe("/login");
-    expect(getRedirect("/settings/general", false)).toBe("/login");
-    expect(getRedirect("/products/agent", false)).toBe("/login");
+    expect(getRedirect("/dashboard", false)).toBe(
+      "/login?returnTo=%2Fdashboard",
+    );
+    expect(getRedirect("/dashboard/org/proj", false)).toBe(
+      "/login?returnTo=%2Fdashboard%2Forg%2Fproj",
+    );
+    expect(getRedirect("/settings/general", false, "?tab=members")).toBe(
+      "/login?returnTo=%2Fsettings%2Fgeneral%3Ftab%3Dmembers",
+    );
+    expect(getRedirect("/products/agent", false)).toBe(
+      "/login?returnTo=%2Fproducts%2Fagent",
+    );
   });
 
   it("allows unauthenticated user to access public paths", () => {
@@ -63,9 +71,9 @@ describe("auth middleware logic", () => {
     expect(getRedirect("/api/auth/session", false)).toBeNull();
   });
 
-  it("redirects authenticated user away from login/signup to dashboard", () => {
-    expect(getRedirect("/login", true)).toBe("/dashboard");
-    expect(getRedirect("/signup", true)).toBe("/dashboard");
+  it("allows auth pages through middleware even when a cookie exists", () => {
+    expect(getRedirect("/login", true)).toBeNull();
+    expect(getRedirect("/signup", true)).toBeNull();
   });
 
   it("allows authenticated user to access protected paths", () => {
@@ -75,7 +83,9 @@ describe("auth middleware logic", () => {
   });
 
   it("redirects unauthenticated user from onboarding to login", () => {
-    expect(getRedirect("/onboarding", false)).toBe("/login");
+    expect(getRedirect("/onboarding", false)).toBe(
+      "/login?returnTo=%2Fonboarding",
+    );
   });
 
   it("allows authenticated user to access onboarding", () => {

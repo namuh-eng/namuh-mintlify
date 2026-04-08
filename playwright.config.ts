@@ -7,11 +7,11 @@ export default defineConfig({
   projects: [
     {
       name: "auth-setup",
-      testMatch: /auth\.setup\.ts/,
+      testMatch: /(^|\/)auth\.setup\.ts$/,
     },
     {
       name: "default",
-      testIgnore: /auth\.setup\.ts/,
+      testIgnore: [/(^|\/)auth\.setup\.ts$/, /(^|\/)auth\.spec\.ts$/],
       dependencies: ["auth-setup"],
       use: {
         storageState: "tests/e2e/.auth/user.json",
@@ -19,7 +19,7 @@ export default defineConfig({
     },
     {
       name: "unauthenticated",
-      testMatch: /auth\.spec\.ts/,
+      testMatch: /(^|\/)auth\.spec\.ts$/,
       // No storageState — tests run without session
     },
   ],
@@ -29,8 +29,8 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: {
-    command: "npm run dev",
+    command: "PLAYWRIGHT_TEST=true npm run dev",
     port: 3015,
-    reuseExistingServer: true,
+    reuseExistingServer: false,
   },
 });
