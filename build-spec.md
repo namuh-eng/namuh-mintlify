@@ -1,6 +1,6 @@
 # Build Spec — Mintlify Clone (namuh-mintlify)
 
-**Status: PARTIAL** — Docs extraction complete. Site map complete. All dashboard pages inspected. Docs site inspected. Final iteration pending to finalize spec.
+**Status: COMPLETE** — All pages inspected, all sections finalized.
 
 ## Product Overview
 
@@ -166,7 +166,7 @@ Docs site: `{projectSlug}.mintlify.app/...`
 - **Org switcher**: Current org dropdown + "New documentation" option
 - **Notifications inbox**: Slide-over with filter, empty state
 
-## Design System (partial — updated with Home page inspection)
+## Design System (COMPLETE)
 
 ### Colors (confirmed from dark mode UI)
 - Primary/Brand: Green (#0D9373 / similar — used for "Live" badge, success states, active nav items, checkmarks)
@@ -718,23 +718,128 @@ No SDK package needed — Mintlify's developer tool is the CLI (`mint`).
 - Assistant (create-message with streaming, search, get-page-content)
 - Analytics export (views, visitors, feedback, searches, conversations)
 
+## Core Features — What Makes This Product Valuable
+
+Mintlify's reason to exist is: **Write docs in MDX → get a beautiful, AI-powered docs site.**
+
+The 5 core features that define this product:
+1. **MDX Page Management** — CRUD pages with MDX content, frontmatter, navigation structure
+2. **MDX Renderer / Docs Site** — Render MDX to a beautiful public docs site with component library (Cards, Steps, Callouts, Code blocks, API reference)
+3. **Web Editor** — Visual + markdown MDX editing with live preview, file tree, page settings
+4. **Deployment System** — Trigger builds, track status, deployment history, preview branches
+5. **AI Assistant** — Chat widget on docs site that answers questions from indexed documentation
+
+Everything else (analytics, agent, workflows, MCP, settings, team management) is secondary.
+
 ## Build Order
 
-1. **P0: Infrastructure** — DB schema, S3 bucket, env config
-2. **P1: Auth** — Better Auth + Google OAuth, sessions, middleware
-3. **P1: Core API** — API key management, auth middleware for API routes
-4. **P2: Dashboard shell** — Layout, navigation, routing
-5. **P2: Project CRUD** — Create/manage documentation projects
-6. **P3: Docs renderer** — MDX → HTML with component library
-7. **P3: Web editor** — MDX editing with live preview
-8. **P3: Deployment system** — Git webhook → build → deploy
-9. **P4: AI Assistant** — Chat widget, search, content indexing
-10. **P4: Analytics** — Page views, visitors, searches, feedback
-11. **P5: Agent** — AI doc updater, PR creation
-12. **P5: Team management** — Invite, roles, permissions
-13. **P6: Integrations** — Analytics (GA4, etc.), support (Intercom)
-14. **P7: CLI** — `mint dev`, `mint build`
-15. **P8: Settings pages** — Theme, domain, navigation config
-16. **P9: Advanced features** — CI checks, SSO, audit logs, export
-17. **P10: Polish** — Onboarding flow, empty states, responsive design
-18. **Last: Deployment** — Docker build, ECR push, production deploy
+### Phase 1: Foundation (P0-P1)
+1. **infra-001** — Database schema (all tables with Drizzle ORM)
+2. **infra-002** — S3 bucket for file uploads
+3. **auth-001** — Better Auth + Google OAuth, session management, middleware
+4. **auth-002** — Organization creation, membership with RBAC
+5. **auth-003** — API key management (admin + assistant keys)
+
+### Phase 2: Core Shell (P2)
+6. **design-001** — Dashboard layout shell (sidebar, top bar, routing)
+7. **feature-001** — Project CRUD (create, configure, manage docs projects)
+8. **onboard-001** — Onboarding wizard (org → GitHub → project → first deploy)
+
+### Phase 3: Core Features (P3) — THE PRODUCT
+9. **feature-002** — Page management (CRUD MDX pages in project)
+10. **feature-004** — MDX renderer (parse MDX → HTML with component library)
+11. **feature-004a** — MDX component library (Cards, Steps, Callouts, Code blocks)
+12. **feature-014** — Docs site layout (sidebar nav, content area, TOC panel)
+13. **feature-014a** — Docs site top bar (logo, search, AI toggle, dark mode)
+14. **feature-003** — MDX editor (visual + markdown modes, toolbar, live preview)
+15. **feature-005** — Deployment system (trigger, status tracking, history)
+
+### Phase 4: Search & AI (P4)
+16. **feature-016** — Docs site full-text search (Cmd+K modal, Postgres FTS)
+17. **feature-008** — AI Assistant chat widget (streaming responses, citations)
+18. **feature-014b** — Docs site page chrome (breadcrumb, copy page, heading anchors, prev/next)
+19. **feature-014c** — Table of contents (auto-generated, sticky, scroll tracking)
+20. **feature-007** — Analytics layout shell (traffic toggle, date picker, tabs)
+21. **feature-007a** — Analytics Visitors tab (chart + tables)
+22. **feature-007b** — Analytics Views tab
+23. **api-001** — REST API: deployment endpoints
+24. **api-002** — REST API: assistant endpoints
+
+### Phase 5: Secondary Features (P5)
+25. **feature-015** — API playground (send requests from docs)
+26. **feature-015a** — API reference layout (method badges, params, response schema)
+27. **feature-009** — Team management (invite, roles, remove)
+28. **feature-018** — Agent settings page
+29. **feature-019** — Assistant settings page
+30. **feature-007c** — Analytics Assistant tab
+31. **feature-007d** — Analytics Searches tab
+32. **feature-007e** — Analytics Feedback tab
+33. **feature-010** — Agent management (jobs, PR creation)
+34. **api-003** — REST API: analytics export
+35. **api-004** — REST API: agent endpoints
+
+### Phase 6: Settings & Configuration (P6-P7)
+36. **settings-001** — Settings layout shell
+37. **feature-011** — Appearance settings (theme, logo, colors)
+38. **feature-012** — Navigation configuration (visual docs.json editor)
+39. **feature-020** — Workflows template picker
+40. **feature-020a** — Workflow creation form
+41. **feature-017** — Feedback widget on docs pages
+42. **feature-007f** — Analytics Agents mode
+43. **feature-021** — MCP server page
+44. **feature-013** — Custom domain configuration
+45. **settings-002** — General settings
+46. **settings-003** — Git settings
+47. **feature-014d** — Docs site footer
+
+### Phase 7: Polish & Advanced (P8-P9)
+48. **settings-004** — Add-ons settings
+49. **settings-005** — My profile settings
+50. **settings-006** — Danger zone (delete deployment/org)
+51. **feature-019a** — Assistant billing tab
+52. **onboard-002** — Empty states for dashboard pages
+
+### Phase 8: Deployment
+53. **deploy-001** — Docker build, ECR push, production deployment
+
+## Deployment Instructions (AWS)
+
+### Prerequisites
+- AWS CLI configured (verified in `ralph-config.json`)
+- RDS Postgres provisioned (via `scripts/preflight.sh`)
+- S3 bucket created (via `scripts/preflight.sh`)
+- ECR repository created (via `scripts/preflight.sh`)
+- `.env` populated with all credentials
+
+### Build & Deploy
+```bash
+# 1. Run preflight to ensure all infrastructure exists
+bash scripts/preflight.sh
+
+# 2. Push Drizzle schema to RDS
+make db-push
+
+# 3. Build production Docker image
+docker build -t namuh-mintlify .
+
+# 4. Tag and push to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REPO
+docker tag namuh-mintlify:latest $ECR_REPO:latest
+docker push $ECR_REPO:latest
+
+# 5. Deploy (ECS, App Runner, or EC2 — depending on infra choice)
+# The deploy script handles this:
+bash scripts/deploy.sh
+```
+
+### Environment Variables Required
+- `DATABASE_URL` — RDS Postgres connection string
+- `BETTER_AUTH_SECRET` — Auth session signing secret
+- `BETTER_AUTH_URL` — App base URL
+- `AUTH_GOOGLE_ID` — Google OAuth client ID
+- `AUTH_GOOGLE_SECRET` — Google OAuth client secret
+- `AWS_REGION` — AWS region
+- `S3_BUCKET` — S3 bucket name for file uploads
+- `ANTHROPIC_API_KEY` — For AI assistant features
+- `CLOUDFLARE_API_TOKEN` — For DNS management (optional)
+- `CLOUDFLARE_ZONE_ID` — For DNS management (optional)

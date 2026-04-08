@@ -284,3 +284,37 @@
 
 ### What's next:
 - Iteration 9: Final iteration — finalize build-spec.md with all sections complete, add dependent_on to all PRD entries, reorder PRD by implementation priority
+
+## Iteration 9 — Final: Spec Finalization & PRD Ordering (2026-04-08)
+
+### What was done:
+- Finalized `build-spec.md`:
+  - Removed all "PARTIAL" status markers → set to COMPLETE
+  - Identified 5 CORE features: MDX page management, MDX renderer/docs site, web editor, deployment system, AI assistant
+  - Rewrote Build Order section with 8 phases and 53 numbered items mapping to PRD IDs
+  - Added Deployment Instructions section (Docker build, ECR push, env vars)
+  - Added "Core Features" section explaining what makes the product valuable
+- Reordered `prd.json`:
+  - Sorted all 54 entries by priority (P0→P10)
+  - Added `deploy-001` entry (P10) for production deployment
+  - Verified all entries have `dependent_on`, `build_pass`, `qa_pass` fields
+  - Core features (13 entries) properly marked with `"core": true`
+- All `dependent_on` fields already populated from previous iterations (verified)
+
+### Final PRD summary:
+- **54 total entries** across 10 priority levels
+- **13 core entries** (P0-P3): infra, auth, dashboard shell, project CRUD, page management, MDX editor, MDX renderer, component library, docs site layout, docs site top bar, deployment system
+- **Categories**: data(2), auth(3), layout(1), crud(4), ui(23), settings(7), developer-experience(4), onboarding(2), deployment(1)
+- **Dependency graph**: All entries have 0-5 direct dependencies
+
+### Inspection COMPLETE:
+- Phase A: Docs extraction (195 pages, 4 OpenAPI specs, AsyncAPI spec)
+- Iteration 1 (skipped — merged into Phase A)
+- Iteration 2: Site map (18 dashboard URLs, all nav items)
+- Iteration 3: Home page deep dive
+- Iteration 4: Editor page deep dive
+- Iteration 5: Analytics page deep dive (5 tabs + agents mode)
+- Iteration 6: Settings pages deep dive (12 sub-pages)
+- Iteration 7: Agents sub-pages deep dive (Agent, Assistant, Workflows, MCP)
+- Iteration 8: Docs site deep dive (layout, components, API reference, assistant, search)
+- Iteration 9: Final — spec finalization, PRD ordering, deployment instructions
