@@ -963,17 +963,30 @@ function ApiDocsForm({ config, updateSection }: SectionProps) {
   const d = config.apiDocs;
   const update = (patch: Partial<typeof d>) =>
     updateSection("apiDocs", { ...d, ...patch });
+  const [fetchStatus, setFetchStatus] = useState<string>("");
 
   return (
     <>
       <div>
-        <FieldLabel>OpenAPI spec URL</FieldLabel>
+        <FieldLabel>OpenAPI / AsyncAPI spec URL</FieldLabel>
         <TextInput
           value={d.openApiSpecUrl}
           onChange={(v) => update({ openApiSpecUrl: v })}
           placeholder="https://api.example.com/openapi.json"
           testId="config-api-spec-url"
         />
+        <p className="text-xs text-gray-500 mt-1">
+          Provide an OpenAPI 3.x or AsyncAPI 3.0 spec URL. API reference pages
+          will be auto-generated from the spec.
+        </p>
+        {fetchStatus && (
+          <p
+            className={`text-xs mt-1 ${fetchStatus.startsWith("Error") ? "text-red-400" : "text-emerald-400"}`}
+            data-testid="fetch-status"
+          >
+            {fetchStatus}
+          </p>
+        )}
       </div>
       <ToggleSwitch
         label="API Playground"

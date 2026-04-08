@@ -160,12 +160,13 @@ describe("generateCurlExample", () => {
 // ── Code Examples ────────────────────────────────────────────────────────────
 
 describe("generateCodeExamples", () => {
-  it("returns cURL, Python, and JavaScript examples", () => {
+  it("returns cURL, Python, JavaScript, and Go examples", () => {
     const examples = generateCodeExamples(makeEndpoint());
-    expect(examples).toHaveLength(3);
+    expect(examples).toHaveLength(4);
     expect(examples[0].language).toBe("curl");
     expect(examples[1].language).toBe("python");
     expect(examples[2].language).toBe("javascript");
+    expect(examples[3].language).toBe("go");
   });
 
   it("cURL example matches generateCurlExample output", () => {

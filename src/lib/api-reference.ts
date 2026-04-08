@@ -3,6 +3,7 @@
  * response schema rendering, and sidebar endpoint metadata extraction.
  */
 
+import { generateGoExample } from "@/lib/openapi";
 import {
   type OpenApiEndpoint,
   type OpenApiParameter,
@@ -163,6 +164,8 @@ export function generateCodeExamples(endpoint: OpenApiEndpoint): CodeExample[] {
   }
   jsLines.push("});");
 
+  const goCode = generateGoExample(endpoint);
+
   return [
     { language: "curl", label: "cURL", code: curl },
     { language: "python", label: "Python", code: pythonLines.join("\n") },
@@ -171,6 +174,7 @@ export function generateCodeExamples(endpoint: OpenApiEndpoint): CodeExample[] {
       label: "JavaScript",
       code: jsLines.join("\n"),
     },
+    { language: "go", label: "Go", code: goCode },
   ];
 }
 
