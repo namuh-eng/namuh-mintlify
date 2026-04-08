@@ -32,11 +32,19 @@ interface NavGroup {
   items: NavItem[];
 }
 
+interface ProjectInfo {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface SidebarProps {
   orgName: string;
   orgSlug: string;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  projects?: ProjectInfo[];
+  activeProjectSlug?: string;
 }
 
 const mainNavItems: NavItem[] = [
@@ -78,9 +86,14 @@ export function Sidebar({
   orgSlug,
   collapsed = false,
   onToggleCollapse,
+  projects = [],
+  activeProjectSlug,
 }: SidebarProps) {
   const pathname = usePathname();
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
+  const activeProject =
+    projects.find((p) => p.slug === activeProjectSlug) ?? projects[0];
+  const displayName = activeProject ? activeProject.name : orgName;
 
   if (collapsed) {
     return (
@@ -143,26 +156,52 @@ export function Sidebar({
           <div className="flex items-center justify-center w-6 h-6 rounded bg-emerald-600 text-white text-xs font-bold shrink-0">
             {orgName.charAt(0).toUpperCase()}
           </div>
-          <span className="truncate">{orgName}</span>
+          <span className="truncate">{displayName}</span>
           <ChevronDown size={14} className="ml-auto text-gray-500 shrink-0" />
         </button>
         {orgDropdownOpen && (
           <div className="mt-1 bg-[#1a1a1a] border border-white/[0.08] rounded-lg shadow-lg py-1 z-50">
-            <div className="px-3 py-2 flex items-center gap-2 text-sm text-white">
-              <div className="flex items-center justify-center w-5 h-5 rounded bg-emerald-600 text-white text-[10px] font-bold">
-                {orgName.charAt(0).toUpperCase()}
-              </div>
-              <span className="truncate">{orgName}</span>
-              <span className="ml-auto text-emerald-500">✓</span>
-            </div>
-            <div className="border-t border-white/[0.08] my-1" />
-            <button
-              type="button"
+            {projects.length > 0 && (
+              <>
+                {projects.map((project) => (
+                  <Link
+                    key={project.id}
+                    href="/dashboard"
+                    onClick={() => setOrgDropdownOpen(false)}
+                    className="px-3 py-2 flex items-center gap-2 text-sm text-white hover:bg-white/[0.06]"
+                  >
+                    <div className="flex items-center justify-center w-5 h-5 rounded bg-emerald-600 text-white text-[10px] font-bold">
+                      {project.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="truncate">{project.name}</span>
+                    {project.slug === activeProject?.slug && (
+                      <span className="ml-auto text-emerald-500">✓</span>
+                    )}
+                  </Link>
+                ))}
+                <div className="border-t border-white/[0.08] my-1" />
+              </>
+            )}
+            {projects.length === 0 && (
+              <>
+                <div className="px-3 py-2 flex items-center gap-2 text-sm text-white">
+                  <div className="flex items-center justify-center w-5 h-5 rounded bg-emerald-600 text-white text-[10px] font-bold">
+                    {orgName.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="truncate">{orgName}</span>
+                  <span className="ml-auto text-emerald-500">✓</span>
+                </div>
+                <div className="border-t border-white/[0.08] my-1" />
+              </>
+            )}
+            <Link
+              href="/dashboard/new-project"
+              onClick={() => setOrgDropdownOpen(false)}
               className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-400 hover:bg-white/[0.06] hover:text-white"
             >
               <Plus size={14} />
               New documentation
-            </button>
+            </Link>
           </div>
         )}
       </div>
