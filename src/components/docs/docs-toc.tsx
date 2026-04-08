@@ -1,17 +1,19 @@
 "use client";
 
 import type { TocEntry } from "@/lib/editor";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface DocsTocProps {
   entries: TocEntry[];
 }
 
 export function DocsToc({ entries }: DocsTocProps) {
+  // Filter to H2 and H3 only for display
+  const displayEntries = entries.filter((e) => e.level >= 2 && e.level <= 3);
   const [activeId, setActiveId] = useState<string>("");
 
   useEffect(() => {
-    if (entries.length === 0) return;
+    if (displayEntries.length === 0) return;
 
     const observer = new IntersectionObserver(
       (observerEntries) => {
@@ -24,26 +26,42 @@ export function DocsToc({ entries }: DocsTocProps) {
       { rootMargin: "-20% 0% -80% 0%" },
     );
 
-    for (const tocEntry of entries) {
+    for (const tocEntry of displayEntries) {
       const element = document.getElementById(tocEntry.id);
       if (element) observer.observe(element);
     }
 
     return () => observer.disconnect();
-  }, [entries]);
+  }, [displayEntries]);
 
-  if (entries.length === 0) return null;
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+      e.preventDefault();
+      const target = document.getElementById(id);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Update URL hash without jumping
+        window.history.pushState(null, "", `#${id}`);
+        setActiveId(id);
+      }
+    },
+    [],
+  );
+
+  if (displayEntries.length === 0) return null;
 
   return (
-    <aside className="docs-toc">
+    <aside className="docs-toc" data-testid="docs-toc">
       <h4 className="docs-toc-title">On this page</h4>
       <nav>
-        {entries.map((entry) => (
+        {displayEntries.map((entry) => (
           <a
             key={entry.id}
             href={`#${entry.id}`}
             className={`docs-toc-link ${activeId === entry.id ? "active" : ""}`}
-            style={{ paddingLeft: `${(entry.level - 1) * 12 + 8}px` }}
+            style={{ paddingLeft: `${(entry.level - 2) * 12 + 8}px` }}
+            onClick={(e) => handleClick(e, entry.id)}
+            data-testid={`toc-link-${entry.id}`}
           >
             {entry.text}
           </a>
