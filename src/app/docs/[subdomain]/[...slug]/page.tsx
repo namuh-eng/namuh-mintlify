@@ -5,11 +5,16 @@ import { DocsToc } from "@/components/docs/docs-toc";
 import { DocsTopbar } from "@/components/docs/docs-topbar";
 import { MdxContent } from "@/components/docs/mdx-content";
 import { MobileSidebar } from "@/components/docs/mobile-nav";
+import {
+  HeadingAnchors,
+  PageHeaderActions,
+} from "@/components/docs/page-chrome";
 import { SearchModal } from "@/components/docs/search-modal";
 import { db } from "@/lib/db";
 import { pages, projects } from "@/lib/db/schema";
 import { extractToc } from "@/lib/editor";
 import { buildDocsNav, renderMdxContent } from "@/lib/mdx-renderer";
+import { getGroupName } from "@/lib/page-chrome";
 import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
@@ -86,14 +91,8 @@ export default async function DocsPage({ params }: DocsPageProps) {
         }
       : null;
 
-  // Get breadcrumb from path
-  const pathSegments = targetPath.split("/");
-  const breadcrumb = pathSegments.map((seg) =>
-    seg
-      .split("-")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" "),
-  );
+  // Get group name for breadcrumb
+  const groupName = getGroupName(targetPath);
 
   // Build searchable pages list
   const searchablePages = allPages.map((p) => ({
@@ -126,30 +125,29 @@ export default async function DocsPage({ params }: DocsPageProps) {
         />
 
         <main className="docs-main">
-          <div className="docs-breadcrumb">
-            {breadcrumb.map((crumb, idx) => (
-              <span key={crumb}>
-                {idx > 0 && <span className="docs-breadcrumb-sep">/</span>}
-                <span
-                  className={
-                    idx === breadcrumb.length - 1
-                      ? "docs-breadcrumb-active"
-                      : ""
-                  }
-                >
-                  {crumb}
-                </span>
-              </span>
-            ))}
-          </div>
+          {groupName && (
+            <div className="docs-breadcrumb" data-testid="breadcrumb-group">
+              {groupName}
+            </div>
+          )}
 
           <article className="docs-article">
-            <h1 className="docs-page-title">{currentPage.title}</h1>
+            <div className="docs-title-row">
+              <h1 className="docs-page-title" data-testid="page-title">
+                {currentPage.title}
+              </h1>
+              <PageHeaderActions
+                title={currentPage.title}
+                content={currentPage.content || ""}
+                pageUrl={`/docs/${subdomain}/${targetPath}`}
+              />
+            </div>
             {currentPage.description && (
               <p className="docs-page-description">{currentPage.description}</p>
             )}
 
             <MdxContent html={renderedHtml} />
+            <HeadingAnchors />
           </article>
 
           <DocsPagination
