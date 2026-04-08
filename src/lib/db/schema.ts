@@ -446,3 +446,28 @@ export const auditLogs = pgTable(
     t.index("audit_created_idx").on(table.createdAt),
   ],
 );
+
+// ── User Preferences ──────────────────────────────────────────────────────────
+
+export const userPreferences = pgTable(
+  "user_preferences",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    userId: t.text("user_id").notNull().unique(),
+    emailNotifications: t
+      .boolean("email_notifications")
+      .default(true)
+      .notNull(),
+    githubAuthorized: t.boolean("github_authorized").default(false).notNull(),
+    githubUsername: t.varchar("github_username", { length: 256 }),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: t
+      .timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [t.uniqueIndex("user_prefs_user_idx").on(table.userId)],
+);
