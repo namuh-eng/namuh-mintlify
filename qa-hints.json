@@ -330,5 +330,32 @@
       "Steps with embedded code blocks inside step content",
       "Dark mode color contrast — syntax highlighting colors readable on dark background"
     ]
+  },
+  {
+    "feature_id": "feature-005",
+    "tests_written": [
+      "isValidStatus validates all deployment statuses",
+      "statusLabel returns correct labels for each status",
+      "statusColor/statusDotColor return correct CSS classes",
+      "timeAgo formats relative time correctly",
+      "shortSha truncates to 7 chars",
+      "validateTriggerDeploymentRequest validates commit SHA format",
+      "generateDeploymentLogSteps returns step array",
+      "deploymentDuration computes seconds between timestamps",
+      "formatDuration formats seconds to human-readable",
+      "GET /api/deployments returns deployments array",
+      "POST /api/deployments triggers deployment",
+      "GET /api/deployments/:id returns or 404",
+      "POST /api/deployments/:id/complete updates status",
+      "dashboard home loads with activity section"
+    ],
+    "needs_deeper_qa": [
+      "Simulated build completion via setTimeout — verify status transitions in real-time",
+      "Expanded deployment row layout matches Mintlify screenshots pixel-perfectly",
+      "Trigger deployment button handles concurrent clicks",
+      "Deployment list pagination (currently limited to 50)",
+      "Project status badge updates after deployment completes",
+      "Activity table Live vs Previews tabs — Previews is placeholder"
+    ]
   }
 ]

@@ -491,3 +491,44 @@ Date: 2026-04-08
 - Keywords set covers JS/TS, Python, Go, Java common keywords — intentionally broad but not language-specific
 - Ask AI button dispatches a CustomEvent ("ask-ai-code") rather than direct navigation — allows parent component to handle the interaction (e.g., open assistant panel)
 - Code block filename parsed from meta string: ```lang filename — matches common MDX convention
+
+## Iteration 13 — feature-005: Deployment System
+Date: 2026-04-08
+
+### What was built
+- Deployment utility library (`src/lib/deployments.ts`) with status helpers (label, color, dot color), timeAgo formatter, shortSha, validation for trigger requests, deployment log step generation, duration calculation, and duration formatting
+- API route `GET /api/deployments` — list deployments for the user's active project (max 50, newest first)
+- API route `POST /api/deployments` — trigger a new deployment (admin/editor role required), simulates async build that completes after 3s
+- API route `GET /api/deployments/[id]` — get single deployment with org-scoped access check
+- API route `POST /api/deployments/[id]/complete` — update deployment status to succeeded/failed, updates project status accordingly
+- Dashboard home page rewritten with Mintlify-matching UI:
+  - Project overview card: project name, Live/Updating/Error status badge, last deployment info, Visit site link, domain info, "Add custom domain" link
+  - Trigger deployment button (rocket icon) and refresh button
+  - Activity section with Live/Previews tab toggle
+  - Deployment table: Update (name + time ago), Status (colored badge), Changes (commit message + SHA)
+  - Expandable deployment rows: commit details (source, SHA), deployment log with checkmark steps
+  - Empty states for no deployments and no project
+
+### Test results
+- 30 new unit tests (deployments.test.ts) — all passing
+- 5 new E2E tests (deployments.spec.ts) — written, QA will verify
+- 317 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/deployments.ts — new, deployment utilities
+- src/app/api/deployments/route.ts — new, GET + POST deployment API routes
+- src/app/api/deployments/[id]/route.ts — new, GET single deployment
+- src/app/api/deployments/[id]/complete/route.ts — new, POST status update
+- src/app/dashboard/page.tsx — rewritten, server component fetching project + deployments
+- src/app/dashboard/dashboard-home-client.tsx — new, full dashboard home UI
+- tests/deployments.test.ts — new, 30 unit tests
+- tests/e2e/deployments.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Build completion simulated via setTimeout (3s) — in production would be a background job/queue
+- Project status updated to "deploying" on trigger, then "active" on success or "error" on failure
+- Deployment table limited to 50 rows — pagination not needed for MVP
+- Expanded row shows commit details (source ref, SHA) + deployment log steps matching Mintlify screenshots
+- Preview tab is placeholder — branch-based preview deployments planned for later feature
+- resolveUserProject helper extracts common org→project resolution pattern used across deployment routes
