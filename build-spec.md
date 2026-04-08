@@ -43,7 +43,7 @@ Docs site: `{projectSlug}.mintlify.app/...`
 |------|-----|------|
 | Home | `/{org}/{project}` | Overview — greeting, project card, deployment status, activity table (Live/Previews), domain, "Things to do" |
 | Editor | `/{org}/{project}/editor/main` | Rich MDX editor — Navigation/Files tree, visual+markdown modes, toolbar, live preview, publish, comments, branch selector |
-| Analytics | `/{org}/{project}/analytics/v2` | Charts + tables — sub-tabs: Visitors, Views, Assistant, Searches, Feedback; Humans/Agents toggle, date range picker |
+| Analytics | `/{org}/{project}/analytics/v2` | Charts + tables — see Analytics Deep Dive below |
 
 ### Settings Pages
 | Page | URL |
@@ -276,6 +276,63 @@ Left sidebar with 10 config sections:
 
 Each section has a form-based UI with inputs, toggles, dropdowns, file uploads, and color pickers.
 This is effectively a visual GUI for editing the docs.json config file.
+
+### Analytics Page — COMPLETE
+**URL**: `/{org}/{project}/analytics/v2`
+**Layout**: Full-width content area with traffic toggle, date picker, sub-tab navigation, charts, and tables
+
+#### Top Controls:
+1. **Traffic source toggle**: "Humans" | "Agents" — switches between human and AI traffic views
+   - **Humans mode**: Shows 5 sub-tabs — Visitors, Views, Assistant, Searches, Feedback
+   - **Agents mode**: Shows 2 sub-tabs — Agent Visitors, MCP Searches
+2. **Date range picker**: Button showing current range (e.g., "Apr 1 - 8"), opens calendar dialog
+   - Calendar grid with clickable dates for custom range selection
+   - **Preset shortcuts** (right side): Today, Yesterday, Last 7 days, Last 14 days, Last 30 days, Last 90 days, This month, Year to date, All time
+   - URL query params: `?from=2026-04-01T00:00:00&to=2026-04-08T23:59:59&trafficSource=human`
+
+#### Sub-tab Navigation:
+Each tab shows its metric count in a badge (e.g., "Visitors 7", "Views 13", "Feedback 0").
+
+**Visitors tab** (`/analytics/v2/visitors`):
+- **Chart**: "Visitors Over Time" — line/bar chart with daily visitor counts, interactive SVG (Recharts or similar)
+- **Top pages table**: Columns: Page path (truncated with title tooltip), Views count
+- **Referrals table**: Columns: Referral source (e.g., "$direct", "dashboard.mintlify.com"), Views count
+- Tables side-by-side below the chart
+
+**Views tab** (`/analytics/v2/views`):
+- **Chart**: "Page Views Over Time" — similar chart with daily page views
+- **Top pages table**: Same structure as Visitors — page path + view count
+- No Referrals table
+
+**Assistant tab** (`/analytics/v2/assistant`):
+- **Sub-sections**: "Categories" and "Chat history" toggle
+- **Export to CSV** button
+- Empty state: "No assistant activity / When users ask questions, results will show up here"
+
+**Searches tab** (`/analytics/v2/searches`):
+- Empty state: "No search activity / When users search your docs, results will show up here"
+
+**Feedback tab** (`/analytics/v2/feedback`):
+- **3 sub-tabs**: "Ratings by page" | "Detailed feedback" | "Code snippets"
+  - URL param: `type=contextual` (detailed), `type=code_snippet` (code snippets)
+- **Filters button**: Opens dialog with:
+  - **Status filter**: Pending, In Progress, Resolved, Dismissed
+  - **Show abusive** toggle
+- **Table**: Columns: Feedback (text), Status (badge), Page (path), Date, Actions (checkbox for bulk select)
+  - "Select all feedback" checkbox in header
+- Empty state: "No feedback yet."
+
+#### Agents Mode:
+- **Agent Visitors tab**: Empty state — "No visitor activity"
+- **MCP Searches tab**: Empty state — "No MCP search activity / When AI agents search your docs via MCP, results will show up here"
+
+#### Behaviors observed:
+- Tab navigation updates URL path + preserves date range and traffic source in query params
+- Each tab badge shows real-time count for the selected date range
+- Chart is interactive SVG (likely Recharts) — hover for tooltips
+- Tables show data sorted by view count descending
+- Page paths show as truncated spans with full path in title tooltip
+- Switching Humans↔Agents changes the entire sub-tab set (not just data filtering)
 
 ## Data Models
 

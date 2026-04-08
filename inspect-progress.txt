@@ -135,3 +135,35 @@
 ### What's next:
 - Iteration 5: Analytics page deep dive — test sub-tabs, charts, date picker, humans/agents toggle
 - Then: Settings sub-pages, Agents sub-pages
+
+## Iteration 5 — Analytics Page Deep Dive (2026-04-08)
+
+### What was done:
+- Navigated to Analytics page and inspected all sub-tabs with Ever CLI
+- Tested **Humans/Agents toggle** — completely swaps the sub-tab navigation
+  - Humans mode: 5 tabs — Visitors, Views, Assistant, Searches, Feedback
+  - Agents mode: 2 tabs — Agent Visitors, MCP Searches
+- Tested **Visitors tab**: "Visitors Over Time" chart (interactive SVG), Top pages table, Referrals table side-by-side
+- Tested **Views tab**: "Page Views Over Time" chart + Top pages table only (no Referrals)
+- Tested **Assistant tab**: Categories + Chat history sub-sections, Export to CSV button, empty state
+- Tested **Searches tab**: Empty state with helpful message about search analytics
+- Tested **Feedback tab**: 3 sub-tabs (Ratings by page, Detailed feedback, Code snippets), Filters dialog (Status: Pending/In Progress/Resolved/Dismissed + Show abusive), table with bulk select checkbox
+- Tested **Date range picker**: Calendar dialog with clickable dates + preset shortcuts (Today, Yesterday, Last 7/14/30/90 days, This month, Year to date, All time)
+- Tested **Agents mode**: Agent Visitors (empty) + MCP Searches (empty with "When AI agents search your docs via MCP, results will show up here")
+- Took 8 screenshots of analytics states
+- Updated build-spec.md with comprehensive Analytics deep dive
+- Split feature-007 into 7 granular PRD entries (007, 007a-f) covering layout, each tab, and agents mode
+
+### Key findings:
+- URL pattern: `/analytics/v2/{tab}?from=...&to=...&trafficSource=human|agent`
+- Feedback has type param: `type=contextual` (detailed) or `type=code_snippet` (code snippets)
+- Tab badges show real-time metric counts for selected date range
+- Humans/Agents is not a data filter — it completely replaces the tab navigation
+- Feedback status has 4 states: Pending, In Progress, Resolved, Dismissed + "Show abusive" toggle
+- Charts use interactive SVG (likely Recharts library)
+- Tables show truncated page paths with full path in title tooltip
+- Date picker has both calendar grid and preset shortcuts in a single dialog
+
+### What's next:
+- Iteration 6: Settings pages deep dive — start with the 12 settings sub-pages
+- Then: Agents sub-pages (Agent, Assistant, Workflows, MCP)
