@@ -12,7 +12,7 @@ test-results/
 playwright-report/
 drizzle/
 packages/sdk/dist/
-target-docs/
+# target-docs/ — tracked for inspect phase
 .current-feature.json
 tsconfig.tsbuildinfo
 
@@ -26,7 +26,7 @@ ONBOARDING-PLAN.md
 *.lock
 build-progress.txt
 .onboard-answers.tmp
-inspect-progress.txt
+# inspect-progress.txt — tracked for inspect phase
 qa-hints.json
 qa-report.json
 test-a.txt

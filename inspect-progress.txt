@@ -1,0 +1,29 @@
+## Iteration 1 — Phase A: Docs Extraction (2026-04-08)
+
+### What was done:
+- Downloaded full documentation via llms-full.txt (25,708 lines, 195 pages)
+- Downloaded llms.txt index with all page URLs
+- Downloaded 4 OpenAPI specs (openapi.json, analytics-openapi.json, discovery-openapi.json, admin-openapi.json)
+- Downloaded AsyncAPI spec (asyncapi.yaml)
+- Created target-docs/INDEX.md with all 195 pages categorized
+- Created target-docs/onboarding-flow.md — step-by-step onboarding sequence
+- Created target-docs/auth-flow.md — dashboard auth + docs site auth + API auth
+- Created docs-extract.md — DX/SDK summary (CLI, REST API, AI features, content system)
+- Created initial build-spec.md with product overview, tech stack, data models, backend architecture, build order
+- Created initial prd.json with 25 entries covering infra, auth, core features, API, onboarding
+
+### Key findings:
+- Mintlify is a docs-as-code platform: Git repo with MDX files + docs.json config → deployed docs site
+- Three main surfaces: Dashboard (management), Web Editor (content editing), Docs Site (public-facing)
+- Auth: Google/GitHub OAuth for dashboard, multiple methods (OAuth/JWT/password) for docs site auth
+- API: Bearer token auth with mint_/mint_dsc_ prefixed keys, 16 endpoints
+- AI features: Assistant (chat widget), Agent (auto-update PRs), MCP server, llms.txt
+- CLI: mint dev, mint build, mint analytics, mint broken-links
+- Rich component library: 25+ MDX components (Callouts, Cards, Tabs, Steps, Code Groups, etc.)
+- Team management with RBAC (admin/editor/viewer)
+- Analytics: page views, visitors, searches, feedback, assistant conversations
+
+### What's next:
+- Iteration 2: Navigate the Mintlify dashboard UI with Ever CLI to map the complete site structure
+- Take screenshots of all dashboard pages
+- Deep-dive into each feature area in subsequent iterations
