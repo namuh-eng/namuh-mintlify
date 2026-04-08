@@ -22,7 +22,7 @@ test.describe("auth-001: authentication flow", () => {
   }) => {
     await page.goto("/dashboard");
     await page.waitForURL(/\/login/);
-    expect(page.url()).toContain("/login");
+    expect(page.url()).toContain("/login?returnTo=%2Fdashboard");
   });
 
   test("unauthenticated user is redirected from settings to login", async ({
@@ -30,7 +30,7 @@ test.describe("auth-001: authentication flow", () => {
   }) => {
     await page.goto("/settings/general");
     await page.waitForURL(/\/login/);
-    expect(page.url()).toContain("/login");
+    expect(page.url()).toContain("/login?returnTo=%2Fsettings%2Fgeneral");
   });
 
   test("auth API session endpoint returns unauthenticated", async ({
@@ -39,6 +39,6 @@ test.describe("auth-001: authentication flow", () => {
     const res = await request.get("/api/auth/get-session");
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.session).toBeNull();
+    expect(body).toBeNull();
   });
 });
