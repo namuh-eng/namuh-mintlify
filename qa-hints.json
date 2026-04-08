@@ -931,5 +931,36 @@
       "SVG upload security — XSS vectors in SVG files",
       "Settings merge when project already has other settings — verify no data loss"
     ]
+  },
+  {
+    "feature_id": "feature-012",
+    "tests_written": [
+      "isValidLabel accepts/rejects labels correctly",
+      "isValidPath validates lowercase slug paths",
+      "isValidHref validates absolute paths and URLs",
+      "validateNavPage checks label and path",
+      "validateNavEntry validates groups, tabs, anchors",
+      "validateNavigation validates full config",
+      "mergeNavigation returns defaults for empty/null",
+      "factory helpers create correct structures",
+      "moveItem reorders array elements",
+      "countPages counts across groups",
+      "getAllPaths/findDuplicatePaths detects dupes",
+      "labelToPath slugifies labels correctly",
+      "E2E: page renders with title and save button",
+      "E2E: default entries display on load",
+      "E2E: add dropdown shows group/tab/anchor options",
+      "E2E: can add a new group entry",
+      "E2E: save button persists changes"
+    ],
+    "needs_deeper_qa": [
+      "Drag-and-drop reorder (only button-based reorder implemented, no native DnD)",
+      "Visual verification of entry cards, modals, and page rows",
+      "Save round-trip: save, reload, verify persisted state",
+      "Edit modal: change label/href/icon, save, verify update",
+      "Add page modal: auto-path generation from label",
+      "Duplicate path detection error message display",
+      "Concurrent edits to navigation by multiple users"
+    ]
   }
 ]

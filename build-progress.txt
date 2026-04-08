@@ -1510,3 +1510,53 @@ Date: 2026-04-09
 - File upload dropzones use existing /api/uploads/presign flow, no new API routes needed
 - Dark mode stored as "light" | "dark" | "system" string enum
 - A11y: file upload zones use <button> elements, labels have htmlFor attributes
+
+## Iteration 29 — feature-012: Navigation Configuration
+Date: 2026-04-09
+
+### What was built
+- Navigation utility library (`src/lib/navigation.ts`) with:
+  - Types: NavPage, NavGroup, NavTab, NavAnchor, NavEntry, NavigationConfig
+  - Validation: isValidLabel, isValidPath, isValidHref, validateNavPage, validateNavEntry, validateNavigation
+  - Factory helpers: createGroup, createPage, createTab, createAnchor
+  - Array helpers: moveItem (reorder), countPages, getAllPaths, findDuplicatePaths, labelToPath (slugifier)
+  - Default navigation config with Documentation tab + Getting started group (Introduction, Quickstart, Development)
+  - mergeNavigation for loading from settings JSONB with fallback to defaults
+- Navigation settings page (`/settings/navigation`) with full visual tree editor:
+  - Entry cards for groups, tabs, and anchors with type badges and icons (folder=group, file=tab, link=anchor)
+  - Groups expand/collapse to show nested pages
+  - Button-based reorder (up/down) for entries and pages within groups
+  - "Add new" dropdown with Group, Tab, Anchor options
+  - "Add page" modal per group with label input, auto-generated path from label (slugified), manual path override
+  - "Edit entry" modal for editing label, href (tab/anchor), icon (group/anchor)
+  - Remove buttons for entries and individual pages
+  - Summary bar showing entry count, group count, page count
+  - Duplicate path detection with error message
+  - Save persists to project.settings.navigation via PUT /api/projects/{id}
+  - Success/error message display
+  - Loading and empty states
+  - Grip handle icons for visual drag affordance
+
+### Test results
+- 42 new unit tests (navigation.test.ts) — all passing
+- 5 new E2E tests (navigation.spec.ts) — written, QA will verify
+- 842 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/navigation.ts — new, types + validation + defaults + helpers
+- src/app/settings/navigation/page.tsx — new, full navigation editor page
+- tests/navigation.test.ts — new, 42 unit tests
+- tests/e2e/navigation.spec.ts — new, 5 E2E tests
+- prd.json — feature-012 build_pass set to true
+- qa-hints.json — appended QA hints for feature-012
+
+### Decisions
+- Used button-based up/down reorder instead of native HTML5 drag-and-drop — simpler, more accessible, works on all devices
+- Navigation stored in project.settings.navigation JSONB — same pattern as appearance settings
+- Default nav includes Documentation tab + Getting started group to match Mintlify's standard structure
+- Path validation requires lowercase alphanumeric + hyphens + slashes — matches URL-safe slug format
+- Auto-path generation from label via slugification (labelToPath) — user can override manually
+- Entries support three types (group, tab, anchor) matching Mintlify's docs.json structure
+- Groups have a collapsible page list; tabs and anchors show their href inline
+- Edit modal adapts fields based on entry type (groups get icon field, tabs/anchors get href)
