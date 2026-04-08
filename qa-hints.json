@@ -506,5 +506,26 @@
       "Referral grouping edge cases (empty referrer → $direct)",
       "Concurrent date range changes while data is loading"
     ]
+  },
+  {
+    "feature_id": "feature-007b",
+    "tests_written": [
+      "formatViewCount formats numbers with commas",
+      "sumDailyCounts sums daily entries correctly",
+      "ViewsData type shape with dailyCounts, topPages, totalViews",
+      "fillDailyCounts integration with views data",
+      "truncatePath integration for top pages display",
+      "Views tab navigates from /analytics to /analytics/views",
+      "Page Views Over Time heading or empty state renders",
+      "Top pages table visible, no Referrals table",
+      "Agents mode shows empty state on Views tab",
+      "Date range params preserved on Views tab"
+    ],
+    "needs_deeper_qa": [
+      "Chart rendering with real data — only verified structure in unit tests",
+      "Date range picker interaction on Views tab specifically",
+      "Large dataset performance with many pages in top pages table",
+      "API response format when no analytics events exist"
+    ]
   }
 ]

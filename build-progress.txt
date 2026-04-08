@@ -803,3 +803,34 @@ Date: 2026-04-09
 - Project resolved via /api/projects (first project in org) — same pattern as editor page
 - Tables limited to top 20 entries to keep UI clean
 - Agent mode shows dedicated empty state rather than empty chart
+
+## Iteration 11 — feature-007b: Analytics Views Tab
+Date: 2026-04-09
+
+### What was built
+- Analytics Views tab page (`/analytics/views`) — "Page Views Over Time" chart + Top pages table (no Referrals table)
+- API route `GET /api/analytics/views?projectId=...&from=...&to=...` — returns dailyCounts, topPages, totalViews
+- Analytics views utility module (`src/lib/analytics-views.ts`) — ViewsData type, DailyViewCount alias, formatViewCount, sumDailyCounts helpers
+- Same Recharts ComposedChart (Bar + Line) as Visitors tab but labeled "Page Views"
+- Agent mode shows "No page view activity" empty state with book icon
+- Loading skeleton with single table placeholder (no 2-column grid since no referrals)
+- Reuses existing analytics-visitors utilities: fillDailyCounts, formatChartDate, generateDateRange, truncatePath
+
+### Test results
+- 11 new unit tests (analytics-views.test.ts) — all passing
+- 5 new E2E tests (analytics-views.spec.ts) — written, QA will verify
+- 447 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/analytics-views.ts — new, ViewsData type + formatViewCount + sumDailyCounts
+- src/app/api/analytics/views/route.ts — new, GET endpoint for page view analytics
+- src/app/analytics/views/page.tsx — new, Views tab with chart + top pages table
+- tests/analytics-views.test.ts — new, 11 unit tests
+- tests/e2e/analytics-views.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Reused DailyVisitorCount type as DailyViewCount alias — same shape, different semantic meaning
+- API route mirrors visitors route structure but omits referrals query — Views tab focuses only on page views
+- Single Top pages table (full width) instead of 2-column grid — matches PRD spec ("no Referrals table")
+- Agent empty state uses book icon (svg) instead of people icon to differentiate from visitors
