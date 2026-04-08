@@ -131,6 +131,11 @@ export default function ApiKeysPage() {
     });
   };
 
+  const formatLastUsed = (dateStr: string | null) => {
+    if (!dateStr) return "Never";
+    return formatDate(dateStr);
+  };
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
       <div className="mx-auto max-w-3xl px-6 py-10">
@@ -173,6 +178,9 @@ export default function ApiKeysPage() {
                         <th className="px-4 py-2 text-left font-medium text-gray-400">
                           Created
                         </th>
+                        <th className="px-4 py-2 text-left font-medium text-gray-400">
+                          Last used
+                        </th>
                         <th className="px-4 py-2 text-right font-medium text-gray-400">
                           Actions
                         </th>
@@ -190,6 +198,9 @@ export default function ApiKeysPage() {
                           </td>
                           <td className="px-4 py-3 text-gray-400">
                             {formatDate(key.createdAt)}
+                          </td>
+                          <td className="px-4 py-3 text-gray-400">
+                            {formatLastUsed(key.lastUsedAt)}
                           </td>
                           <td className="px-4 py-3 text-right">
                             <button
@@ -245,6 +256,9 @@ export default function ApiKeysPage() {
                         <th className="px-4 py-2 text-left font-medium text-gray-400">
                           Created
                         </th>
+                        <th className="px-4 py-2 text-left font-medium text-gray-400">
+                          Last used
+                        </th>
                         <th className="px-4 py-2 text-right font-medium text-gray-400">
                           Actions
                         </th>
@@ -262,6 +276,9 @@ export default function ApiKeysPage() {
                           </td>
                           <td className="px-4 py-3 text-gray-400">
                             {formatDate(key.createdAt)}
+                          </td>
+                          <td className="px-4 py-3 text-gray-400">
+                            {formatLastUsed(key.lastUsedAt)}
                           </td>
                           <td className="px-4 py-3 text-right">
                             <button

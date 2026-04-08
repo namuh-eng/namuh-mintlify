@@ -28,6 +28,13 @@ export async function GET(
     );
   }
 
+  if (keyAuth.type !== "admin") {
+    return NextResponse.json(
+      { error: "Forbidden — admin API key required" },
+      { status: 403 },
+    );
+  }
+
   // Look up the deployment
   const rows = await db
     .select()

@@ -67,7 +67,9 @@ test.describe("API Keys Settings Page", () => {
     await page.getByRole("button", { name: /^Create$/i }).click();
     await page.getByRole("button", { name: /Done|Close/i }).click();
 
-    await expect(page.getByRole("columnheader", { name: "Last used" })).toHaveCount(2);
+    await expect(
+      page.getByRole("columnheader", { name: "Last used" }),
+    ).toHaveCount(2);
 
     const row = page.getByRole("row").filter({
       has: page.getByText("Last Used Key"),
