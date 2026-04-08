@@ -31,11 +31,11 @@
       "API route GET /api/uploads/presign returns download URL"
     ],
     "needs_deeper_qa": [
-      "Real S3 upload via presigned URL — unit tests mock the SDK",
-      "CORS headers on S3 bucket — verify browser can PUT directly",
-      "Large file upload (near 50MB limit) — only validated client-side",
-      "Concurrent uploads to same key — race condition handling",
-      "Presigned URL expiry — verify 15-minute window works correctly"
+      "Real S3 upload via presigned URL \u2014 unit tests mock the SDK",
+      "CORS headers on S3 bucket \u2014 verify browser can PUT directly",
+      "Large file upload (near 50MB limit) \u2014 only validated client-side",
+      "Concurrent uploads to same key \u2014 race condition handling",
+      "Presigned URL expiry \u2014 verify 15-minute window works correctly"
     ]
   },
   {
@@ -55,11 +55,11 @@
       "E2E: auth API session endpoint returns null for unauthenticated"
     ],
     "needs_deeper_qa": [
-      "Full Google OAuth flow — requires real Google account login via browser",
-      "Session persistence after OAuth callback — verify cookie is set and session created in DB",
-      "Session expiry and refresh — Better Auth cookie cache set to 5 minutes",
-      "Middleware redirect with return URL — currently redirects to /login without preserving original URL",
-      "Concurrent session handling — multiple tabs/devices",
+      "Full Google OAuth flow \u2014 requires real Google account login via browser",
+      "Session persistence after OAuth callback \u2014 verify cookie is set and session created in DB",
+      "Session expiry and refresh \u2014 Better Auth cookie cache set to 5 minutes",
+      "Middleware redirect with return URL \u2014 currently redirects to /login without preserving original URL",
+      "Concurrent session handling \u2014 multiple tabs/devices",
       "Test-only /api/test/create-session route is NOT accessible in production (NODE_ENV guard)"
     ]
   },
@@ -82,11 +82,11 @@
       "E2E: validates empty org name"
     ],
     "needs_deeper_qa": [
-      "Full flow: Google OAuth → first login → onboarding → create org → dashboard",
-      "Slug collision handling — if org name produces duplicate slug, suffix is appended",
-      "Concurrent org creation by same user — race condition on membership",
-      "User with existing org visits /onboarding — should redirect to /dashboard",
-      "Org name with only special characters — slug would be empty, should return error"
+      "Full flow: Google OAuth \u2192 first login \u2192 onboarding \u2192 create org \u2192 dashboard",
+      "Slug collision handling \u2014 if org name produces duplicate slug, suffix is appended",
+      "Concurrent org creation by same user \u2014 race condition on membership",
+      "User with existing org visits /onboarding \u2014 should redirect to /dashboard",
+      "Org name with only special characters \u2014 slug would be empty, should return error"
     ]
   },
   {
@@ -110,11 +110,38 @@
     ],
     "needs_deeper_qa": [
       "Full create+list+delete flow with real authenticated session",
-      "API key validation in API middleware — keys work for authenticating API requests",
-      "Only admin role can create/delete keys — viewer/editor should get 403",
+      "API key validation in API middleware \u2014 keys work for authenticating API requests",
+      "Only admin role can create/delete keys \u2014 viewer/editor should get 403",
       "Concurrent key creation by multiple users in same org",
-      "Key prefix collision — extremely unlikely but no unique constraint on keyPrefix",
-      "Copy to clipboard on the 'shown once' modal — requires HTTPS or localhost"
+      "Key prefix collision \u2014 extremely unlikely but no unique constraint on keyPrefix",
+      "Copy to clipboard on the 'shown once' modal \u2014 requires HTTPS or localhost"
+    ]
+  },
+  {
+    "feature_id": "design-001",
+    "tests_written": [
+      "sidebar has correct main nav items (Home, Editor, Analytics, Settings)",
+      "sidebar has correct agent nav items (Agent, Assistant, Workflows, MCP)",
+      "nav items have valid href paths",
+      "active nav item detection works correctly for all routes",
+      "top bar has search, notifications, chat, and profile elements",
+      "sidebar collapse toggle works",
+      "user menu includes required items with correct order",
+      "E2E: dashboard loads with sidebar and top bar",
+      "E2E: sidebar shows all nav items",
+      "E2E: profile menu opens with user options",
+      "E2E: trial banner visible",
+      "E2E: greeting displayed"
+    ],
+    "needs_deeper_qa": [
+      "Sidebar collapse animation and state persistence across navigations",
+      "Org switcher dropdown \u2014 creating new org from dropdown",
+      "Profile menu logout actually clears session and redirects",
+      "Theme switcher (System/Light/Dark) \u2014 currently visual only, no state management",
+      "Mobile responsiveness \u2014 sidebar should collapse on small screens",
+      "Settings layout shares same shell \u2014 verify settings pages show sidebar",
+      "Products pages layout shares same shell \u2014 verify products pages show sidebar",
+      "Trial banner dismiss persists (currently resets on page reload)"
     ]
   }
 ]

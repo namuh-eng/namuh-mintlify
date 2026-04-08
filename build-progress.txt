@@ -184,3 +184,56 @@ Date: 2026-04-08
 - Org resolved from user session → first org membership (single-org model for now)
 - Raw key shown once in creation modal with copy-to-clipboard button
 - API routes at /api/api-keys (not nested under orgs) — org resolved from session context
+
+## Iteration 6 — design-001: Dashboard Layout Shell
+Date: 2026-04-08
+
+### What was built
+- Sidebar component (`src/components/layout/sidebar.tsx`) — collapsible sidebar with org switcher dropdown, main nav (Home, Editor, Analytics, Settings), Agents group (Agent with "New" badge, Assistant, Workflows, MCP), collapse button
+- Top bar component (`src/components/layout/top-bar.tsx`) — search button with ⌘K hint, notifications bell, chat button, profile avatar with Radix dropdown menu (Your profile, Invite members, Billing, Theme switcher, Documentation, Contact support, Log Out)
+- Trial banner component (`src/components/layout/trial-banner.tsx`) — amber dismissible banner with free trial info and "Explore upgrades" link
+- Dashboard layout client (`src/components/layout/dashboard-layout-client.tsx`) — client wrapper combining sidebar + top bar + trial banner + content area
+- Dashboard shell server component (`src/components/layout/dashboard-shell.tsx`) — fetches session and org data, redirects to /login or /onboarding if needed
+- Session helper (`src/lib/session.ts`) — server-side session fetcher using Better Auth
+- User org helper (`src/lib/get-user-org.ts`) — fetches first org membership for a user
+- Dashboard layout (`src/app/dashboard/layout.tsx`) — wraps dashboard pages with DashboardShell
+- Settings layout (`src/app/settings/layout.tsx`) — wraps settings pages with DashboardShell
+- Products layout (`src/app/products/layout.tsx`) — wraps products pages with DashboardShell
+- Updated dashboard page with dynamic greeting ("Good morning/afternoon/evening, {firstName}")
+- Active nav item highlighting based on current pathname
+
+### Test results
+- 13 new unit tests (dashboard-layout.test.ts) — all passing
+- 9 new E2E tests (dashboard-layout.spec.ts) — written, QA will verify
+- Updated smoke tests with dashboard and settings page loads
+- 122 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/components/layout/sidebar.tsx — new, sidebar with nav groups + org switcher
+- src/components/layout/top-bar.tsx — new, top bar with search, notifications, profile menu
+- src/components/layout/trial-banner.tsx — new, amber trial banner
+- src/components/layout/dashboard-layout-client.tsx — new, client-side layout wrapper
+- src/components/layout/dashboard-shell.tsx — new, server-side shell with session/org fetch
+- src/components/layout/index.ts — new, barrel export
+- src/lib/session.ts — new, server session helper
+- src/lib/get-user-org.ts — new, user org lookup helper
+- src/app/dashboard/layout.tsx — new, dashboard route layout
+- src/app/dashboard/page.tsx — updated, dynamic greeting
+- src/app/settings/layout.tsx — new, settings route layout
+- src/app/products/layout.tsx — new, products route layout
+- tests/dashboard-layout.test.ts — new, 13 unit tests
+- tests/e2e/dashboard-layout.spec.ts — new, 9 E2E tests
+- tests/e2e/smoke.spec.ts — updated, added dashboard/settings smoke tests
+- package.json — added lucide-react, clsx
+
+### Decisions
+- Shared DashboardShell server component used across dashboard, settings, and products layouts — avoids code duplication
+- Sidebar collapse state managed in client component (DashboardLayoutClient) — not persisted across page reloads
+- Active nav detection: exact match for /dashboard, startsWith for other routes
+- Profile avatar shows initials (first letter of first+last name) when no image URL available
+- Org switcher shows first letter of org name as colored avatar
+- Trial banner is dismissible but state resets on page reload (not persisted)
+- Used Radix DropdownMenu for profile menu — accessible keyboard navigation built-in
+- Used lucide-react for all icons — consistent with Mintlify's icon style
+- Dark theme colors: bg-[#0f0f0f] for sidebar/topbar, bg-[#1a1a1a] for elevated surfaces, emerald accents

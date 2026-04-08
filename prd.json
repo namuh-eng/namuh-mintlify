@@ -23,7 +23,9 @@
     "data_model": "Files stored in S3 with path: /{orgId}/{projectId}/assets/*",
     "priority": 0,
     "core": true,
-    "dependent_on": ["infra-001"],
+    "dependent_on": [
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -37,7 +39,9 @@
     "data_model": "Better Auth manages user, session, account tables",
     "priority": 1,
     "core": true,
-    "dependent_on": ["infra-001"],
+    "dependent_on": [
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -51,7 +55,10 @@
     "data_model": "organizations(id, name, slug, plan, settings, createdAt), org_memberships(id, orgId, userId, role, createdAt)",
     "priority": 1,
     "core": true,
-    "dependent_on": ["auth-001", "infra-001"],
+    "dependent_on": [
+      "auth-001",
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -65,7 +72,10 @@
     "data_model": "api_keys(id, orgId, name, keyPrefix, keyHash, type, createdAt, lastUsedAt)",
     "priority": 1,
     "core": true,
-    "dependent_on": ["auth-001", "auth-002"],
+    "dependent_on": [
+      "auth-001",
+      "auth-002"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -79,8 +89,10 @@
     "data_model": "N/A",
     "priority": 2,
     "core": true,
-    "dependent_on": ["auth-001"],
-    "build_pass": false,
+    "dependent_on": [
+      "auth-001"
+    ],
+    "build_pass": true,
     "qa_pass": false
   },
   {
@@ -93,7 +105,10 @@
     "data_model": "projects(id, orgId, name, slug, repoUrl, repoBranch, repoPath, customDomain, subdomain, settings, status, createdAt, updatedAt)",
     "priority": 2,
     "core": true,
-    "dependent_on": ["auth-002", "infra-001"],
+    "dependent_on": [
+      "auth-002",
+      "infra-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -107,7 +122,11 @@
     "data_model": "Creates organization, project, first deployment records",
     "priority": 2,
     "core": false,
-    "dependent_on": ["auth-001", "auth-002", "feature-001"],
+    "dependent_on": [
+      "auth-001",
+      "auth-002",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -121,21 +140,27 @@
     "data_model": "pages(id, projectId, path, title, description, content, frontmatter, isPublished, createdAt, updatedAt)",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-001", "infra-001"],
+    "dependent_on": [
+      "feature-001",
+      "infra-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-003",
     "category": "ui",
-    "description": "Dual-mode MDX editor — Visual mode (Tiptap/ProseMirror WYSIWYG with contenteditable blocks) and Markdown mode (code editor with syntax highlighting and line numbers)",
+    "description": "Dual-mode MDX editor \u2014 Visual mode (Tiptap/ProseMirror WYSIWYG with contenteditable blocks) and Markdown mode (code editor with syntax highlighting and line numbers)",
     "page": "/editor/[page]",
     "ui_details": "3-panel layout: left nav/files tree (resizable 280-550px) + center editor + right TOC/comments. Visual mode: Tiptap block editor where bold renders as bold, cards render as interactive cards, drag-to-reorder blocks. Markdown mode: code editor with line numbers and MDX syntax highlighting showing raw frontmatter. Toggle between modes via Visual/Markdown tabs. Toolbar: bold, italic, heading, link, image, code block, component insertion. 'Add new' dropdown: Add (Tab), Wrap with (Dropdown, Anchor, Language, Product, Version).",
     "behavior": "Visual mode: contenteditable blocks, inline formatting renders live, MDX components render as interactive previews. Markdown mode: raw MDX editing with syntax highlighting. Toggle preserves content. Auto-save draft. Publish button with site URL popover. Branch selector for preview deployments. Ask AI button opens agent sidebar (premium).",
     "data_model": "Uses pages table content field. Editor state persisted as MDX string.",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-002", "design-001"],
+    "dependent_on": [
+      "feature-002",
+      "design-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -149,7 +174,10 @@
     "data_model": "Reads pages table + project settings (docs.json)",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-002", "feature-001"],
+    "dependent_on": [
+      "feature-002",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -163,7 +191,9 @@
     "data_model": "MDX components map to React components in renderer",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-004"],
+    "dependent_on": [
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -177,7 +207,10 @@
     "data_model": "deployments(id, projectId, status, commitSha, commitMessage, startedAt, endedAt, createdAt)",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-001", "infra-001"],
+    "dependent_on": [
+      "feature-001",
+      "infra-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -191,7 +224,11 @@
     "data_model": "Reads project + latest deployment",
     "priority": 3,
     "core": false,
-    "dependent_on": ["design-001", "feature-001", "feature-005"],
+    "dependent_on": [
+      "design-001",
+      "feature-001",
+      "feature-005"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -205,7 +242,10 @@
     "data_model": "Reads project.settings.navigation + page headings",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-004", "feature-001"],
+    "dependent_on": [
+      "feature-004",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -219,7 +259,10 @@
     "data_model": "project.settings (logo paths, social links)",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-014", "feature-001"],
+    "dependent_on": [
+      "feature-014",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -233,7 +276,10 @@
     "data_model": "Uses deployments table",
     "priority": 4,
     "core": false,
-    "dependent_on": ["auth-003", "feature-005"],
+    "dependent_on": [
+      "auth-003",
+      "feature-005"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -247,7 +293,11 @@
     "data_model": "Uses pages + assistant_conversations tables",
     "priority": 4,
     "core": false,
-    "dependent_on": ["auth-003", "feature-002", "feature-008"],
+    "dependent_on": [
+      "auth-003",
+      "feature-002",
+      "feature-008"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -261,7 +311,11 @@
     "data_model": "analytics_events aggregated by type, page, date",
     "priority": 4,
     "core": false,
-    "dependent_on": ["design-001", "feature-001", "infra-001"],
+    "dependent_on": [
+      "design-001",
+      "feature-001",
+      "infra-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -275,7 +329,10 @@
     "data_model": "analytics_events WHERE type='page_view' GROUP BY page, date; referrals grouped by source",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-007", "infra-001"],
+    "dependent_on": [
+      "feature-007",
+      "infra-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -289,7 +346,10 @@
     "data_model": "analytics_events WHERE type='page_view' GROUP BY page, date",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-007", "infra-001"],
+    "dependent_on": [
+      "feature-007",
+      "infra-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -303,7 +363,10 @@
     "data_model": "assistant_conversations(id, projectId, messages, createdAt). Pages indexed for semantic search.",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-004", "feature-002"],
+    "dependent_on": [
+      "feature-004",
+      "feature-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -317,7 +380,10 @@
     "data_model": "Derived from page content + docs.json navigation",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-014", "feature-002"],
+    "dependent_on": [
+      "feature-014",
+      "feature-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -331,7 +397,10 @@
     "data_model": "Derived from page content headings",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-014", "feature-004"],
+    "dependent_on": [
+      "feature-014",
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -345,7 +414,10 @@
     "data_model": "Postgres full-text search on pages table (title, content, description)",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-014", "feature-002"],
+    "dependent_on": [
+      "feature-014",
+      "feature-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -359,7 +431,10 @@
     "data_model": "Uses analytics_events table aggregations",
     "priority": 5,
     "core": false,
-    "dependent_on": ["auth-003", "feature-007"],
+    "dependent_on": [
+      "auth-003",
+      "feature-007"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -373,7 +448,10 @@
     "data_model": "Uses agent_jobs table",
     "priority": 5,
     "core": false,
-    "dependent_on": ["auth-003", "feature-010"],
+    "dependent_on": [
+      "auth-003",
+      "feature-010"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -387,7 +465,10 @@
     "data_model": "assistant_conversations aggregated by category, date",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-007", "feature-008"],
+    "dependent_on": [
+      "feature-007",
+      "feature-008"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -401,7 +482,10 @@
     "data_model": "analytics_events WHERE type='search' GROUP BY query",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-007", "feature-016"],
+    "dependent_on": [
+      "feature-007",
+      "feature-016"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -415,7 +499,10 @@
     "data_model": "analytics_events WHERE type='feedback' with status enum (pending/in_progress/resolved/dismissed)",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-007", "feature-017"],
+    "dependent_on": [
+      "feature-007",
+      "feature-017"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -429,7 +516,10 @@
     "data_model": "org_memberships + users table",
     "priority": 5,
     "core": false,
-    "dependent_on": ["auth-002", "design-001"],
+    "dependent_on": [
+      "auth-002",
+      "design-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -443,7 +533,11 @@
     "data_model": "agent_jobs(id, projectId, prompt, status, prUrl, messages, createdAt, updatedAt)",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-001", "feature-002", "auth-003"],
+    "dependent_on": [
+      "feature-001",
+      "feature-002",
+      "auth-003"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -457,7 +551,10 @@
     "data_model": "Reads OpenAPI spec from project settings",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-014", "feature-004"],
+    "dependent_on": [
+      "feature-014",
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -471,7 +568,10 @@
     "data_model": "OpenAPI spec parsed into endpoint definitions",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-014", "feature-004"],
+    "dependent_on": [
+      "feature-014",
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -485,7 +585,11 @@
     "data_model": "agent_settings(orgId, slackConnected, slackWorkspace, githubAppInstalled, connectedRepos JSON)",
     "priority": 5,
     "core": false,
-    "dependent_on": ["design-001", "feature-001", "auth-002"],
+    "dependent_on": [
+      "design-001",
+      "feature-001",
+      "auth-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -499,7 +603,11 @@
     "data_model": "assistant_settings(projectId, enabled, deflectionEnabled, deflectionEmail, showHelpButton, searchDomains JSON, starterQuestions JSON, starterQuestionsEnabled)",
     "priority": 5,
     "core": false,
-    "dependent_on": ["design-001", "feature-001", "feature-008"],
+    "dependent_on": [
+      "design-001",
+      "feature-001",
+      "feature-008"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -513,7 +621,9 @@
     "data_model": "analytics_events WHERE trafficSource='agent' grouped by type",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-007"],
+    "dependent_on": [
+      "feature-007"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -527,7 +637,10 @@
     "data_model": "project.settings.appearance JSON",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-001", "infra-002"],
+    "dependent_on": [
+      "feature-001",
+      "infra-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -541,7 +654,10 @@
     "data_model": "project.settings.navigation JSON",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-001", "feature-002"],
+    "dependent_on": [
+      "feature-001",
+      "feature-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -555,7 +671,9 @@
     "data_model": "analytics_events with type='feedback', data={rating, text, pageId}",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-014"],
+    "dependent_on": [
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -569,7 +687,10 @@
     "data_model": "workflow_templates (hardcoded list of 9 templates with name, description, default trigger, default prompt)",
     "priority": 6,
     "core": false,
-    "dependent_on": ["design-001", "feature-001"],
+    "dependent_on": [
+      "design-001",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -583,7 +704,10 @@
     "data_model": "workflows(id, projectId, name, triggerType, triggerConfig JSON, prompt, autoMerge, contextRepos JSON, slackNotify, createdAt, updatedAt)",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-020", "feature-018"],
+    "dependent_on": [
+      "feature-020",
+      "feature-018"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -597,7 +721,9 @@
     "data_model": "N/A",
     "priority": 6,
     "core": false,
-    "dependent_on": ["design-001"],
+    "dependent_on": [
+      "design-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -611,7 +737,9 @@
     "data_model": "project.customDomain, project.settings.domain",
     "priority": 7,
     "core": false,
-    "dependent_on": ["feature-001"],
+    "dependent_on": [
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -625,7 +753,9 @@
     "data_model": "project.settings.footer (social links, branding)",
     "priority": 7,
     "core": false,
-    "dependent_on": ["feature-014"],
+    "dependent_on": [
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -639,7 +769,10 @@
     "data_model": "Derived from project slug \u2014 no additional DB storage needed",
     "priority": 7,
     "core": false,
-    "dependent_on": ["design-001", "feature-001"],
+    "dependent_on": [
+      "design-001",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -653,7 +786,10 @@
     "data_model": "projects.name",
     "priority": 7,
     "core": false,
-    "dependent_on": ["settings-001", "feature-001"],
+    "dependent_on": [
+      "settings-001",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -667,7 +803,10 @@
     "data_model": "projects.repoUrl, projects.repoBranch, projects.repoPath",
     "priority": 7,
     "core": false,
-    "dependent_on": ["settings-001", "feature-001"],
+    "dependent_on": [
+      "settings-001",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -681,7 +820,9 @@
     "data_model": "assistant_usage(projectId, messagesUsed, messageLimit, billingCycleStart, billingCycleEnd, overageSpend)",
     "priority": 8,
     "core": false,
-    "dependent_on": ["feature-019"],
+    "dependent_on": [
+      "feature-019"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -695,7 +836,11 @@
     "data_model": "N/A \u2014 conditional rendering based on data existence",
     "priority": 8,
     "core": false,
-    "dependent_on": ["design-001", "feature-007", "feature-010"],
+    "dependent_on": [
+      "design-001",
+      "feature-007",
+      "feature-010"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -709,7 +854,11 @@
     "data_model": "project.settings.addons JSON",
     "priority": 8,
     "core": false,
-    "dependent_on": ["settings-001", "feature-001", "feature-017"],
+    "dependent_on": [
+      "settings-001",
+      "feature-001",
+      "feature-017"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -723,7 +872,10 @@
     "data_model": "users.name, user.settings.emailNotifications, user.integrations.github",
     "priority": 8,
     "core": false,
-    "dependent_on": ["settings-001", "auth-001"],
+    "dependent_on": [
+      "settings-001",
+      "auth-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -737,7 +889,11 @@
     "data_model": "Deletes from projects/organizations tables + cascading deletes",
     "priority": 9,
     "core": false,
-    "dependent_on": ["settings-001", "feature-001", "auth-002"],
+    "dependent_on": [
+      "settings-001",
+      "feature-001",
+      "auth-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -751,217 +907,265 @@
     "data_model": "N/A",
     "priority": 10,
     "core": false,
-    "dependent_on": ["infra-001", "infra-002", "auth-001", "feature-001"],
+    "dependent_on": [
+      "infra-001",
+      "infra-002",
+      "auth-001",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-003a",
     "category": "ui",
-    "description": "Configurations panel — visual GUI editor for docs.json embedded in the editor sidebar, with 10 sections: Overview, Visual Branding (theme, colors, logos), Typography, Header & Topbar, Footer, Content Features (thumbnails, code theme, LaTeX, icons), Assistant & Search, Integrations, API Documentation, Advanced",
+    "description": "Configurations panel \u2014 visual GUI editor for docs.json embedded in the editor sidebar, with 10 sections: Overview, Visual Branding (theme, colors, logos), Typography, Header & Topbar, Footer, Content Features (thumbnails, code theme, LaTeX, icons), Assistant & Search, Integrations, API Documentation, Advanced",
     "page": "/editor (Configurations tab)",
     "ui_details": "Sidebar panel replacing nav tree when Configurations selected. Accordion sections. Visual Branding: theme dropdown, primary/light/dark color hex pickers, light/dark logo path inputs, logo link. Content Features: thumbnail toggle, code block theme dropdown, LaTeX toggle, icon library selector. File upload accepts .json, .json.gz for importing configs.",
-    "behavior": "Edit any section → changes update docs.json in real-time. Color pickers show hex input + preview swatch. Logo paths accept S3/CDN URLs. Save triggers redeployment. Import/export full config as JSON.",
+    "behavior": "Edit any section \u2192 changes update docs.json in real-time. Color pickers show hex input + preview swatch. Logo paths accept S3/CDN URLs. Save triggers redeployment. Import/export full config as JSON.",
     "data_model": "project.settings (docs.json structure stored as JSONB in projects table)",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-003", "feature-001"],
+    "dependent_on": [
+      "feature-003",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-003b",
     "category": "ui",
-    "description": "Editor collaboration — inline comments on pages, text suggestions (propose changes without direct editing), branch selector for creating/switching branches, publish workflow",
+    "description": "Editor collaboration \u2014 inline comments on pages, text suggestions (propose changes without direct editing), branch selector for creating/switching branches, publish workflow",
     "page": "/editor/[page]",
     "ui_details": "Comments sidebar: 'This page' filter, comment threads with reply support. Suggestions: highlighted diffs for review, accept/reject buttons. Branch selector: popover with search, branch list with 'Default' badge, 'Create new branch' button. Publish: popover with site URL and Publish button (disabled when no changes).",
-    "behavior": "All roles can comment, editors/admins can resolve. Suggestions appear as tracked changes in PR. Create branch → edit → publish creates PR for review. Comment threads linked to PR descriptions.",
+    "behavior": "All roles can comment, editors/admins can resolve. Suggestions appear as tracked changes in PR. Create branch \u2192 edit \u2192 publish creates PR for review. Comment threads linked to PR descriptions.",
     "data_model": "comments(id, pageId, userId, content, resolved, createdAt), suggestions(id, pageId, userId, diff, status, createdAt)",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-003", "auth-002"],
+    "dependent_on": [
+      "feature-003",
+      "auth-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-004b",
     "category": "ui",
-    "description": "Extended MDX component library — Mermaid (flowcharts/sequence diagrams), Expandables (toggle nested properties), Columns (responsive grid), Tooltips (hover definitions), Accordion, Frame (styled borders for media), Update/Changelog (structured timeline entries), View (switchable panels for language/framework variants), Banner (dismissible announcements), Badge (status indicators)",
+    "description": "Extended MDX component library \u2014 Mermaid (flowcharts/sequence diagrams), Expandables (toggle nested properties), Columns (responsive grid), Tooltips (hover definitions), Accordion, Frame (styled borders for media), Update/Changelog (structured timeline entries), View (switchable panels for language/framework variants), Banner (dismissible announcements), Badge (status indicators)",
     "page": "Docs site (rendered components)",
     "ui_details": "Mermaid: renders flowchart/sequence/gantt from code fence. Expandables: nested collapsible sections for API property trees. Columns: responsive 2-3 column grid. Tooltips: dotted underline text with hover popup. Accordion: collapsible sections with chevron. Frame: rounded border container for screenshots/videos. Update: date header + content body for changelogs. View: tab-like switcher for multi-language code examples. Banner: full-width dismissible bar at top. Badge: inline colored status pill.",
     "behavior": "Mermaid renders client-side from text definition. Expandables toggle open/close. Columns reflow on mobile. Tooltips show on hover with delay. Frame adds consistent visual treatment. Update auto-generates RSS feed. View persists language preference across pages.",
     "data_model": "MDX components map to React components in renderer",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-004"],
+    "dependent_on": [
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-005a",
     "category": "backend",
-    "description": "GitHub webhook auto-deploy — receive push webhooks from connected GitHub repos, trigger automatic deployment on push to deployment branch, GitHub App install flow",
+    "description": "GitHub webhook auto-deploy \u2014 receive push webhooks from connected GitHub repos, trigger automatic deployment on push to deployment branch, GitHub App install flow",
     "page": "N/A (backend) + /settings/organization/github-app",
     "ui_details": "GitHub App settings page: 'Enable auto updates', active connections list, 'Install the GitHub app' button. After install: shows connected repos with branch and permissions.",
-    "behavior": "Install GitHub App → select repos → webhook registered. Push to deployment branch → webhook received → auto-deploy triggered → status updates in dashboard activity table. Supports multiple repos per org.",
+    "behavior": "Install GitHub App \u2192 select repos \u2192 webhook registered. Push to deployment branch \u2192 webhook received \u2192 auto-deploy triggered \u2192 status updates in dashboard activity table. Supports multiple repos per org.",
     "data_model": "github_connections(id, orgId, installationId, repos JSON, createdAt). Deployments triggered via webhook payload (repo, branch, commitSha).",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-001", "feature-005"],
+    "dependent_on": [
+      "feature-001",
+      "feature-005"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-005b",
     "category": "ui",
-    "description": "Branch-based preview deployments — create preview deployments from non-default branches, preview deployment list with branch column, 'Create custom preview' button",
+    "description": "Branch-based preview deployments \u2014 create preview deployments from non-default branches, preview deployment list with branch column, 'Create custom preview' button",
     "page": "/ (Previews tab)",
     "ui_details": "Previews tab on dashboard home: table with Branch column, Status badge, Commit, Timestamp. 'Create custom preview' button at top. Each preview gets unique URL ({branch}.preview.{project}.mintlify.app).",
-    "behavior": "Create preview → select branch → deploy → unique preview URL generated. Branch selector in editor creates branch → auto-creates preview. Preview auth toggle in settings restricts access to org members.",
+    "behavior": "Create preview \u2192 select branch \u2192 deploy \u2192 unique preview URL generated. Branch selector in editor creates branch \u2192 auto-creates preview. Preview auth toggle in settings restricts access to org members.",
     "data_model": "deployments table with type='preview', branch field, previewUrl field",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-005", "feature-005a"],
+    "dependent_on": [
+      "feature-005",
+      "feature-005a"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-022",
     "category": "content",
-    "description": "llms.txt and llms-full.txt auto-generation — generate machine-readable documentation index (llms.txt with page titles and URLs) and full content dump (llms-full.txt with all page content) for LLM consumption",
+    "description": "llms.txt and llms-full.txt auto-generation \u2014 generate machine-readable documentation index (llms.txt with page titles and URLs) and full content dump (llms-full.txt with all page content) for LLM consumption",
     "page": "Docs site (/llms.txt, /llms-full.txt)",
-    "ui_details": "N/A — served as plain text files at well-known URLs",
+    "ui_details": "N/A \u2014 served as plain text files at well-known URLs",
     "behavior": "Auto-generated on each deployment from all published pages. llms.txt: title + URL per line. llms-full.txt: full markdown content of all pages concatenated. Respects hidden pages and auth groups. Served with text/plain content type.",
     "data_model": "Generated from pages table on deploy, cached as static files",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-002", "feature-005"],
+    "dependent_on": [
+      "feature-002",
+      "feature-005"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-023",
     "category": "content",
-    "description": "URL redirects — configure path redirects in docs.json to preserve SEO when pages are moved or renamed",
+    "description": "URL redirects \u2014 configure path redirects in docs.json to preserve SEO when pages are moved or renamed",
     "page": "N/A (config) + Configurations panel",
-    "ui_details": "Redirects section in Configurations panel: list of source → destination path mappings with add/remove buttons.",
-    "behavior": "Request to old path → 301 redirect to new path. Configured in docs.json redirects array. Applied at request time by the docs site server.",
+    "ui_details": "Redirects section in Configurations panel: list of source \u2192 destination path mappings with add/remove buttons.",
+    "behavior": "Request to old path \u2192 301 redirect to new path. Configured in docs.json redirects array. Applied at request time by the docs site server.",
     "data_model": "project.settings.redirects JSON array [{source, destination}]",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-001", "feature-014"],
+    "dependent_on": [
+      "feature-001",
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-024",
     "category": "content",
-    "description": "SEO features — auto-generated XML sitemap, robots.txt, canonical URLs, per-page meta tags (title, description, og:image), noindex frontmatter option, page timestamps (last modified)",
+    "description": "SEO features \u2014 auto-generated XML sitemap, robots.txt, canonical URLs, per-page meta tags (title, description, og:image), noindex frontmatter option, page timestamps (last modified)",
     "page": "Docs site (/sitemap.xml, /robots.txt) + page frontmatter",
     "ui_details": "Page Settings dialog in editor: Title, Description, OG Image URL, Hidden toggle, noindex option. Sitemap and robots.txt auto-generated.",
     "behavior": "Sitemap.xml lists all published, indexable pages with lastmod. Robots.txt respects auth settings (disallow all if site requires auth). Canonical URLs prevent duplicate content. og:image for social sharing. noindex excludes page from search engines.",
     "data_model": "Pages frontmatter fields (title, description, ogImage, noindex). Generated files cached on deploy.",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-002", "feature-005"],
+    "dependent_on": [
+      "feature-002",
+      "feature-005"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-025",
     "category": "content",
-    "description": "Custom CSS and JavaScript injection — allow users to inject custom stylesheets and scripts for branding, analytics widgets, and third-party integrations",
+    "description": "Custom CSS and JavaScript injection \u2014 allow users to inject custom stylesheets and scripts for branding, analytics widgets, and third-party integrations",
     "page": "/settings or Configurations panel",
     "ui_details": "Custom CSS textarea and Custom JS textarea in Advanced section of Configurations panel. Preview changes before deploy.",
     "behavior": "Custom CSS injected in <head> after default styles. Custom JS injected before </body>. Applied to all docs site pages. Common use: analytics scripts, support widgets, brand-specific styling overrides.",
     "data_model": "project.settings.customCSS (text), project.settings.customJS (text)",
     "priority": 7,
     "core": false,
-    "dependent_on": ["feature-001", "feature-003a"],
+    "dependent_on": [
+      "feature-001",
+      "feature-003a"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-026",
     "category": "content",
-    "description": "Reusable snippets with variables — parameterized content reuse across pages to reduce duplication, define variables in frontmatter or config",
+    "description": "Reusable snippets with variables \u2014 parameterized content reuse across pages to reduce duplication, define variables in frontmatter or config",
     "page": "Docs site (rendered in MDX)",
-    "ui_details": "N/A — authored in MDX using {{ variableName }} syntax or <Snippet /> component importing from snippets directory",
+    "ui_details": "N/A \u2014 authored in MDX using {{ variableName }} syntax or <Snippet /> component importing from snippets directory",
     "behavior": "Define snippet files in /snippets directory. Import and use in any page. Variables resolved at render time from frontmatter, config, or user context. Reduces duplication for repeated content like install instructions or API base URLs.",
     "data_model": "Snippet files stored as pages with type='snippet', not shown in navigation",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-002", "feature-004"],
+    "dependent_on": [
+      "feature-002",
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-027",
     "category": "content",
-    "description": "OpenAPI/AsyncAPI auto-documentation — auto-generate API reference pages from OpenAPI 3.x specs and AsyncAPI 3.0 specs, with method badges, parameter tables, response schemas, and code examples",
+    "description": "OpenAPI/AsyncAPI auto-documentation \u2014 auto-generate API reference pages from OpenAPI 3.x specs and AsyncAPI 3.0 specs, with method badges, parameter tables, response schemas, and code examples",
     "page": "Docs site /api-reference/*",
     "ui_details": "Auto-generated sidebar entries with HTTP method badges (GET/POST/PUT/DELETE). Each endpoint page: method + URL header, parameters table (name, type, required, description), request body schema, response tabs by status code, cURL/language code examples, auth section.",
-    "behavior": "Upload or link OpenAPI/AsyncAPI spec in project settings → pages auto-generated for each endpoint/channel. Spec changes on deploy regenerate pages. AsyncAPI generates WebSocket channel documentation. Language selector for code examples (cURL, Python, JS, Go, etc.).",
+    "behavior": "Upload or link OpenAPI/AsyncAPI spec in project settings \u2192 pages auto-generated for each endpoint/channel. Spec changes on deploy regenerate pages. AsyncAPI generates WebSocket channel documentation. Language selector for code examples (cURL, Python, JS, Go, etc.).",
     "data_model": "project.settings.openapi (spec URL or inline JSON). Generated pages cached, not stored in pages table.",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-004", "feature-014"],
+    "dependent_on": [
+      "feature-004",
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-028",
     "category": "content",
-    "description": "Multi-language docs (i18n) — support multiple language versions of documentation with language switcher, per-language navigation, and SEO hreflang tags",
+    "description": "Multi-language docs (i18n) \u2014 support multiple language versions of documentation with language switcher, per-language navigation, and SEO hreflang tags",
     "page": "Docs site (language switcher in navbar)",
     "ui_details": "Language switcher dropdown in top bar showing available locales (ISO 639-1 codes). Each language has its own navigation tree. Language-specific overrides for banner, footer, navbar text in docs.json.",
-    "behavior": "Select language → URL updates with locale prefix (e.g. /fr/getting-started). Default language has no prefix. Each language can have independent page content and navigation. hreflang tags auto-generated for SEO. 27+ supported language codes.",
+    "behavior": "Select language \u2192 URL updates with locale prefix (e.g. /fr/getting-started). Default language has no prefix. Each language can have independent page content and navigation. hreflang tags auto-generated for SEO. 27+ supported language codes.",
     "data_model": "Pages organized by locale directory. project.settings.languages JSON array. Navigation per-language in docs.json.",
     "priority": 7,
     "core": false,
-    "dependent_on": ["feature-002", "feature-014", "feature-024"],
+    "dependent_on": [
+      "feature-002",
+      "feature-014",
+      "feature-024"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-029",
     "category": "content",
-    "description": "Multi-version documentation — version switcher in navigation for maintaining multiple API/product versions side-by-side with version-specific navigation trees",
+    "description": "Multi-version documentation \u2014 version switcher in navigation for maintaining multiple API/product versions side-by-side with version-specific navigation trees",
     "page": "Docs site (version switcher in navbar)",
     "ui_details": "Version switcher dropdown next to language switcher. Each version has its own navigation tree defined in docs.json navigation.versions array. 'Default' badge on current/latest version.",
-    "behavior": "Select version → navigation tree swaps to version-specific pages. URL includes version prefix. Default version shown when no prefix. Common use: API v1/v2/v3 docs side-by-side.",
+    "behavior": "Select version \u2192 navigation tree swaps to version-specific pages. URL includes version prefix. Default version shown when no prefix. Common use: API v1/v2/v3 docs side-by-side.",
     "data_model": "project.settings.versions JSON array [{tag, name, default}]. Navigation per-version in docs.json.",
     "priority": 7,
     "core": false,
-    "dependent_on": ["feature-002", "feature-014"],
+    "dependent_on": [
+      "feature-002",
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-030",
     "category": "content",
-    "description": "LaTeX math rendering — inline ($equation$) and block ($$equation$$) mathematical equation rendering with auto-loaded LaTeX stylesheet",
+    "description": "LaTeX math rendering \u2014 inline ($equation$) and block ($$equation$$) mathematical equation rendering with auto-loaded LaTeX stylesheet",
     "page": "Docs site (rendered in MDX)",
     "ui_details": "Inline math renders inline with text. Block math renders centered on its own line. Styled with KaTeX or similar library.",
     "behavior": "Single dollar signs for inline math, double dollar signs for block equations. LaTeX stylesheet auto-loaded when enabled in project settings (styles.latex config). Renders at build time, no client-side JS required for display.",
     "data_model": "project.settings.styles.latex (boolean)",
     "priority": 8,
     "core": false,
-    "dependent_on": ["feature-004"],
+    "dependent_on": [
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
   {
     "id": "feature-031",
     "category": "ui",
-    "description": "Contextual AI menu — one-click buttons to send page content to external AI tools (ChatGPT, Claude, Cursor, Perplexity, Google AI Studio, Grok, Devin, Windsurf)",
+    "description": "Contextual AI menu \u2014 one-click buttons to send page content to external AI tools (ChatGPT, Claude, Cursor, Perplexity, Google AI Studio, Grok, Devin, Windsurf)",
     "page": "Docs site (page header or TOC sidebar)",
     "ui_details": "Menu or button group showing AI tool icons. Each button opens the respective AI tool with page content pre-loaded. Configurable in docs.json (navigation.contextualMenu with options array).",
-    "behavior": "Click AI tool button → opens tool's URL with page content as context (via URL params or clipboard). Tools configurable per project — can enable/disable specific options.",
+    "behavior": "Click AI tool button \u2192 opens tool's URL with page content as context (via URL params or clipboard). Tools configurable per project \u2014 can enable/disable specific options.",
     "data_model": "project.settings.contextualMenu JSON (enabled tools list)",
     "priority": 8,
     "core": false,
-    "dependent_on": ["feature-014"],
+    "dependent_on": [
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   }
