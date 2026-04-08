@@ -1099,5 +1099,27 @@
       "Light theme footer styling — colors, borders, tooltip shadow",
       "Footer with 0 social links — only powered-by should show"
     ]
+  },
+  {
+    "feature_id": "feature-021",
+    "tests_written": [
+      "getMcpServerUrl generates correct URL",
+      "getMcpTools returns 2 tools with correct names",
+      "tool names use underscored slug",
+      "tool descriptions mention project title",
+      "slugToTitle converts hyphenated to title case",
+      "page loads with Hosted MCP server heading",
+      "Beta badge visible",
+      "read-only URL input shows .mintlify.app/mcp",
+      "Copy button visible",
+      "Available tools section visible",
+      "search_ and get_page_ tool cards displayed"
+    ],
+    "needs_deeper_qa": [
+      "Clipboard copy behavior (navigator.clipboard) — mocked in test env",
+      "Correct project slug resolution when user has multiple projects",
+      "Visual match with original Mintlify MCP page styling",
+      "Mobile responsive layout of URL bar and tool cards"
+    ]
   }
 ]

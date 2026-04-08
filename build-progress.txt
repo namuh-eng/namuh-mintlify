@@ -1792,3 +1792,43 @@ Date: 2026-04-09
 - Tooltip uses hover state (not a separate tooltip library) — lightweight, sufficient for single tooltip
 - Footer settings at project.settings.footer — extensible for future customization (e.g. custom links)
 - Brand name fallback: settings.brandName > projectName > "Mintlify" — always shows something meaningful
+
+## Iteration 36 — feature-021: MCP Server Page
+Date: 2026-04-09
+
+### What was built
+- MCP utility library (`src/lib/mcp.ts`) with getMcpServerUrl, getMcpTools, slugToTitle helpers
+- MCP server page (`src/app/products/mcp/page.tsx`) — server component with auth + project slug resolution
+- MCP client component (`src/app/products/mcp/mcp-page-client.tsx`) — full UI with:
+  - Breadcrumb "Agents / MCP" with emerald "Beta" badge
+  - "Hosted MCP server" section with description and "Learn more" external link
+  - URL bar: "https://" prefix + read-only input "{slug}.mintlify.app/mcp" + Copy button with check animation
+  - Helper text below URL bar
+  - "Available tools" section with 2 tool cards (search_{slug} and get_page_{slug})
+  - Each tool card shows Sparkles icon, monospace tool name, and detailed description
+- Sidebar already has MCP link under Agents section (pre-existing)
+- Smoke tests updated with MCP page load check
+
+### Test results
+- 13 new unit tests (mcp.test.ts) — all passing
+- 7 new E2E tests (mcp.spec.ts) — written, QA will verify
+- 955 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/mcp.ts — new, MCP URL + tools generation utilities
+- src/app/products/mcp/page.tsx — new, server component with auth
+- src/app/products/mcp/mcp-page-client.tsx — new, client UI component
+- tests/mcp.test.ts — new, 13 unit tests
+- tests/e2e/mcp.spec.ts — new, 7 E2E tests
+- tests/e2e/smoke.spec.ts — updated, added MCP smoke test
+- prd.json — feature-021 build_pass set to true
+- qa-hints.json — added feature-021 QA hints
+
+### Decisions
+- Project slug derived from subdomain field first, falling back to slug, then "my-project" default
+- Tool names use underscored slug (e.g., search_mint_starter_kit) matching Mintlify's pattern
+- Tool descriptions auto-generated with title-cased project name
+- Copy button shows check icon + "Copied" text for 2s after click
+- Used emerald accent color for Beta badge and Learn more link, matching design system
+- Read-only page — no additional DB tables or API routes needed
