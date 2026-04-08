@@ -37,10 +37,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "fp",
-                  "messages"
-                ],
+                "required": ["fp", "messages"],
                 "properties": {
                   "fp": {
                     "type": "string",
@@ -75,12 +72,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "system",
-                            "assistant",
-                            "data",
-                            "user"
-                          ],
+                          "enum": ["system", "assistant", "data", "user"],
                           "description": "The role of the message sender."
                         },
                         "createdAt": {
@@ -106,27 +98,20 @@
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "text"
-                                    ]
+                                    "enum": ["text"]
                                   },
                                   "text": {
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "type",
-                                  "text"
-                                ]
+                                "required": ["type", "text"]
                               },
                               {
                                 "type": "object",
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "reasoning"
-                                    ]
+                                    "enum": ["reasoning"]
                                   },
                                   "reasoning": {
                                     "type": "string"
@@ -140,9 +125,7 @@
                                           "properties": {
                                             "type": {
                                               "type": "string",
-                                              "enum": [
-                                                "text"
-                                              ]
+                                              "enum": ["text"]
                                             },
                                             "text": {
                                               "type": "string"
@@ -151,70 +134,50 @@
                                               "type": "string"
                                             }
                                           },
-                                          "required": [
-                                            "type",
-                                            "text"
-                                          ]
+                                          "required": ["type", "text"]
                                         },
                                         {
                                           "type": "object",
                                           "properties": {
                                             "type": {
                                               "type": "string",
-                                              "enum": [
-                                                "redacted"
-                                              ]
+                                              "enum": ["redacted"]
                                             },
                                             "data": {
                                               "type": "string"
                                             }
                                           },
-                                          "required": [
-                                            "type",
-                                            "data"
-                                          ]
+                                          "required": ["type", "data"]
                                         }
                                       ]
                                     }
                                   }
                                 },
-                                "required": [
-                                  "type",
-                                  "reasoning",
-                                  "details"
-                                ]
+                                "required": ["type", "reasoning", "details"]
                               },
                               {
                                 "type": "object",
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "step-start"
-                                    ]
+                                    "enum": ["step-start"]
                                   }
                                 },
-                                "required": [
-                                  "type"
-                                ]
+                                "required": ["type"]
                               },
                               {
                                 "type": "object",
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "source"
-                                    ]
+                                    "enum": ["source"]
                                   },
                                   "source": {
                                     "type": "object",
                                     "properties": {
                                       "sourceType": {
                                         "type": "string",
-                                        "enum": [
-                                          "url"
-                                        ]
+                                        "enum": ["url"]
                                       },
                                       "id": {
                                         "type": "string"
@@ -226,26 +189,17 @@
                                         "type": "string"
                                       }
                                     },
-                                    "required": [
-                                      "sourceType",
-                                      "id",
-                                      "url"
-                                    ]
+                                    "required": ["sourceType", "id", "url"]
                                   }
                                 },
-                                "required": [
-                                  "type",
-                                  "source"
-                                ]
+                                "required": ["type", "source"]
                               },
                               {
                                 "type": "object",
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "tool-invocation"
-                                    ]
+                                    "enum": ["tool-invocation"]
                                   },
                                   "toolInvocation": {
                                     "oneOf": [
@@ -254,9 +208,7 @@
                                         "properties": {
                                           "state": {
                                             "type": "string",
-                                            "enum": [
-                                              "partial-call"
-                                            ]
+                                            "enum": ["partial-call"]
                                           },
                                           "step": {
                                             "type": "number"
@@ -281,9 +233,7 @@
                                         "properties": {
                                           "state": {
                                             "type": "string",
-                                            "enum": [
-                                              "call"
-                                            ]
+                                            "enum": ["call"]
                                           },
                                           "step": {
                                             "type": "number"
@@ -308,9 +258,7 @@
                                         "properties": {
                                           "state": {
                                             "type": "string",
-                                            "enum": [
-                                              "result"
-                                            ]
+                                            "enum": ["result"]
                                           },
                                           "step": {
                                             "type": "number"
@@ -335,10 +283,7 @@
                                     ]
                                   }
                                 },
-                                "required": [
-                                  "type",
-                                  "toolInvocation"
-                                ]
+                                "required": ["type", "toolInvocation"]
                               }
                             ]
                           },
@@ -359,19 +304,12 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "url"
-                            ]
+                            "required": ["url"]
                           },
                           "description": "Optional array of experimental attachments for the message."
                         }
                       },
-                      "required": [
-                        "id",
-                        "role",
-                        "content",
-                        "parts"
-                      ]
+                      "required": ["id", "role", "content", "parts"]
                     },
                     "description": "Array of messages in the conversation. On the frontend, you will likely want to use the handleSubmit function from the @ai-sdk package's useChat hook to append user messages and handle streaming responses, rather than manually defining the objects in this array as they have so many parameters."
                   },
@@ -402,10 +340,7 @@
                       "properties": {
                         "type": {
                           "type": "string",
-                          "enum": [
-                            "code",
-                            "textSelection"
-                          ],
+                          "enum": ["code", "textSelection"],
                           "description": "The type of context being provided."
                         },
                         "value": {
@@ -421,10 +356,7 @@
                           "description": "Optional identifier for the UI element containing the context."
                         }
                       },
-                      "required": [
-                        "type",
-                        "value"
-                      ]
+                      "required": ["type", "value"]
                     },
                     "description": "Optional array of contextual information to provide to the assistant."
                   },
@@ -473,10 +405,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "fp",
-                  "messages"
-                ],
+                "required": ["fp", "messages"],
                 "properties": {
                   "fp": {
                     "type": "string",
@@ -510,11 +439,7 @@
                         },
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "system",
-                            "assistant",
-                            "user"
-                          ],
+                          "enum": ["system", "assistant", "user"],
                           "description": "The role of the message sender."
                         },
                         "createdAt": {
@@ -532,18 +457,13 @@
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "text"
-                                    ]
+                                    "enum": ["text"]
                                   },
                                   "text": {
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "type",
-                                  "text"
-                                ]
+                                "required": ["type", "text"]
                               },
                               {
                                 "type": "object",
@@ -551,9 +471,7 @@
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "reasoning"
-                                    ]
+                                    "enum": ["reasoning"]
                                   },
                                   "text": {
                                     "type": "string"
@@ -563,10 +481,7 @@
                                     "description": "Optional provider-specific metadata."
                                   }
                                 },
-                                "required": [
-                                  "type",
-                                  "text"
-                                ]
+                                "required": ["type", "text"]
                               },
                               {
                                 "type": "object",
@@ -574,9 +489,7 @@
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "source-url"
-                                    ]
+                                    "enum": ["source-url"]
                                   },
                                   "sourceId": {
                                     "type": "string"
@@ -592,11 +505,7 @@
                                     "description": "Optional provider-specific metadata."
                                   }
                                 },
-                                "required": [
-                                  "type",
-                                  "sourceId",
-                                  "url"
-                                ]
+                                "required": ["type", "sourceId", "url"]
                               },
                               {
                                 "type": "object",
@@ -604,9 +513,7 @@
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "file"
-                                    ]
+                                    "enum": ["file"]
                                   },
                                   "mediaType": {
                                     "type": "string"
@@ -618,11 +525,7 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "type",
-                                  "mediaType",
-                                  "url"
-                                ]
+                                "required": ["type", "mediaType", "url"]
                               },
                               {
                                 "type": "object",
@@ -630,14 +533,10 @@
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "step-start"
-                                    ]
+                                    "enum": ["step-start"]
                                   }
                                 },
-                                "required": [
-                                  "type"
-                                ]
+                                "required": ["type"]
                               }
                             ]
                           },
@@ -648,11 +547,7 @@
                           "description": "Optional metadata associated with the message."
                         }
                       },
-                      "required": [
-                        "id",
-                        "role",
-                        "parts"
-                      ]
+                      "required": ["id", "role", "parts"]
                     },
                     "description": "Array of messages in the conversation. Use the handleSubmit function from the @ai-sdk/react package's useChat hook to manage messages and streaming responses."
                   },
@@ -690,10 +585,7 @@
                       "properties": {
                         "type": {
                           "type": "string",
-                          "enum": [
-                            "code",
-                            "textSelection"
-                          ],
+                          "enum": ["code", "textSelection"],
                           "description": "The type of context being provided."
                         },
                         "value": {
@@ -709,10 +601,7 @@
                           "description": "Optional identifier for the UI element containing the context."
                         }
                       },
-                      "required": [
-                        "type",
-                        "value"
-                      ]
+                      "required": ["type", "value"]
                     },
                     "description": "Optional array of contextual information to provide to the assistant."
                   },
@@ -761,9 +650,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "path"
-                ],
+                "required": ["path"],
                 "properties": {
                   "path": {
                     "type": "string",
@@ -840,9 +727,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "query"
-                ],
+                "required": ["query"],
                 "properties": {
                   "query": {
                     "type": "string",

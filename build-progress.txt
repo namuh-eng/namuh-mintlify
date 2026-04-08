@@ -1,0 +1,26 @@
+## Iteration 1 — infra-001: Database Schema
+Date: 2026-04-08
+
+### What was built
+- Complete Drizzle ORM schema with 10 tables: organizations, org_memberships, projects, deployments, pages, api_keys, agent_jobs, assistant_conversations, analytics_events, audit_logs
+- 7 PostgreSQL enums: org_plan, org_role, project_status, deployment_status, api_key_type, agent_job_status, analytics_event_type
+- All tables have UUID primary keys, timestamps with timezone, proper foreign keys with cascade deletes
+- Unique indexes on org slugs, project slugs per org, page paths per project, user-org membership pairs
+- Performance indexes on all foreign key columns and frequently queried fields
+
+### Test results
+- 28 unit tests (schema.test.ts) — all passing
+- 49 total unit tests — all passing
+- make check (typecheck + lint) — passing
+- Schema pushed to RDS Postgres via make db-push — success
+
+### Files changed
+- src/lib/db/schema.ts — complete schema (was placeholder)
+- tests/schema.test.ts — new, 28 tests
+- tests/e2e/smoke.spec.ts — new, 2 smoke tests
+
+### Decisions
+- Used UUID (defaultRandom) for all primary keys — matches SaaS patterns
+- userId in orgMemberships/auditLogs is text (not UUID) to match Better Auth's user.id type
+- JSON columns (settings, frontmatter, messages, data, details) typed with $type<> for TypeScript safety
+- Cascade deletes on all parent-child relationships (org->projects, project->pages, etc.)

@@ -38,9 +38,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "messages"
-                ],
+                "required": ["messages"],
                 "properties": {
                   "branch": {
                     "type": "string",
@@ -51,18 +49,11 @@
                     "description": "A list of messages to provide to the agent. A default system prompt is always prepended automatically, so you typically only need to include user messages.",
                     "items": {
                       "type": "object",
-                      "required": [
-                        "role",
-                        "content"
-                      ],
+                      "required": ["role", "content"],
                       "properties": {
                         "role": {
                           "type": "string",
-                          "enum": [
-                            "system",
-                            "user",
-                            "assistant"
-                          ],
+                          "enum": ["system", "user", "assistant"],
                           "description": "The role of the message sender. Use `user` for task instructions. Use `system` to add supplementary instructions that are appended after the default system prompt (does not replace it). Use `assistant` to provide example assistant responses for few-shot prompting."
                         },
                         "content": {
@@ -79,10 +70,7 @@
                   },
                   "model": {
                     "type": "string",
-                    "enum": [
-                      "sonnet",
-                      "opus"
-                    ],
+                    "enum": ["sonnet", "opus"],
                     "default": "sonnet",
                     "description": "The AI model to use for the agent job. Use `sonnet` for faster, cost-effective processing. Use `opus` for more capable, but slower processing."
                   }
@@ -211,11 +199,7 @@
                           },
                           "priority": {
                             "type": "string",
-                            "enum": [
-                              "high",
-                              "medium",
-                              "low"
-                            ],
+                            "enum": ["high", "medium", "low"],
                             "description": "Priority level of the task."
                           },
                           "id": {
@@ -357,11 +341,7 @@
                                 },
                                 "priority": {
                                   "type": "string",
-                                  "enum": [
-                                    "high",
-                                    "medium",
-                                    "low"
-                                  ],
+                                  "enum": ["high", "medium", "low"],
                                   "description": "Priority level of the task."
                                 },
                                 "id": {
@@ -416,9 +396,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "prompt"
-                ],
+                "required": ["prompt"],
                 "properties": {
                   "prompt": {
                     "type": "string",
@@ -542,9 +520,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "prompt"
-                ],
+                "required": ["prompt"],
                 "properties": {
                   "prompt": {
                     "type": "string",
@@ -612,12 +588,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "active",
-              "completed",
-              "archived",
-              "failed"
-            ],
+            "enum": ["active", "completed", "archived", "failed"],
             "description": "Current status of the job. `active` — the agent is currently processing the prompt. `completed` — the agent finished successfully and a PR may have been created (check `prLink`). `archived` — the job has been archived. `failed` — the agent encountered an unrecoverable error. Poll until status is `completed`, `archived`, or `failed`."
           },
           "source": {

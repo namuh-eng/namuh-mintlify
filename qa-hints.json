@@ -1,0 +1,17 @@
+[
+  {
+    "feature_id": "infra-001",
+    "tests_written": [
+      "all 10 tables exist with correct names",
+      "all columns present on each table",
+      "not-null constraints on critical columns (slug, orgId, userId, keyHash, action, type)",
+      "schema pushed to RDS Postgres successfully"
+    ],
+    "needs_deeper_qa": [
+      "Verify foreign key cascade deletes work in practice (insert parent + child, delete parent, confirm child deleted)",
+      "Verify unique index constraints reject duplicates (e.g. duplicate org slug, duplicate membership)",
+      "Verify enum columns reject invalid values",
+      "Verify jsonb default values are correct ({} vs [])"
+    ]
+  }
+]

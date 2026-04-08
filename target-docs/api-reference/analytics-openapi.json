@@ -44,26 +44,16 @@
                       "description": "The path or URL to the source document."
                     },
                     "comment": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Text of the user's feedback comment."
                     },
                     "createdAt": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Timestamp when the feedback was submitted."
                     },
                     "source": {
                       "type": "string",
-                      "enum": [
-                        "code_snippet",
-                        "contextual",
-                        "thumbs_only"
-                      ],
+                      "enum": ["code_snippet", "contextual", "thumbs_only"],
                       "description": "Where the feedback originated. `code_snippet` is feedback on a code block, `contextual` is page-level feedback, `thumbs_only` is a thumbs up/down vote."
                     },
                     "status": {
@@ -98,26 +88,16 @@
                       "description": "The path or URL to the source document."
                     },
                     "comment": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Text of the user's feedback comment."
                     },
                     "createdAt": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Timestamp when the feedback was submitted."
                     },
                     "source": {
                       "type": "string",
-                      "enum": [
-                        "code_snippet",
-                        "contextual",
-                        "thumbs_only"
-                      ],
+                      "enum": ["code_snippet", "contextual", "thumbs_only"],
                       "description": "Where the feedback originated. `code_snippet` is feedback on a code block, `contextual` is page-level feedback, `thumbs_only` is a thumbs up/down vote."
                     },
                     "status": {
@@ -135,10 +115,7 @@
                       "description": "Whether the user found the content helpful."
                     },
                     "contact": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Email address the user provided for follow-up."
                     }
                   },
@@ -165,26 +142,16 @@
                       "description": "The path or URL to the source document."
                     },
                     "comment": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Text of the user's feedback comment."
                     },
                     "createdAt": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Timestamp when the feedback was submitted."
                     },
                     "source": {
                       "type": "string",
-                      "enum": [
-                        "code_snippet",
-                        "contextual",
-                        "thumbs_only"
-                      ],
+                      "enum": ["code_snippet", "contextual", "thumbs_only"],
                       "description": "Where the feedback originated. `code_snippet` is feedback on a code block, `contextual` is page-level feedback, `thumbs_only` is a thumbs up/down vote."
                     },
                     "status": {
@@ -202,17 +169,11 @@
                       "description": "The code snippet the feedback relates to."
                     },
                     "filename": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Filename associated with the code snippet."
                     },
                     "lang": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Programming language of the code snippet."
                     }
                   },
@@ -232,10 +193,7 @@
             }
           },
           "nextCursor": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Cursor to retrieve the next page of results. Null if no more results."
           },
           "hasMore": {
@@ -243,11 +201,7 @@
             "description": "Whether additional results are available beyond this page."
           }
         },
-        "required": [
-          "feedback",
-          "nextCursor",
-          "hasMore"
-        ]
+        "required": ["feedback", "nextCursor", "hasMore"]
       },
       "AnalyticsErrorResponse": {
         "type": "object",
@@ -267,15 +221,11 @@
                   "description": "Description of a specific validation or processing error."
                 }
               },
-              "required": [
-                "message"
-              ]
+              "required": ["message"]
             }
           }
         },
-        "required": [
-          "error"
-        ]
+        "required": ["error"]
       },
       "AssistantConversationsResponse": {
         "type": "object",
@@ -317,17 +267,11 @@
                         "description": "URL of the referenced documentation page."
                       }
                     },
-                    "required": [
-                      "title",
-                      "url"
-                    ]
+                    "required": ["title", "url"]
                   }
                 },
                 "queryCategory": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": ["string", "null"],
                   "description": "Auto-assigned category grouping for the conversation, if applicable."
                 }
               },
@@ -342,10 +286,7 @@
             }
           },
           "nextCursor": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Cursor to retrieve the next page of results. Null if no more results."
           },
           "hasMore": {
@@ -353,11 +294,7 @@
             "description": "Whether additional results are available beyond this page."
           }
         },
-        "required": [
-          "conversations",
-          "nextCursor",
-          "hasMore"
-        ]
+        "required": ["conversations", "nextCursor", "hasMore"]
       },
       "FeedbackGroupedByPageResponse": {
         "type": "object",
@@ -389,13 +326,7 @@
                   "description": "Total feedback entries for this page."
                 }
               },
-              "required": [
-                "path",
-                "thumbsUp",
-                "thumbsDown",
-                "code",
-                "total"
-              ]
+              "required": ["path", "thumbsUp", "thumbsDown", "code", "total"]
             }
           },
           "hasMore": {
@@ -403,10 +334,7 @@
             "description": "Whether additional results are available beyond this page."
           }
         },
-        "required": [
-          "feedback",
-          "hasMore"
-        ]
+        "required": ["feedback", "hasMore"]
       },
       "SearchesResponse": {
         "type": "object",
@@ -430,10 +358,7 @@
                   "description": "Click-through rate for this search term."
                 },
                 "topClickedPage": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": ["string", "null"],
                   "description": "The most-clicked result path for this query, if any."
                 },
                 "lastSearchedAt": {
@@ -456,18 +381,11 @@
             "description": "Total count of search events in the requested date range (sum of all hits, not distinct queries)."
           },
           "nextCursor": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Opaque pagination cursor for the next page. Null if no more results."
           }
         },
-        "required": [
-          "searches",
-          "totalSearches",
-          "nextCursor"
-        ]
+        "required": ["searches", "totalSearches", "nextCursor"]
       },
       "ViewsTrafficTotals": {
         "type": "object",
@@ -485,11 +403,7 @@
             "description": "Site-wide content view events."
           }
         },
-        "required": [
-          "human",
-          "ai",
-          "total"
-        ]
+        "required": ["human", "ai", "total"]
       },
       "ViewsByPageResponse": {
         "type": "object",
@@ -521,12 +435,7 @@
                   "description": "Total content view events on this path."
                 }
               },
-              "required": [
-                "path",
-                "human",
-                "ai",
-                "total"
-              ]
+              "required": ["path", "human", "ai", "total"]
             }
           },
           "hasMore": {
@@ -534,11 +443,7 @@
             "description": "Whether additional results are available beyond this page."
           }
         },
-        "required": [
-          "totals",
-          "views",
-          "hasMore"
-        ]
+        "required": ["totals", "views", "hasMore"]
       },
       "AssistantCallerStatsResponse": {
         "type": "object",
@@ -560,12 +465,7 @@
             "description": "Total assistant queries across all caller types."
           }
         },
-        "required": [
-          "web",
-          "api",
-          "other",
-          "total"
-        ]
+        "required": ["web", "api", "other", "total"]
       },
       "VisitorsTrafficTotals": {
         "type": "object",
@@ -583,11 +483,7 @@
             "description": "Site-wide approximate distinct visitors with any qualifying view (deduplicated across human and AI)."
           }
         },
-        "required": [
-          "human",
-          "ai",
-          "total"
-        ]
+        "required": ["human", "ai", "total"]
       },
       "VisitorsByPageResponse": {
         "type": "object",
@@ -619,12 +515,7 @@
                   "description": "Approximate distinct visitors with any qualifying view on this path (deduplicated across human and AI)."
                 }
               },
-              "required": [
-                "path",
-                "human",
-                "ai",
-                "total"
-              ]
+              "required": ["path", "human", "ai", "total"]
             }
           },
           "hasMore": {
@@ -632,11 +523,7 @@
             "description": "Whether additional results are available beyond this page."
           }
         },
-        "required": [
-          "totals",
-          "visitors",
-          "hasMore"
-        ]
+        "required": ["totals", "visitors", "hasMore"]
       }
     },
     "parameters": {
@@ -655,9 +542,7 @@
       "get": {
         "summary": "Get user feedback",
         "description": "Returns paginated user feedback with optional filtering",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "security": [
           {
             "bearerAuth": []
@@ -690,11 +575,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "code_snippet",
-                "contextual",
-                "thumbs_only"
-              ],
+              "enum": ["code_snippet", "contextual", "thumbs_only"],
               "description": "Filter by feedback source"
             },
             "required": false,
@@ -770,9 +651,7 @@
       "get": {
         "summary": "Get feedback by page",
         "description": "Returns feedback counts aggregated by documentation page path (thumbs up/down for contextual feedback, code snippet count, and total per page)",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "security": [
           {
             "bearerAuth": []
@@ -817,10 +696,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "code_snippet",
-                "contextual"
-              ],
+              "enum": ["code_snippet", "contextual"],
               "description": "Filter by feedback source"
             },
             "required": false,
@@ -875,9 +751,7 @@
       "get": {
         "summary": "Get assistant conversations",
         "description": "Returns paginated AI assistant conversation history",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "security": [
           {
             "bearerAuth": []
@@ -968,9 +842,7 @@
       "get": {
         "summary": "Get assistant caller stats",
         "description": "Returns a breakdown of assistant query counts by caller type (web, API, and other) for the specified date range.",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "security": [
           {
             "bearerAuth": []
@@ -1039,9 +911,7 @@
       "get": {
         "summary": "Get search queries",
         "description": "Returns paginated documentation search terms for the date range, ordered by hit count descending. Each row includes click-through rate, the most-clicked result path for that query (if any), and the last time the term was searched. `totalSearches` is the total number of search query events in the same date range (sum of all hits, not distinct queries).",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "security": [
           {
             "bearerAuth": []
@@ -1131,9 +1001,7 @@
       "get": {
         "summary": "Get page views",
         "description": "Returns per-path and site-wide content view event counts, split by human and AI traffic.",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "security": [
           {
             "bearerAuth": []
@@ -1225,9 +1093,7 @@
       "get": {
         "summary": "Get unique visitors",
         "description": "Returns per-path and site-wide approximate distinct visitors by traffic type. The `total` field is deduplicated across human and AI (union of distinct visitor IDs with any qualifying content view).",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "security": [
           {
             "bearerAuth": []
