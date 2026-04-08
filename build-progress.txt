@@ -2279,3 +2279,50 @@ Date: 2026-04-09
 - Repo matching: compares project.repoUrl (stripped of github.com prefix) against push payload repo full_name
 - Projects without repoUrl still get deployed if branch matches — supports initial setup before repo is configured
 - Used timing-safe comparison for webhook signature to prevent timing attacks
+
+## Iteration 49 — feature-005b: Branch-based Preview Deployments
+Date: 2026-04-09
+
+### What was built
+- Extended `deployments` table with 3 new columns: `type` (production/preview enum), `branch` (varchar 256), `preview_url` (varchar 512)
+- New `deployment_type` PostgreSQL enum (production, preview)
+- Preview deployment utility functions in `src/lib/deployments.ts`:
+  - `isValidBranchName()` — validates branch name format (alphanumeric, hyphens, underscores, dots, slashes)
+  - `generatePreviewUrl()` — generates `{branch}.preview.{subdomain}.mintlify.app` URLs with sanitized branch names
+  - `validateCreatePreviewRequest()` — validates create-preview request body (branch required, optional commitSha/commitMessage)
+- Preview deployments API (`/api/deployments/previews`):
+  - GET — list preview deployments for user's active project (filtered by type=preview)
+  - POST — create preview deployment (branch required, generates preview URL, simulates build)
+- Updated dashboard server page to fetch both production and preview deployments separately
+- Updated `DashboardHomeClient` Previews tab:
+  - "Create custom preview" button (emerald green, top-right)
+  - Modal dialog with branch name input (GitBranch icon, cancel/deploy buttons)
+  - Preview deployments table with columns: Branch, Preview URL, Status, Commit, Timestamp
+  - Each row shows branch with git icon, clickable preview URL, status badge, commit SHA, relative time
+  - Empty state message when no previews exist
+
+### Test results
+- 23 new unit tests (preview-deployments.test.ts) — all passing
+- 6 new E2E tests (preview-deployments.spec.ts) — written, QA will verify
+- 1267 total unit tests — all passing
+- make check (typecheck + lint) — passing
+- Schema pushed to RDS Postgres via make db-push — success
+
+### Files changed
+- src/lib/db/schema.ts — added deploymentTypeEnum, type/branch/previewUrl columns to deployments table
+- src/lib/deployments.ts — added isValidBranchName, generatePreviewUrl, validateCreatePreviewRequest, DeploymentType
+- src/app/api/deployments/previews/route.ts — new, GET/POST for preview deployments
+- src/app/dashboard/page.tsx — updated to fetch production + preview deployments separately
+- src/app/dashboard/dashboard-home-client.tsx — updated Previews tab with table, modal, create button
+- tests/preview-deployments.test.ts — new, 23 unit tests
+- tests/e2e/preview-deployments.spec.ts — new, 6 E2E tests
+- prd.json — feature-005b build_pass set to true
+- qa-hints.json — added feature-005b QA hints
+
+### Decisions
+- Added `type` column with default "production" so existing deployments are unaffected (backward compatible)
+- Preview URLs follow pattern `{sanitized-branch}.preview.{subdomain}.mintlify.app` — branch sanitized to lowercase alphanumeric + hyphens
+- Build completion is simulated with 3-second timeout (same pattern as production deployments)
+- Preview deployments don't change project status (unlike production deploys which set status to "deploying")
+- No dedup logic for same-branch previews — each creation generates a new deployment record
+- Modal pattern for branch input matches the dark theme design system

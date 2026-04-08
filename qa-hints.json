@@ -1381,5 +1381,25 @@
       "Connection toggle and removal UI interaction",
       "Settings page rendering with various connection states"
     ]
+  },
+  {
+    "feature_id": "feature-005b",
+    "tests_written": [
+      "isValidBranchName accepts/rejects various branch formats",
+      "generatePreviewUrl produces correct URLs with sanitized branch names",
+      "validateCreatePreviewRequest validates branch, commitSha, commitMessage",
+      "Previews tab visible on dashboard",
+      "Create custom preview button opens modal with branch input",
+      "POST /api/deployments/previews creates preview deployment",
+      "GET /api/deployments/previews returns preview list"
+    ],
+    "needs_deeper_qa": [
+      "Real preview deployment build process — only simulated with timeout",
+      "Preview URL DNS/hosting — URLs are generated but don't resolve",
+      "Branch selector in editor auto-creating previews — not wired to editor",
+      "Preview auth toggle in settings restricting access to org members — not implemented",
+      "Concurrent preview deployments for the same branch — no dedup logic",
+      "Preview cleanup/expiry — previews persist indefinitely"
+    ]
   }
 ]

@@ -997,7 +997,7 @@
       "feature-005",
       "feature-005a"
     ],
-    "build_pass": false,
+    "build_pass": true,
     "qa_pass": false
   },
   {
