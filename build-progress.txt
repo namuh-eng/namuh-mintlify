@@ -1299,3 +1299,52 @@ Date: 2026-04-09
 - Custom MDX parser (no external OpenAPI library) — keeps bundle small, handles common OpenAPI 3.x patterns
 - Response area hidden by default, shown only after Send — clean initial state
 - Light theme overrides for all playground elements — consistent with existing docs theme system
+
+## Iteration 24 — feature-015a: Docs Site API Reference Layout
+Date: 2026-04-09
+
+### What was built
+- API reference utility library (`src/lib/api-reference.ts`) with:
+  - Method badge mapping (GET=green, POST=blue, PUT/PATCH=amber, DELETE=red, HEAD=purple, HOOK=purple)
+  - Sidebar endpoint metadata parser — extracts HTTP method from frontmatter `api` field
+  - cURL code generation from OpenAPI endpoints with auth headers and request body
+  - Multi-language code examples generator (cURL, Python, JavaScript)
+  - Response schema field extractor with type formatting (handles format, enum, array items)
+  - Response tab extractor with status code sorting
+  - Full API reference page HTML renderer: method+URL header, code block with language selector, response tabs, auth section, parameters section, response schema
+- Updated `DocsNavItem` type to include optional `apiMethod` field
+- Updated `buildDocsNav` to extract API method from page frontmatter for sidebar badge display
+- Updated sidebar component (`docs-sidebar.tsx`) to show colored method badges (GET/POST/DEL/HOOK) instead of file icons for API reference endpoints
+- Created API reference layout client component (`api-reference-layout.tsx`) with interactive event wiring:
+  - Language tab switching for code examples
+  - Code copy button with clipboard API
+  - Ask AI button dispatching custom event
+  - Response status tab switching (200/400)
+  - Try it button scrolling to API playground
+- Updated docs page to render API reference layout for matched OpenAPI endpoints
+- Added comprehensive CSS styles: sidebar badges (compact inline), method+URL header, code section with lang tabs, response status tabs, auth section, parameters table with type/required badges, all with light theme overrides
+
+### Test results
+- 38 new unit tests (api-reference.test.ts) — all passing
+- 5 new E2E tests (api-reference-layout.spec.ts) — written, QA will verify
+- 712 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/api-reference.ts — new, API reference utilities (badges, cURL, schema, renderer)
+- src/lib/mdx-renderer.ts — updated, DocsNavItem type + buildDocsNav frontmatter support
+- src/components/docs/docs-sidebar.tsx — updated, method badge rendering for API reference items
+- src/components/docs/api-reference-layout.tsx — new, client-side interactivity for API reference page
+- src/app/docs/[subdomain]/[...slug]/page.tsx — updated, API reference layout integration
+- src/app/globals.css — updated, sidebar badge + API reference page styles with light theme
+- tests/api-reference.test.ts — new, 38 unit tests
+- tests/e2e/api-reference-layout.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Method badges in sidebar use compact inline styling (0.5625rem font, 3px radius) to fit nav items
+- DELETE shows as "DEL" and webhooks as "HOOK" matching Mintlify's abbreviated labels
+- API method extracted from frontmatter `api` field format "METHOD /path" — same pattern as existing playground matching
+- Code examples generate 3 languages (cURL, Python, JavaScript) — cURL shown by default
+- Response tabs show placeholder JSON examples based on status code range (2xx = success, 4xx = error)
+- Try it button scrolls to the existing API playground section rather than duplicating functionality
+- Used biome-ignore for useEffect dependency (html triggers re-wiring) following existing ApiPlayground pattern

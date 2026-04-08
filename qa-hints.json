@@ -816,5 +816,28 @@
       "Error states — network failures, timeouts, malformed responses",
       "Light theme visual correctness for all playground elements"
     ]
+  },
+  {
+    "feature_id": "feature-015a",
+    "tests_written": [
+      "method badge colors (GET=green, POST=blue, DEL=red)",
+      "sidebar endpoint parsing from frontmatter api field",
+      "webhook badge detection",
+      "cURL generation with auth and request body",
+      "multi-language code examples (cURL, Python, JavaScript)",
+      "response schema field extraction with types and required",
+      "response status tab extraction and sorting",
+      "status code CSS class mapping",
+      "full endpoint page HTML rendering with all sections"
+    ],
+    "needs_deeper_qa": [
+      "Visual verification: sidebar method badges match Mintlify colors (GET=green, POST=blue, DEL=red, HOOK=purple)",
+      "Language selector tab switching in code block",
+      "Copy button functionality for code examples",
+      "Response status tab switching between 200/400",
+      "Try it button scrolling to API playground section",
+      "Light theme rendering of all API reference components",
+      "Mobile responsive layout of endpoint page"
+    ]
   }
 ]
