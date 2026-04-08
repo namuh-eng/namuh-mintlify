@@ -1922,3 +1922,40 @@ Date: 2026-04-09
 - Matched two-column side-by-side layout from reference screenshot
 - Kept existing progress bar and legend implementation (already matched spec)
 - Billing tab is read-only display — no mutations needed
+
+## Iteration 40 — onboard-002: Empty States for Dashboard Pages
+Date: 2026-04-09
+
+### What was built
+- Shared EmptyState component (`src/components/empty-state.tsx`) — reusable centered layout with icon (in emerald-tinted rounded-2xl container), title, description, and optional CTA button (link or onClick). Uses `data-testid="empty-state"` and `data-testid="empty-state-cta"` for testing.
+- Empty state config library (`src/lib/empty-states.ts`) — three configs:
+  - Analytics: "No data yet" / "Share your docs URL" → links to /settings
+  - Agent: "Connect integrations" / "Connect Slack or Linear" → links to /settings/integrations
+  - Editor: "Start writing your docs" / "Create a page" → triggers create modal
+- Analytics page (`/analytics`) — shows full-page EmptyState with BarChart3 icon when totalVisitors=0 and no topPages/referrals, with CTA linking to settings
+- Agent page (`/products/agent`) — replaced inline EmptyState with shared component using Bot icon and agent config, includes CTA to integrations settings
+- Editor page (`/editor/main`) — center panel shows EmptyState with FileText icon and create CTA button when no pages exist; preserves "Select a page" message when pages exist but none selected
+
+### Test results
+- 21 new unit tests (empty-states.test.ts) — all passing
+- 4 new E2E tests (empty-states.spec.ts) — written, QA will verify
+- 1045 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/components/empty-state.tsx — new, shared EmptyState component
+- src/lib/empty-states.ts — new, empty state configurations
+- src/app/analytics/page.tsx — added EmptyState import and rendering when no data
+- src/app/products/agent/agent-page-client.tsx — replaced inline EmptyState with shared component
+- src/app/editor/main/page.tsx — added EmptyState for zero-pages case in center panel
+- tests/empty-states.test.ts — new, 21 unit tests
+- tests/e2e/empty-states.spec.ts — new, 4 E2E tests
+- prd.json — onboard-002 build_pass set to true
+- qa-hints.json — appended QA hints for onboard-002
+
+### Decisions
+- Used shared component to ensure visual consistency across all empty states
+- Analytics empty state triggers only when ALL data is empty (visitors + pages + referrals = 0), not just when one metric is zero
+- Agent empty state now shows "Connect integrations" instead of "Enable the Agent" — matches PRD spec for onboarding context
+- Editor empty state uses onClick (not href) to trigger the existing create modal — keeps user in-context
+- CTA buttons use emerald-600 background matching the app's accent color

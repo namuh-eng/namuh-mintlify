@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyState } from "@/components/empty-state";
 import {
   getDatePresets,
   parseDateParam,
@@ -19,6 +20,8 @@ import {
   generateDateRange,
   truncatePath,
 } from "@/lib/analytics-visitors";
+import { analyticsEmptyState } from "@/lib/empty-states";
+import { BarChart3 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -328,6 +331,21 @@ function VisitorsContent() {
           <div className="h-48 bg-white/[0.04] rounded-lg animate-pulse" />
         </div>
       </div>
+    );
+  }
+
+  // Show empty state when no data exists at all
+  if (totalVisitors === 0 && topPages.length === 0 && referrals.length === 0) {
+    return (
+      <EmptyState
+        icon={<BarChart3 size={32} className="text-emerald-500" />}
+        title={analyticsEmptyState.title}
+        description={analyticsEmptyState.description}
+        action={{
+          label: analyticsEmptyState.ctaLabel,
+          href: analyticsEmptyState.ctaHref,
+        }}
+      />
     );
   }
 

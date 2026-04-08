@@ -1182,5 +1182,23 @@
       "Billing date formatting across timezones",
       "Tab switching preserves billing data (no re-fetch flash)"
     ]
+  },
+  {
+    "feature_id": "onboard-002",
+    "tests_written": [
+      "analytics empty state config has correct title and CTA",
+      "agent empty state config has Slack/Linear messaging",
+      "editor empty state config has MDX description and create CTA",
+      "all empty state configs have required fields",
+      "E2E: analytics/agent/editor pages show empty state when no data",
+      "E2E: CTA buttons have correct destinations"
+    ],
+    "needs_deeper_qa": [
+      "Visual check: empty state icon, text, and CTA alignment match Mintlify style",
+      "Verify empty state disappears once data/jobs/pages exist",
+      "Test CTA navigation destinations actually load correct pages",
+      "Check empty state rendering on mobile/narrow viewports",
+      "Verify agent empty state CTA links to real integrations settings page"
+    ]
   }
 ]

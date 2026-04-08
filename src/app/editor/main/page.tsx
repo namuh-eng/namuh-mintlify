@@ -5,6 +5,7 @@ import { MarkdownEditor } from "@/components/editor/markdown-editor";
 import { PageSettingsPanel } from "@/components/editor/page-settings-panel";
 import { TocPanel } from "@/components/editor/toc-panel";
 import { VisualEditor } from "@/components/editor/visual-editor";
+import { EmptyState } from "@/components/empty-state";
 import type { EditorMode, MdxSnippetKey } from "@/lib/editor";
 import {
   createAutoSave,
@@ -14,6 +15,7 @@ import {
   mdxSnippets,
   serializeFrontmatter,
 } from "@/lib/editor";
+import { editorEmptyState } from "@/lib/empty-states";
 import type { TreeNode } from "@/lib/pages";
 import { buildPageTree } from "@/lib/pages";
 import { clsx } from "clsx";
@@ -700,15 +702,27 @@ export default function EditorPage() {
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <FileText size={48} className="mx-auto mb-4 text-gray-700" />
-                <p className="text-lg font-medium text-gray-400">
-                  Select a page to edit
-                </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Choose a page from the sidebar or create a new one
-                </p>
-              </div>
+              {pages.length === 0 ? (
+                <EmptyState
+                  icon={<FileText size={32} className="text-emerald-500" />}
+                  title={editorEmptyState.title}
+                  description={editorEmptyState.description}
+                  action={{
+                    label: editorEmptyState.ctaLabel,
+                    onClick: () => setShowCreateModal(true),
+                  }}
+                />
+              ) : (
+                <div className="text-center">
+                  <FileText size={48} className="mx-auto mb-4 text-gray-700" />
+                  <p className="text-lg font-medium text-gray-400">
+                    Select a page to edit
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Choose a page from the sidebar or create a new one
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
