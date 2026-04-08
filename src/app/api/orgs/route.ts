@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { orgMemberships, organizations } from "@/lib/db/schema";
 import { slugify, validateCreateOrgRequest } from "@/lib/orgs";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -66,31 +66,49 @@ export async function POST(request: Request) {
     );
   }
 
-  // Check for slug uniqueness
-  const existing = await db
-    .select({ id: organizations.id })
-    .from(organizations)
-    .where(eq(organizations.slug, slug))
-    .limit(1);
+  return db.transaction(async (tx) => {
+    // Serialize org creation per user so a double-submit cannot create
+    // multiple orgs before the membership check observes the first insert.
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${session.user.id}))`,
+    );
 
-  const finalSlug =
-    existing.length > 0 ? `${slug}-${Date.now().toString(36)}` : slug;
+    const existingMembership = await tx
+      .select({ orgId: orgMemberships.orgId })
+      .from(orgMemberships)
+      .where(eq(orgMemberships.userId, session.user.id))
+      .limit(1);
 
-  // Create org
-  const [org] = await db
-    .insert(organizations)
-    .values({
-      name: validation.name,
-      slug: finalSlug,
-    })
-    .returning();
+    if (existingMembership.length > 0) {
+      return NextResponse.json(
+        { error: "You already belong to an organization" },
+        { status: 409 },
+      );
+    }
 
-  // Add creator as admin
-  await db.insert(orgMemberships).values({
-    orgId: org.id,
-    userId: session.user.id,
-    role: "admin",
+    const existingSlug = await tx
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.slug, slug))
+      .limit(1);
+
+    const finalSlug =
+      existingSlug.length > 0 ? `${slug}-${Date.now().toString(36)}` : slug;
+
+    const [org] = await tx
+      .insert(organizations)
+      .values({
+        name: validation.name,
+        slug: finalSlug,
+      })
+      .returning();
+
+    await tx.insert(orgMemberships).values({
+      orgId: org.id,
+      userId: session.user.id,
+      role: "admin",
+    });
+
+    return NextResponse.json({ org }, { status: 201 });
   });
-
-  return NextResponse.json({ org }, { status: 201 });
 }

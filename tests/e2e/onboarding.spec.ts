@@ -1,7 +1,57 @@
-import { expect, test } from "@playwright/test";
+import {
+  type APIRequestContext,
+  type Page,
+  expect,
+  test,
+} from "@playwright/test";
+import { parseSetCookieHeader } from "better-auth/cookies";
+
+async function createSession(
+  page: Page,
+  request: APIRequestContext,
+  baseURL: string | undefined,
+  options?: {
+    name?: string;
+    withOrg?: boolean;
+  },
+) {
+  const email = `onboarding-e2e+${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+  const response = await request.post("/api/test/create-session", {
+    data: {
+      email,
+      name: options?.name ?? "Onboarding E2E User",
+      withOrg: options?.withOrg ?? false,
+    },
+  });
+
+  expect(response.ok()).toBeTruthy();
+  const data = (await response.json()) as {
+    expiresAt: string;
+    setCookie: string;
+  };
+  const [cookieName, cookieValue] = Array.from(
+    parseSetCookieHeader(data.setCookie).entries(),
+  ).map(([name, value]) => [name, value.value] as const)[0] ?? ["", ""];
+
+  await page.context().addCookies([
+    {
+      name: cookieName,
+      value: cookieValue,
+      url: baseURL ?? "http://localhost:3015",
+      httpOnly: true,
+      sameSite: "Lax",
+      expires: Math.floor(new Date(data.expiresAt).getTime() / 1000),
+    },
+  ]);
+}
 
 test.describe("onboarding wizard — multi-step flow", () => {
-  test.use({ storageState: "tests/e2e/.auth/user.json" });
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test.beforeEach(async ({ page, request, baseURL }) => {
+    await page.context().clearCookies();
+    await createSession(page, request, baseURL);
+  });
 
   test("shows step 1 (org creation) on /onboarding", async ({ page }) => {
     await page.goto("/onboarding");
@@ -14,16 +64,27 @@ test.describe("onboarding wizard — multi-step flow", () => {
 
   test("shows progress indicator with 4 steps", async ({ page }) => {
     await page.goto("/onboarding");
-    await expect(page.getByText("Organization")).toBeVisible();
-    await expect(page.getByText("GitHub")).toBeVisible();
-    await expect(page.getByText("Project")).toBeVisible();
-    await expect(page.getByText("Complete")).toBeVisible();
+    await expect(page.getByText("Organization", { exact: true })).toBeVisible();
+    await expect(page.getByText("GitHub", { exact: true })).toBeVisible();
+    await expect(page.getByText("Project", { exact: true })).toBeVisible();
+    await expect(page.getByText("Complete", { exact: true })).toBeVisible();
   });
 
   test("validates empty org name on step 1", async ({ page }) => {
     await page.goto("/onboarding");
     await page.getByRole("button", { name: /continue/i }).click();
     await expect(page.getByText(/name is required/i)).toBeVisible();
+  });
+
+  test("shows a validation error when slug generation would be empty", async ({
+    page,
+  }) => {
+    await page.goto("/onboarding");
+    await page.getByLabel(/organization name/i).fill("!!!");
+    await page.getByRole("button", { name: /continue/i }).click();
+    await expect(
+      page.getByText(/could not generate a valid slug/i),
+    ).toBeVisible();
   });
 
   test("step 2 shows GitHub connection with skip option", async ({ page }) => {
@@ -106,5 +167,46 @@ test.describe("onboarding wizard — multi-step flow", () => {
     await expect(
       page.getByRole("heading", { name: /create.*organization/i }),
     ).toBeVisible();
+  });
+
+  test("user with an existing org is redirected to dashboard", async ({
+    page,
+    request,
+    baseURL,
+  }) => {
+    await page.context().clearCookies();
+    await createSession(page, request, baseURL, {
+      name: "Existing Org User",
+      withOrg: true,
+    });
+
+    await page.goto("/onboarding");
+    await page.waitForURL(/\/dashboard/);
+    expect(page.url()).toContain("/dashboard");
+  });
+
+  test("concurrent org creation only creates one org for a first-time user", async ({
+    page,
+  }) => {
+    await page.goto("/onboarding");
+
+    const results = await page.evaluate(async () =>
+      Promise.all(
+        [1, 2].map(() =>
+          fetch("/api/orgs", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: "Concurrent Org Test" }),
+          }).then(async (response) => ({
+            status: response.status,
+            text: await response.text(),
+          })),
+        ),
+      ),
+    );
+
+    const statuses = results.map((result) => result.status).sort();
+    expect(statuses).toEqual([201, 409]);
   });
 });

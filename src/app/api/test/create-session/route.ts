@@ -23,7 +23,15 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { email, name } = body as { email: string; name: string };
+  const {
+    email,
+    name,
+    withOrg = true,
+  } = body as {
+    email: string;
+    name: string;
+    withOrg?: boolean;
+  };
 
   if (!email || !name) {
     return NextResponse.json(
@@ -67,70 +75,72 @@ export async function POST(request: Request) {
     );
   }
 
-  let [membership] = await db
-    .select({
-      orgId: orgMemberships.orgId,
-    })
-    .from(orgMemberships)
-    .where(eq(orgMemberships.userId, existingUser.id))
-    .limit(1);
-
-  if (!membership) {
-    const orgSlugBase = slugify(name) || "playwright-user";
-    const orgSlug = `${orgSlugBase}-${existingUser.id.slice(0, 6)}`;
-    const [organization] = await db
-      .insert(organizations)
-      .values({
-        name: `${name}'s Workspace`,
-        slug: orgSlug,
-      })
-      .returning({
-        id: organizations.id,
-        slug: organizations.slug,
-      });
-
-    if (!organization) {
-      return NextResponse.json(
-        { error: "failed to create organization" },
-        { status: 500 },
-      );
-    }
-
-    await db.insert(orgMemberships).values({
-      orgId: organization.id,
-      userId: existingUser.id,
-      role: "admin",
-    });
-
-    membership = { orgId: organization.id };
-  }
-
-  const [existingProject] = await db
-    .select({
-      id: projects.id,
-    })
-    .from(projects)
-    .where(eq(projects.orgId, membership.orgId))
-    .limit(1);
-
-  if (!existingProject) {
-    const projectName = "QA Project";
-    const projectSlug = slugifyProject(projectName) || "qa-project";
-    const [organization] = await db
+  if (withOrg) {
+    let [membership] = await db
       .select({
-        slug: organizations.slug,
+        orgId: orgMemberships.orgId,
       })
-      .from(organizations)
-      .where(eq(organizations.id, membership.orgId))
+      .from(orgMemberships)
+      .where(eq(orgMemberships.userId, existingUser.id))
       .limit(1);
 
-    await db.insert(projects).values({
-      orgId: membership.orgId,
-      name: projectName,
-      slug: projectSlug,
-      subdomain: generateSubdomain(organization?.slug ?? "qa", projectSlug),
-      status: "active",
-    });
+    if (!membership) {
+      const orgSlugBase = slugify(name) || "playwright-user";
+      const orgSlug = `${orgSlugBase}-${existingUser.id.slice(0, 6)}`;
+      const [organization] = await db
+        .insert(organizations)
+        .values({
+          name: `${name}'s Workspace`,
+          slug: orgSlug,
+        })
+        .returning({
+          id: organizations.id,
+          slug: organizations.slug,
+        });
+
+      if (!organization) {
+        return NextResponse.json(
+          { error: "failed to create organization" },
+          { status: 500 },
+        );
+      }
+
+      await db.insert(orgMemberships).values({
+        orgId: organization.id,
+        userId: existingUser.id,
+        role: "admin",
+      });
+
+      membership = { orgId: organization.id };
+    }
+
+    const [existingProject] = await db
+      .select({
+        id: projects.id,
+      })
+      .from(projects)
+      .where(eq(projects.orgId, membership.orgId))
+      .limit(1);
+
+    if (!existingProject) {
+      const projectName = "QA Project";
+      const projectSlug = slugifyProject(projectName) || "qa-project";
+      const [organization] = await db
+        .select({
+          slug: organizations.slug,
+        })
+        .from(organizations)
+        .where(eq(organizations.id, membership.orgId))
+        .limit(1);
+
+      await db.insert(projects).values({
+        orgId: membership.orgId,
+        name: projectName,
+        slug: projectSlug,
+        subdomain: generateSubdomain(organization?.slug ?? "qa", projectSlug),
+        status: "active",
+      });
+    }
   }
 
   await db.delete(authSessions).where(eq(authSessions.userId, existingUser.id));
