@@ -23,7 +23,9 @@
     "data_model": "Files stored in S3 with path: /{orgId}/{projectId}/assets/*",
     "priority": 0,
     "core": true,
-    "dependent_on": ["infra-001"],
+    "dependent_on": [
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -37,7 +39,9 @@
     "data_model": "Better Auth manages user, session, account tables",
     "priority": 1,
     "core": true,
-    "dependent_on": ["infra-001"],
+    "dependent_on": [
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -51,7 +55,10 @@
     "data_model": "organizations(id, name, slug, plan, settings, createdAt), org_memberships(id, orgId, userId, role, createdAt)",
     "priority": 1,
     "core": true,
-    "dependent_on": ["auth-001", "infra-001"],
+    "dependent_on": [
+      "auth-001",
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -65,7 +72,10 @@
     "data_model": "api_keys(id, orgId, name, keyPrefix, keyHash, type, createdAt, lastUsedAt)",
     "priority": 1,
     "core": true,
-    "dependent_on": ["auth-001", "auth-002"],
+    "dependent_on": [
+      "auth-001",
+      "auth-002"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -79,7 +89,9 @@
     "data_model": "N/A",
     "priority": 2,
     "core": true,
-    "dependent_on": ["auth-001"],
+    "dependent_on": [
+      "auth-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -93,7 +105,10 @@
     "data_model": "projects(id, orgId, name, slug, repoUrl, repoBranch, repoPath, customDomain, subdomain, settings, status, createdAt, updatedAt)",
     "priority": 2,
     "core": true,
-    "dependent_on": ["auth-002", "infra-001"],
+    "dependent_on": [
+      "auth-002",
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -107,7 +122,11 @@
     "data_model": "Creates organization, project, first deployment records",
     "priority": 2,
     "core": false,
-    "dependent_on": ["auth-001", "auth-002", "feature-001"],
+    "dependent_on": [
+      "auth-001",
+      "auth-002",
+      "feature-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -121,7 +140,10 @@
     "data_model": "pages(id, projectId, path, title, description, content, frontmatter, isPublished, createdAt, updatedAt)",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-001", "infra-001"],
+    "dependent_on": [
+      "feature-001",
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -135,7 +157,10 @@
     "data_model": "Uses pages table content field. Editor state persisted as MDX string.",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-002", "design-001"],
+    "dependent_on": [
+      "feature-002",
+      "design-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -149,7 +174,10 @@
     "data_model": "Reads pages table + project settings (docs.json)",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-002", "feature-001"],
+    "dependent_on": [
+      "feature-002",
+      "feature-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -163,7 +191,9 @@
     "data_model": "MDX components map to React components in renderer",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-004"],
+    "dependent_on": [
+      "feature-004"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -177,7 +207,10 @@
     "data_model": "deployments(id, projectId, status, commitSha, commitMessage, startedAt, endedAt, createdAt)",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-001", "infra-001"],
+    "dependent_on": [
+      "feature-001",
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -191,7 +224,11 @@
     "data_model": "Reads project + latest deployment",
     "priority": 3,
     "core": false,
-    "dependent_on": ["design-001", "feature-001", "feature-005"],
+    "dependent_on": [
+      "design-001",
+      "feature-001",
+      "feature-005"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -205,7 +242,10 @@
     "data_model": "Reads project.settings.navigation + page headings",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-004", "feature-001"],
+    "dependent_on": [
+      "feature-004",
+      "feature-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -219,7 +259,10 @@
     "data_model": "project.settings (logo paths, social links)",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-014", "feature-001"],
+    "dependent_on": [
+      "feature-014",
+      "feature-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -233,7 +276,10 @@
     "data_model": "Uses deployments table",
     "priority": 4,
     "core": false,
-    "dependent_on": ["auth-003", "feature-005"],
+    "dependent_on": [
+      "auth-003",
+      "feature-005"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -247,7 +293,11 @@
     "data_model": "Uses pages + assistant_conversations tables",
     "priority": 4,
     "core": false,
-    "dependent_on": ["auth-003", "feature-002", "feature-008"],
+    "dependent_on": [
+      "auth-003",
+      "feature-002",
+      "feature-008"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -261,7 +311,11 @@
     "data_model": "analytics_events aggregated by type, page, date",
     "priority": 4,
     "core": false,
-    "dependent_on": ["design-001", "feature-001", "infra-001"],
+    "dependent_on": [
+      "design-001",
+      "feature-001",
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -275,7 +329,10 @@
     "data_model": "analytics_events WHERE type='page_view' GROUP BY page, date; referrals grouped by source",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-007", "infra-001"],
+    "dependent_on": [
+      "feature-007",
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -289,7 +346,10 @@
     "data_model": "analytics_events WHERE type='page_view' GROUP BY page, date",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-007", "infra-001"],
+    "dependent_on": [
+      "feature-007",
+      "infra-001"
+    ],
     "build_pass": true,
     "qa_pass": false
   },
@@ -303,8 +363,11 @@
     "data_model": "assistant_conversations(id, projectId, messages, createdAt). Pages indexed for semantic search.",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-004", "feature-002"],
-    "build_pass": false,
+    "dependent_on": [
+      "feature-004",
+      "feature-002"
+    ],
+    "build_pass": true,
     "qa_pass": false
   },
   {
@@ -317,7 +380,10 @@
     "data_model": "Derived from page content + docs.json navigation",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-014", "feature-002"],
+    "dependent_on": [
+      "feature-014",
+      "feature-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -331,7 +397,10 @@
     "data_model": "Derived from page content headings",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-014", "feature-004"],
+    "dependent_on": [
+      "feature-014",
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -345,7 +414,10 @@
     "data_model": "Postgres full-text search on pages table (title, content, description)",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-014", "feature-002"],
+    "dependent_on": [
+      "feature-014",
+      "feature-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -359,7 +431,10 @@
     "data_model": "Uses analytics_events table aggregations",
     "priority": 5,
     "core": false,
-    "dependent_on": ["auth-003", "feature-007"],
+    "dependent_on": [
+      "auth-003",
+      "feature-007"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -373,7 +448,10 @@
     "data_model": "Uses agent_jobs table",
     "priority": 5,
     "core": false,
-    "dependent_on": ["auth-003", "feature-010"],
+    "dependent_on": [
+      "auth-003",
+      "feature-010"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -387,7 +465,10 @@
     "data_model": "assistant_conversations aggregated by category, date",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-007", "feature-008"],
+    "dependent_on": [
+      "feature-007",
+      "feature-008"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -401,7 +482,10 @@
     "data_model": "analytics_events WHERE type='search' GROUP BY query",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-007", "feature-016"],
+    "dependent_on": [
+      "feature-007",
+      "feature-016"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -415,7 +499,10 @@
     "data_model": "analytics_events WHERE type='feedback' with status enum (pending/in_progress/resolved/dismissed)",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-007", "feature-017"],
+    "dependent_on": [
+      "feature-007",
+      "feature-017"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -429,7 +516,10 @@
     "data_model": "org_memberships + users table",
     "priority": 5,
     "core": false,
-    "dependent_on": ["auth-002", "design-001"],
+    "dependent_on": [
+      "auth-002",
+      "design-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -443,7 +533,11 @@
     "data_model": "agent_jobs(id, projectId, prompt, status, prUrl, messages, createdAt, updatedAt)",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-001", "feature-002", "auth-003"],
+    "dependent_on": [
+      "feature-001",
+      "feature-002",
+      "auth-003"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -457,7 +551,10 @@
     "data_model": "Reads OpenAPI spec from project settings",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-014", "feature-004"],
+    "dependent_on": [
+      "feature-014",
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -471,7 +568,10 @@
     "data_model": "OpenAPI spec parsed into endpoint definitions",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-014", "feature-004"],
+    "dependent_on": [
+      "feature-014",
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -485,7 +585,11 @@
     "data_model": "agent_settings(orgId, slackConnected, slackWorkspace, githubAppInstalled, connectedRepos JSON)",
     "priority": 5,
     "core": false,
-    "dependent_on": ["design-001", "feature-001", "auth-002"],
+    "dependent_on": [
+      "design-001",
+      "feature-001",
+      "auth-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -499,7 +603,11 @@
     "data_model": "assistant_settings(projectId, enabled, deflectionEnabled, deflectionEmail, showHelpButton, searchDomains JSON, starterQuestions JSON, starterQuestionsEnabled)",
     "priority": 5,
     "core": false,
-    "dependent_on": ["design-001", "feature-001", "feature-008"],
+    "dependent_on": [
+      "design-001",
+      "feature-001",
+      "feature-008"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -513,7 +621,9 @@
     "data_model": "analytics_events WHERE trafficSource='agent' grouped by type",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-007"],
+    "dependent_on": [
+      "feature-007"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -527,7 +637,10 @@
     "data_model": "project.settings.appearance JSON",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-001", "infra-002"],
+    "dependent_on": [
+      "feature-001",
+      "infra-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -541,7 +654,10 @@
     "data_model": "project.settings.navigation JSON",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-001", "feature-002"],
+    "dependent_on": [
+      "feature-001",
+      "feature-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -555,7 +671,9 @@
     "data_model": "analytics_events with type='feedback', data={rating, text, pageId}",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-014"],
+    "dependent_on": [
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -569,7 +687,10 @@
     "data_model": "workflow_templates (hardcoded list of 9 templates with name, description, default trigger, default prompt)",
     "priority": 6,
     "core": false,
-    "dependent_on": ["design-001", "feature-001"],
+    "dependent_on": [
+      "design-001",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -583,7 +704,10 @@
     "data_model": "workflows(id, projectId, name, triggerType, triggerConfig JSON, prompt, autoMerge, contextRepos JSON, slackNotify, createdAt, updatedAt)",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-020", "feature-018"],
+    "dependent_on": [
+      "feature-020",
+      "feature-018"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -597,7 +721,9 @@
     "data_model": "N/A",
     "priority": 6,
     "core": false,
-    "dependent_on": ["design-001"],
+    "dependent_on": [
+      "design-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -611,7 +737,9 @@
     "data_model": "project.customDomain, project.settings.domain",
     "priority": 7,
     "core": false,
-    "dependent_on": ["feature-001"],
+    "dependent_on": [
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -625,7 +753,9 @@
     "data_model": "project.settings.footer (social links, branding)",
     "priority": 7,
     "core": false,
-    "dependent_on": ["feature-014"],
+    "dependent_on": [
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -639,7 +769,10 @@
     "data_model": "Derived from project slug — no additional DB storage needed",
     "priority": 7,
     "core": false,
-    "dependent_on": ["design-001", "feature-001"],
+    "dependent_on": [
+      "design-001",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -653,7 +786,10 @@
     "data_model": "projects.name",
     "priority": 7,
     "core": false,
-    "dependent_on": ["settings-001", "feature-001"],
+    "dependent_on": [
+      "settings-001",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -667,7 +803,10 @@
     "data_model": "projects.repoUrl, projects.repoBranch, projects.repoPath",
     "priority": 7,
     "core": false,
-    "dependent_on": ["settings-001", "feature-001"],
+    "dependent_on": [
+      "settings-001",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -681,7 +820,9 @@
     "data_model": "assistant_usage(projectId, messagesUsed, messageLimit, billingCycleStart, billingCycleEnd, overageSpend)",
     "priority": 8,
     "core": false,
-    "dependent_on": ["feature-019"],
+    "dependent_on": [
+      "feature-019"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -695,7 +836,11 @@
     "data_model": "N/A — conditional rendering based on data existence",
     "priority": 8,
     "core": false,
-    "dependent_on": ["design-001", "feature-007", "feature-010"],
+    "dependent_on": [
+      "design-001",
+      "feature-007",
+      "feature-010"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -709,7 +854,11 @@
     "data_model": "project.settings.addons JSON",
     "priority": 8,
     "core": false,
-    "dependent_on": ["settings-001", "feature-001", "feature-017"],
+    "dependent_on": [
+      "settings-001",
+      "feature-001",
+      "feature-017"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -723,7 +872,10 @@
     "data_model": "users.name, user.settings.emailNotifications, user.integrations.github",
     "priority": 8,
     "core": false,
-    "dependent_on": ["settings-001", "auth-001"],
+    "dependent_on": [
+      "settings-001",
+      "auth-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -737,7 +889,11 @@
     "data_model": "Deletes from projects/organizations tables + cascading deletes",
     "priority": 9,
     "core": false,
-    "dependent_on": ["settings-001", "feature-001", "auth-002"],
+    "dependent_on": [
+      "settings-001",
+      "feature-001",
+      "auth-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -751,7 +907,12 @@
     "data_model": "N/A",
     "priority": 10,
     "core": false,
-    "dependent_on": ["infra-001", "infra-002", "auth-001", "feature-001"],
+    "dependent_on": [
+      "infra-001",
+      "infra-002",
+      "auth-001",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -765,7 +926,10 @@
     "data_model": "project.settings (docs.json structure stored as JSONB in projects table)",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-003", "feature-001"],
+    "dependent_on": [
+      "feature-003",
+      "feature-001"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -779,7 +943,10 @@
     "data_model": "comments(id, pageId, userId, content, resolved, createdAt), suggestions(id, pageId, userId, diff, status, createdAt)",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-003", "auth-002"],
+    "dependent_on": [
+      "feature-003",
+      "auth-002"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -793,7 +960,9 @@
     "data_model": "MDX components map to React components in renderer",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-004"],
+    "dependent_on": [
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -807,7 +976,10 @@
     "data_model": "github_connections(id, orgId, installationId, repos JSON, createdAt). Deployments triggered via webhook payload (repo, branch, commitSha).",
     "priority": 3,
     "core": true,
-    "dependent_on": ["feature-001", "feature-005"],
+    "dependent_on": [
+      "feature-001",
+      "feature-005"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -821,7 +993,10 @@
     "data_model": "deployments table with type='preview', branch field, previewUrl field",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-005", "feature-005a"],
+    "dependent_on": [
+      "feature-005",
+      "feature-005a"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -835,7 +1010,10 @@
     "data_model": "Generated from pages table on deploy, cached as static files",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-002", "feature-005"],
+    "dependent_on": [
+      "feature-002",
+      "feature-005"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -849,7 +1027,10 @@
     "data_model": "project.settings.redirects JSON array [{source, destination}]",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-001", "feature-014"],
+    "dependent_on": [
+      "feature-001",
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -863,7 +1044,10 @@
     "data_model": "Pages frontmatter fields (title, description, ogImage, noindex). Generated files cached on deploy.",
     "priority": 5,
     "core": false,
-    "dependent_on": ["feature-002", "feature-005"],
+    "dependent_on": [
+      "feature-002",
+      "feature-005"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -877,7 +1061,10 @@
     "data_model": "project.settings.customCSS (text), project.settings.customJS (text)",
     "priority": 7,
     "core": false,
-    "dependent_on": ["feature-001", "feature-003a"],
+    "dependent_on": [
+      "feature-001",
+      "feature-003a"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -891,7 +1078,10 @@
     "data_model": "Snippet files stored as pages with type='snippet', not shown in navigation",
     "priority": 6,
     "core": false,
-    "dependent_on": ["feature-002", "feature-004"],
+    "dependent_on": [
+      "feature-002",
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -905,7 +1095,10 @@
     "data_model": "project.settings.openapi (spec URL or inline JSON). Generated pages cached, not stored in pages table.",
     "priority": 4,
     "core": false,
-    "dependent_on": ["feature-004", "feature-014"],
+    "dependent_on": [
+      "feature-004",
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -919,7 +1112,11 @@
     "data_model": "Pages organized by locale directory. project.settings.languages JSON array. Navigation per-language in docs.json.",
     "priority": 7,
     "core": false,
-    "dependent_on": ["feature-002", "feature-014", "feature-024"],
+    "dependent_on": [
+      "feature-002",
+      "feature-014",
+      "feature-024"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -933,7 +1130,10 @@
     "data_model": "project.settings.versions JSON array [{tag, name, default}]. Navigation per-version in docs.json.",
     "priority": 7,
     "core": false,
-    "dependent_on": ["feature-002", "feature-014"],
+    "dependent_on": [
+      "feature-002",
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -947,7 +1147,9 @@
     "data_model": "project.settings.styles.latex (boolean)",
     "priority": 8,
     "core": false,
-    "dependent_on": ["feature-004"],
+    "dependent_on": [
+      "feature-004"
+    ],
     "build_pass": false,
     "qa_pass": false
   },
@@ -961,7 +1163,9 @@
     "data_model": "project.settings.contextualMenu JSON (enabled tools list)",
     "priority": 8,
     "core": false,
-    "dependent_on": ["feature-014"],
+    "dependent_on": [
+      "feature-014"
+    ],
     "build_pass": false,
     "qa_pass": false
   }

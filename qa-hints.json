@@ -527,5 +527,28 @@
       "Large dataset performance with many pages in top pages table",
       "API response format when no analytics events exist"
     ]
+  },
+  {
+    "feature_id": "feature-008",
+    "tests_written": [
+      "SSE event parsing (text-delta, sources, finish, error)",
+      "Chat message creation (user and assistant)",
+      "Chat state reducer (toggle, add message, streaming, append delta, set sources, finish, error, clear)",
+      "Request body builder strips source metadata",
+      "E2E: Ask AI button visible in docs topbar",
+      "E2E: Chat panel opens/closes via Ask AI button",
+      "E2E: Chat panel has input field and send button",
+      "E2E: Shows AI disclaimer text",
+      "E2E: Chat panel has clear conversation button"
+    ],
+    "needs_deeper_qa": [
+      "Actual Bedrock streaming response — unit tests only cover client-side parsing",
+      "Long conversation with many messages — scroll behavior under load",
+      "Mobile responsiveness of fixed-bottom chat panel",
+      "Concurrent chat sessions across multiple tabs",
+      "Source citation links resolve to correct doc pages",
+      "Chat persistence in assistantConversations table",
+      "Edge case: very long messages, special characters, markdown in responses"
+    ]
   }
 ]

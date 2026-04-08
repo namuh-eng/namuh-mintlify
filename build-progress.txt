@@ -834,3 +834,52 @@ Date: 2026-04-09
 - API route mirrors visitors route structure but omits referrals query — Views tab focuses only on page views
 - Single Top pages table (full width) instead of 2-column grid — matches PRD spec ("no Referrals table")
 - Agent empty state uses book icon (svg) instead of people icon to differentiate from visitors
+
+## Iteration 12 — feature-008: AI Assistant Chat Widget
+Date: 2026-04-09
+
+### What was built
+- Chat widget component (`src/components/docs/chat-widget.tsx`) — fixed-bottom chat panel on docs site with:
+  - Toggle via "Ask AI" button (listens for `toggle-ask-ai` custom event from topbar)
+  - Header with AI sparkle icon, clear conversation button, close button
+  - Scrollable message area with user/assistant messages, typing indicators
+  - Source citations as green linked badges below assistant messages
+  - Empty state with prompt to ask a question
+  - Textarea input with Enter-to-send (Shift+Enter for newline)
+  - Green send button with disabled state during streaming
+  - Disclaimer: "Responses are generated using AI and may contain mistakes."
+  - Auto-scroll to bottom on new messages
+  - Auto-focus input when panel opens
+- Public docs chat API route (`/api/docs/[subdomain]/chat`) — streams AI responses using AWS Bedrock:
+  - Scoped by subdomain — looks up project, no API key needed
+  - Retrieves relevant published pages via ILIKE search
+  - Streams SSE events: text-delta, sources, finish, error
+  - Persists conversations to assistantConversations table (fire-and-forget)
+  - Uses Claude Sonnet 4 via Bedrock ConverseStreamCommand
+- Chat state managed via useReducer with typed actions (TOGGLE, ADD_USER_MESSAGE, START_STREAMING, APPEND_DELTA, SET_SOURCES, FINISH_STREAMING, STREAM_ERROR, CLEAR)
+- Client-side SSE parsing reads streaming response and dispatches actions
+- Full CSS styles for dark theme with light theme overrides
+- Integrated into docs site page (`/docs/[subdomain]/[...slug]`)
+
+### Test results
+- 20 new unit tests (assistant-chat.test.ts) — all passing
+- 5 new E2E tests (assistant-chat.spec.ts) — written, QA will verify
+- 467 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/components/docs/chat-widget.tsx — new, chat widget with SSE streaming
+- src/app/api/docs/[subdomain]/chat/route.ts — new, public docs chat API
+- src/app/docs/[subdomain]/[...slug]/page.tsx — updated, added ChatWidget
+- src/app/globals.css — updated, added chat widget styles + light theme overrides
+- tests/assistant-chat.test.ts — new, 20 unit tests
+- tests/e2e/assistant-chat.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Created separate public chat API (/api/docs/[subdomain]/chat) rather than requiring API key auth — docs site visitors shouldn't need API keys
+- Chat panel is fixed at bottom of page (not floating overlay) — matches Mintlify's inline chat bar design from build-spec
+- State managed via useReducer for predictable state transitions during streaming
+- SSE parsing handles text-delta, sources, finish, and error event types
+- Conversation persisted fire-and-forget to avoid blocking the stream
+- Source links point to /docs/[subdomain]/[path] for in-site navigation
+- AbortController used for fetch cancellation on unmount
