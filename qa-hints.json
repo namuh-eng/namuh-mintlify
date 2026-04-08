@@ -689,5 +689,27 @@
       "Date range filtering edge cases (timezone boundaries)",
       "Agent mode empty state rendering"
     ]
+  },
+  {
+    "feature_id": "feature-007d",
+    "tests_written": [
+      "formatSearchCount formats numbers with comma separators",
+      "sumSearchCounts sums daily search counts correctly",
+      "truncateQuery truncates long queries with ellipsis",
+      "SearchesData type has correct shape",
+      "fillDailyCounts integration for search counts",
+      "E2E: Searches tab renders and navigates",
+      "E2E: Shows chart heading or empty state",
+      "E2E: Shows top searches table or empty state",
+      "E2E: Agent mode shows empty state",
+      "E2E: Preserves date range URL params"
+    ],
+    "needs_deeper_qa": [
+      "Verify search events are tracked when users search docs (data query field populated)",
+      "Test with real search data — empty state vs populated state",
+      "Case-insensitive query grouping — verify LOWER() works with unicode",
+      "Performance with large number of search events (1000+)",
+      "Chart rendering with many data points (90 day range)"
+    ]
   }
 ]

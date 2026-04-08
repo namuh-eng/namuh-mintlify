@@ -1099,3 +1099,38 @@ Date: 2026-04-09
 - CSV export is client-side (blob download) — no server endpoint needed, works offline
 - Sub-tabs are client-side state (not URL params) — keeps URL clean, Categories is default
 - Export CSV button disabled when no data — prevents empty file downloads
+
+## Iteration 19 — feature-007d: Analytics Searches Tab
+Date: 2026-04-09
+
+### What was built
+- Analytics searches library (`src/lib/analytics-searches.ts`) with types (DailySearchCount, SearchQuery, SearchesData) and helpers (formatSearchCount, sumSearchCounts, truncateQuery)
+- Dashboard API endpoint (`src/app/api/analytics/searches/route.ts`) — queries analytics_events WHERE type='search', groups by LOWER(data->>'query') for case-insensitive deduplication, returns dailyCounts, topSearches (top 20), totalSearches
+- Searches page (`src/app/analytics/searches/page.tsx`) with:
+  - Search volume chart (ComposedChart with bars + line, indigo color scheme)
+  - Top searches table (query + count columns)
+  - Empty state: "No search activity / When users search your docs, results will show up here"
+  - Agent mode empty state directing to MCP Searches tab
+  - Loading skeleton matching other analytics tabs
+- Auth + org membership verification on API route (same pattern as views/visitors)
+
+### Test results
+- 16 new unit tests (analytics-searches.test.ts) — all passing
+- 5 new E2E tests (analytics-searches.spec.ts) — written, QA will verify
+- 600 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/analytics-searches.ts — new, types + helpers
+- src/app/api/analytics/searches/route.ts — new, dashboard API endpoint
+- src/app/analytics/searches/page.tsx — new, Searches tab page
+- tests/analytics-searches.test.ts — new, 16 unit tests
+- tests/e2e/analytics-searches.spec.ts — new, 5 E2E tests
+- prd.json — feature-007d build_pass set to true
+- qa-hints.json — appended QA hints
+
+### Decisions
+- Used indigo (#6366f1) color for search charts to differentiate from green (views/visitors)
+- Case-insensitive query grouping via LOWER() in SQL for better deduplication
+- Empty state text matches PRD spec exactly
+- Followed Views tab pattern closely for consistency
