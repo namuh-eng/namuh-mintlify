@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyState as SharedEmptyState } from "@/components/empty-state";
 import {
   extractPrNumber,
   statusColor,
@@ -9,6 +10,7 @@ import {
   validatePrompt,
 } from "@/lib/agent-dashboard";
 import type { AgentJobStatus } from "@/lib/agent-dashboard";
+import { agentEmptyState } from "@/lib/empty-states";
 import { clsx } from "clsx";
 import {
   ArrowLeft,
@@ -80,18 +82,15 @@ function StatusBadge({ status }: { status: string }) {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-emerald-600/10 flex items-center justify-center mb-4">
-        <Bot size={32} className="text-emerald-500" />
-      </div>
-      <h3 className="text-lg font-semibold text-white mb-1">
-        Enable the Agent
-      </h3>
-      <p className="text-sm text-gray-400 max-w-sm">
-        The agent keeps your docs up-to-date by leveraging AI. Enter a prompt
-        below to create your first job.
-      </p>
-    </div>
+    <SharedEmptyState
+      icon={<Bot size={32} className="text-emerald-500" />}
+      title={agentEmptyState.title}
+      description={agentEmptyState.description}
+      action={{
+        label: agentEmptyState.ctaLabel,
+        href: agentEmptyState.ctaHref,
+      }}
+    />
   );
 }
 
