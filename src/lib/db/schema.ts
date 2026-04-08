@@ -202,6 +202,11 @@ export const agentJobs = pgTable(
     prompt: t.text().notNull(),
     status: agentJobStatusEnum().default("pending").notNull(),
     prUrl: t.text("pr_url"),
+    messages: t
+      .json()
+      .$type<{ role: "user" | "agent"; content: string; timestamp: string }[]>()
+      .default([])
+      .notNull(),
     createdAt: t
       .timestamp("created_at", { withTimezone: true })
       .defaultNow()
