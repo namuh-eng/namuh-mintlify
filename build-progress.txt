@@ -1560,3 +1560,35 @@ Date: 2026-04-09
 - Entries support three types (group, tab, anchor) matching Mintlify's docs.json structure
 - Groups have a collapsible page list; tabs and anchors show their href inline
 - Edit modal adapts fields based on entry type (groups get icon field, tabs/anchors get href)
+
+## Iteration 30 — feature-017: User Feedback Widget
+Date: 2026-04-09
+
+### What was built
+- FeedbackWidget component (`src/components/docs/feedback-widget.tsx`) — "Was this helpful?" with thumbs up/down buttons, optional text input, toast confirmation
+- Public API endpoint `POST /api/docs/[subdomain]/feedback` — validates payload, records feedback as analytics_event with type='feedback'
+- Shared validation logic (`src/lib/feedback.ts`) — validates page, rating, optional comment, truncates to 2000 chars
+- Widget integrated at bottom of each docs article page (before pagination)
+- Full CSS styling with dark/light theme support in globals.css
+
+### Test results
+- 15 new unit tests (feedback-widget.test.ts) — all passing
+- 4 new E2E tests (feedback-widget.spec.ts) — API validation tests
+- 857 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/feedback.ts — new, shared validation logic
+- src/app/api/docs/[subdomain]/feedback/route.ts — new, public feedback API
+- src/components/docs/feedback-widget.tsx — new, feedback widget component
+- src/app/docs/[subdomain]/[...slug]/page.tsx — added FeedbackWidget import and usage
+- src/app/globals.css — added feedback widget styles (dark + light theme)
+- tests/feedback-widget.test.ts — new, 15 unit tests
+- tests/e2e/feedback-widget.spec.ts — new, 4 E2E tests
+
+### Decisions
+- Widget is public (no auth needed) — matches how docs feedback works in real products
+- Feedback stored as analytics_events with type='feedback', data={rating, comment, page, status, isAbusive, feedbackType}
+- Compatible with existing dashboard analytics/feedback page which reads these same events
+- Comment truncated to 2000 chars server-side for safety
+- Toast auto-dismisses after 3 seconds

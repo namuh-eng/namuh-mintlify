@@ -962,5 +962,24 @@
       "Duplicate path detection error message display",
       "Concurrent edits to navigation by multiple users"
     ]
+  },
+  {
+    "feature_id": "feature-017",
+    "tests_written": [
+      "validates feedback payload (page, rating, comment)",
+      "rejects missing/invalid fields",
+      "truncates long comments to 2000 chars",
+      "widget state machine: idle → rated → submitting → submitted",
+      "POST /api/docs/:subdomain/feedback returns 404 for unknown subdomain",
+      "POST /api/docs/:subdomain/feedback rejects invalid payload"
+    ],
+    "needs_deeper_qa": [
+      "Verify widget renders correctly on actual docs pages with real data",
+      "Test thumbs up/down click → textarea appears → submit flow in browser",
+      "Toast confirmation appears and auto-dismisses after 3 seconds",
+      "Feedback appears in dashboard analytics/feedback page after submission",
+      "Light theme styling for the feedback widget",
+      "Mobile responsive layout of the widget"
+    ]
   }
 ]

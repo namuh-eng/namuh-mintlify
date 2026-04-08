@@ -5,6 +5,7 @@ import { DocsPagination } from "@/components/docs/docs-pagination";
 import { DocsSidebar } from "@/components/docs/docs-sidebar";
 import { DocsToc } from "@/components/docs/docs-toc";
 import { DocsTopbar } from "@/components/docs/docs-topbar";
+import { FeedbackWidget } from "@/components/docs/feedback-widget";
 import { MdxContent } from "@/components/docs/mdx-content";
 import { MobileSidebar } from "@/components/docs/mobile-nav";
 import {
@@ -201,6 +202,7 @@ export default async function DocsPage({ params }: DocsPageProps) {
             {apiReferenceHtml && <ApiReferenceLayout html={apiReferenceHtml} />}
             {apiPlaygroundHtml && <ApiPlayground html={apiPlaygroundHtml} />}
             <HeadingAnchors />
+            <FeedbackWidget subdomain={subdomain} pagePath={targetPath} />
           </article>
 
           <DocsPagination
