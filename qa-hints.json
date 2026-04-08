@@ -887,5 +887,25 @@
       "View more link navigates to /analytics/assistant",
       "Concurrent toggle + save interactions"
     ]
+  },
+  {
+    "feature_id": "feature-007f",
+    "tests_written": [
+      "agents toggle switches to agent tabs (2 tabs)",
+      "agent visitors tab shows stat cards",
+      "agent visitors tab shows empty state message",
+      "mcp searches page shows empty state message",
+      "mcp searches page shows stat cards",
+      "switching humans to agents changes tabs",
+      "formatAgentCount formats numbers with commas",
+      "getAgentStatCards returns 2 cards with correct labels",
+      "stat card count overrides work"
+    ],
+    "needs_deeper_qa": [
+      "Visual match with original screenshot — stat card layout, spacing, typography",
+      "Agent tab navigation preserves date range and trafficSource query params",
+      "Agent visitors vs MCP searches tabs both show on both sub-pages",
+      "Tab active state styling matches when on MCP Searches page"
+    ]
   }
 ]

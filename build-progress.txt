@@ -1433,3 +1433,41 @@ Date: 2026-04-09
 - Domain validation uses regex — no DNS lookup, just format check
 - Reusable Toggle component extracted within the client file — used 5 times across sections
 - StarterQuestionInput as separate component to isolate input state from parent re-renders
+
+## Iteration 27 — feature-007f: Analytics Agents Mode (Agent Visitors + MCP Searches)
+Date: 2026-04-09
+
+### What was built
+- Analytics agents utility library (`src/lib/analytics-agents.ts`) with:
+  - `AgentStatCard` type and `getAgentStatCards()` returning 2 cards (Agent Visitors, MCP Searches) with optional count overrides
+  - `formatAgentCount()` for number formatting
+  - Empty state messages for both agent visitors and MCP searches
+- Updated agent visitors view (`src/app/analytics/page.tsx`) with:
+  - Two stat cards at top (Agent Visitors: 0, MCP Searches: 0) matching original screenshot layout
+  - "No visitor activity" empty state below cards
+- New MCP Searches page (`src/app/analytics/mcp-searches/page.tsx`) with:
+  - Same stat cards at top
+  - "No MCP search activity" / "When AI agents search your docs via MCP, results will show up here" empty state
+  - Search icon in empty state circle
+- Both pages wrapped in AnalyticsShell with Suspense
+
+### Test results
+- 12 new unit tests (analytics-agents.test.ts) — all passing
+- 6 new E2E tests (analytics-agents.spec.ts) — written, QA will verify
+- 785 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/analytics-agents.ts — new, stat cards + empty messages + formatting
+- src/app/analytics/page.tsx — updated agent mode with stat cards
+- src/app/analytics/mcp-searches/page.tsx — new, MCP Searches tab page
+- tests/analytics-agents.test.ts — new, 12 unit tests
+- tests/e2e/analytics-agents.spec.ts — new, 6 E2E tests
+- prd.json — feature-007f build_pass set to true
+- qa-hints.json — added feature-007f QA hints
+
+### Decisions
+- Stat cards use data-testid attributes for E2E test targeting
+- Both agent sub-pages render their own AgentStatsBar (no shared component needed — DRY not worth the coupling for 2 pages)
+- Empty state messages are exported constants so they can be tested and referenced consistently
+- MCP Searches page uses lucide Search icon; Agent Visitors keeps the inline SVG people icon from previous iteration
