@@ -2358,3 +2358,33 @@ Date: 2026-04-09
 - Public endpoints (no auth) — llms.txt files are meant for LLM crawlers
 - 1-hour cache (Cache-Control: public, max-age=3600) — reasonable freshness for generated docs
 - Filters by isPublished only — no hidden/authGroup fields exist in schema yet
+
+## Iteration 51 — feature-023: URL Redirects
+Date: 2026-04-09
+
+### What was built
+- Redirect data model: `RedirectEntry` interface (`{source, destination}`) added to `AdvancedConfig` in docs-config.ts
+- `findRedirect()` helper: case-insensitive path matching with leading/trailing slash normalization
+- Validation: rejects empty source/destination, rejects same source=destination
+- Merge helper updated to preserve redirects array from persisted config
+- Configurations panel UI: new "URL Redirects" section in Advanced accordion with add/remove buttons, source → destination input pairs
+- 301 redirect logic in docs site route: checks `project.settings.docsConfig.advanced.redirects` before page lookup, uses Next.js `permanentRedirect()` for SEO-preserving 301/308 redirects
+
+### Test results
+- 16 new unit tests (redirects.test.ts) — all passing
+- 2 new E2E tests (redirects.spec.ts) — written, QA will verify
+- 1297 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/docs-config.ts — added RedirectEntry interface, redirects to AdvancedConfig, findRedirect(), validation, merge logic
+- src/components/editor/configs-panel.tsx — added redirects UI to AdvancedForm (add/remove/edit redirect entries)
+- src/app/docs/[subdomain]/[...slug]/page.tsx — added permanentRedirect() logic before page lookup
+- tests/redirects.test.ts — new, 16 unit tests
+- tests/e2e/redirects.spec.ts — new, 2 E2E tests
+
+### Decisions
+- Used permanentRedirect() (308 in Next.js) for SEO-preserving behavior — browsers and crawlers treat as permanent
+- Redirect matching normalizes paths (lowercase, strip slashes) for robust matching
+- Redirects stored in docsConfig.advanced.redirects (JSONB) — no schema migration needed
+- Used biome-ignore for array index key since redirect entries have no stable ID

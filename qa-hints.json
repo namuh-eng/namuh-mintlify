@@ -1424,5 +1424,26 @@
       "Unicode/special characters in page titles and content",
       "Verify only published pages are included (unpublished pages should be excluded)"
     ]
+  },
+  {
+    "feature_id": "feature-023",
+    "tests_written": [
+      "findRedirect matches exact paths",
+      "findRedirect is case-insensitive",
+      "findRedirect strips leading/trailing slashes",
+      "findRedirect returns null on no match",
+      "validateDocsConfig rejects empty source/destination",
+      "validateDocsConfig rejects same source and destination",
+      "mergeDocsConfig preserves redirects array",
+      "mergeDocsConfig defaults to empty array",
+      "E2E: redirects UI add/remove in configs panel"
+    ],
+    "needs_deeper_qa": [
+      "Actual 301 redirect behavior in browser — verify HTTP status code is 308/301 (permanentRedirect)",
+      "Redirect with query parameters or hash fragments",
+      "Redirect chain detection (A→B→C)",
+      "Saving redirects via configs panel and verifying persistence after reload",
+      "Edge case: redirect to external URL (currently only supports internal paths)"
+    ]
   }
 ]
