@@ -46,13 +46,14 @@ export function MdxContent({ html }: MdxContentProps) {
       });
     }
 
-    // Wire up code copy buttons
+    // Wire up code copy buttons (in both code-block and code-group)
     const copyButtons =
       container.querySelectorAll<HTMLButtonElement>(".code-copy");
     for (const btn of copyButtons) {
       btn.addEventListener("click", () => {
-        const codeBlock = btn.closest(".code-block");
-        const code = codeBlock?.querySelector("code");
+        const codeContainer =
+          btn.closest(".code-block") || btn.closest(".tab-panel");
+        const code = codeContainer?.querySelector("code");
         if (code) {
           navigator.clipboard.writeText(code.textContent || "");
           const originalText = btn.textContent;
@@ -60,6 +61,26 @@ export function MdxContent({ html }: MdxContentProps) {
           setTimeout(() => {
             btn.textContent = originalText;
           }, 2000);
+        }
+      });
+    }
+
+    // Wire up Ask AI buttons
+    const askAiButtons =
+      container.querySelectorAll<HTMLButtonElement>(".code-ask-ai");
+    for (const btn of askAiButtons) {
+      btn.addEventListener("click", () => {
+        const codeBlock = btn.closest(".code-block");
+        const code = codeBlock?.querySelector("code");
+        const lang = codeBlock?.getAttribute("data-language") || "";
+        if (code) {
+          const codeText = code.textContent || "";
+          // Dispatch custom event for parent to handle
+          const event = new CustomEvent("ask-ai-code", {
+            bubbles: true,
+            detail: { code: codeText, language: lang },
+          });
+          btn.dispatchEvent(event);
         }
       });
     }

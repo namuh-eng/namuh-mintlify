@@ -34,7 +34,8 @@ describe("MDX Renderer utilities", () => {
       const result = parseMdxToHtml("```javascript\nconst x = 1;\n```");
       expect(result).toContain("<pre");
       expect(result).toContain("<code");
-      expect(result).toContain("const x = 1;");
+      expect(result).toContain("x = 1;");
+      expect(result).toContain("syntax-keyword");
     });
 
     it("converts unordered lists", () => {
