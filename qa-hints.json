@@ -764,5 +764,29 @@
       "Cannot change own role / cannot remove self guards",
       "Edge case: inviting already-member email returns 409"
     ]
+  },
+  {
+    "feature_id": "feature-010",
+    "tests_written": [
+      "statusLabel returns correct labels for all 4 statuses",
+      "statusColor returns correct color tokens",
+      "truncatePrompt truncates long prompts with ellipsis",
+      "timeAgo formats seconds, minutes, hours, days",
+      "validatePrompt rejects empty and oversized prompts",
+      "extractPrNumber extracts PR number from GitHub URLs",
+      "agent page renders header and prompt input",
+      "create job form visible when project exists",
+      "empty state or job list displayed",
+      "refresh button present",
+      "sidebar shows Agent link"
+    ],
+    "needs_deeper_qa": [
+      "Create job flow with real database — unit tests only cover utility functions",
+      "Follow-up message sending in job detail view",
+      "Auto-refresh polling when jobs are active (pending/running)",
+      "Job status transitions (pending → running → succeeded) reflected in UI",
+      "PR link opens in new tab correctly",
+      "Message scroll-to-bottom on new messages"
+    ]
   }
 ]

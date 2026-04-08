@@ -1217,3 +1217,45 @@ Date: 2026-04-09
 - User table joined via Better Auth's `user` table for name/email/image
 - Avatar shows profile image if available, initials fallback otherwise
 - Role badges color-coded: emerald (admin), blue (editor), gray (viewer)
+
+## Iteration 22 — feature-010: Agent Management Page
+Date: 2026-04-09
+
+### What was built
+- Agent dashboard utility library (`src/lib/agent-dashboard.ts`) with status helpers (label, color), prompt truncation, timeAgo formatter, prompt validation, PR number extraction
+- Internal session-authenticated API routes for dashboard agent management:
+  - `GET /api/agent/jobs` — list agent jobs for user's active project (max 50, newest first)
+  - `POST /api/agent/jobs` — create a new agent job with prompt validation
+  - `GET /api/agent/jobs/[jobId]` — get single job with messages and org-scoped access check
+  - `POST /api/agent/jobs/[jobId]/messages` — send follow-up message with agent reply simulation
+- Agent page (`/products/agent`) with full Mintlify-matching UI:
+  - Page header with "Agent" title and refresh button
+  - Prompt input form at top to create new jobs
+  - Job list view: prompt preview (truncated), status badge (color-coded with pulse on running), timestamp, PR link
+  - Job detail view: back button, full prompt, status, PR link with external link icon, message thread (user messages right-aligned green, agent messages left-aligned gray), follow-up message input
+  - Empty state with bot icon and "Enable the Agent" messaging matching screenshot
+  - Auto-refresh every 5s when active jobs exist (pending/running)
+  - Background simulation: jobs transition pending → running (0.5s) → succeeded with PR URL (5s)
+
+### Test results
+- 15 new unit tests (agent-dashboard.test.ts) — all passing
+- 5 new E2E tests (agent-page.spec.ts) — written, QA will verify
+- 654 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/agent-dashboard.ts — new, dashboard utility functions
+- src/app/api/agent/jobs/route.ts — new, GET + POST session-auth API routes
+- src/app/api/agent/jobs/[jobId]/route.ts — new, GET single job detail
+- src/app/api/agent/jobs/[jobId]/messages/route.ts — new, POST follow-up message
+- src/app/products/agent/page.tsx — new, server component fetching jobs
+- src/app/products/agent/agent-page-client.tsx — new, full agent page UI with list + detail views
+- tests/agent-dashboard.test.ts — new, 15 unit tests
+- tests/e2e/agent-page.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Internal API routes use session auth (getServerSession) not API key auth — separate from v1 REST API
+- Job simulation reuses same pattern from v1 create-job route (setTimeout-based transitions)
+- Follow-up messages get an immediate simulated agent reply — in production would be async
+- Access control: verify user is member of org that owns the project
+- Auto-refresh uses setInterval with cleanup, only when active jobs exist to avoid unnecessary polling
