@@ -50,5 +50,31 @@
       }
     ],
     "fix_description": "Locked `/api/uploads/presign` behind authenticated project access, restricted uploads to admin/editor roles, required a `size` field, and signed `Content-Length` so real S3 uploads enforce the 50 MB limit."
+  },
+  {
+    "feature_id": "auth-001",
+    "attempt": 1,
+    "status": "pass",
+    "tested_steps": [
+      "Added the missing `react-is` dependency, which was preventing the Next.js dev server from compiling and returning `/login` successfully.",
+      "Ran `make test` and confirmed the unit suite passed with 1521 tests.",
+      "Ran `npx playwright test tests/e2e/smoke.spec.ts` and confirmed 11 smoke tests passed, including the authenticated dashboard, settings, editor, analytics, workflows, and MCP pages.",
+      "Used Ever CLI on `http://localhost:3015/login` to verify the real Google OAuth flow with `ashleyha0317@gmail.com`: login page rendered, Google account selection worked, consent completed, and the callback redirected into `/onboarding` for the first-time user path.",
+      "Queried Postgres after the real OAuth callback and confirmed Better Auth created `user`, `account`, and `session` records for `ashleyha0317@gmail.com` with provider `google` and a live session row.",
+      "Called `/api/auth/get-session` from the authenticated browser session and confirmed the response returned the live Better Auth session and Google user payload.",
+      "Refreshed the authenticated onboarding page and confirmed the session persisted; navigating to `/login` and `/dashboard` in the same browser session kept the user authenticated and routed back into the authenticated flow.",
+      "Signed out through `POST /api/auth/sign-out`, confirmed `/api/auth/get-session` returned `null`, confirmed the session row was removed from Postgres, and confirmed `/dashboard` redirected back to `/login?returnTo=%2Fdashboard`.",
+      "Verified the test-only `POST /api/test/create-session` route returned `404 Not Found` in normal dev mode, so the Playwright auth helper remains guarded outside test runs."
+    ],
+    "bugs_found": [
+      {
+        "severity": "major",
+        "description": "The app could not compile in dev because `recharts` imported `react-is`, but `react-is` was not installed.",
+        "expected": "Auth pages should load successfully so the Google OAuth flow can be exercised end to end.",
+        "actual": "Navigating to `/login` returned a Next.js `500` error caused by `Module not found: Can't resolve 'react-is'` from `src/app/analytics/page.tsx`.",
+        "reproduction": "Start the dev server with `npm run dev` and request `http://localhost:3015/login`; Next.js fails compilation because `recharts` cannot resolve `react-is`."
+      }
+    ],
+    "fix_description": "Installed the missing `react-is` dependency, then re-ran auth QA to verify real Google OAuth, DB-backed session creation, persistence, sign-out, protected-route redirects, and the test-only session route guard."
   }
 ]
