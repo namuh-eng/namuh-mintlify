@@ -1859,3 +1859,40 @@ Date: 2026-04-09
 - Page was already scaffolded in settings-001 iteration — this iteration adds dedicated test coverage and marks the feature complete
 - Tests focus on the validation logic (validateProjectName, validateSubdomain, validateUpdateProjectRequest) since the API route and page already work
 - E2E tests verify the UI renders correctly; deeper save-persistence tests require auth session (flagged for QA)
+
+## Iteration 38 — settings-003: Git Settings
+Date: 2026-04-09
+
+### What was built
+- Git settings page (`/settings/deployment/git`) — replaced placeholder with full implementation:
+  - Branch and directory path form with save functionality via PUT /api/projects/:id
+  - GitHub section: "Clone as public", "Clone as private", "Download as ZIP" buttons (open GitHub import/download URLs)
+  - "Install GitHub App" button (opens GitHub apps page)
+  - GitLab section: "Configure GitLab" external link, "Switch to GitLab"/"Switch to GitHub" toggle
+  - VCS provider (github/gitlab) stored in project settings JSONB
+  - Repository display name shown (owner/repo format parsed from URL)
+- Git settings utility library (`src/lib/git-settings.ts`):
+  - parseGitHubUrl, buildCloneUrl, buildZipDownloadUrl helpers
+  - isValidBranchName, isValidRepoPath validators
+  - getRepoDisplayName, DEFAULT_GIT_SETTINGS constants
+- Extended `validateUpdateProjectRequest` in `src/lib/projects.ts` to support `repoBranch` and `repoPath` fields
+
+### Test results
+- 34 new unit tests (git-settings.test.ts) — all passing
+- 5 new E2E tests (git-settings.spec.ts) — written, QA will verify
+- 1008 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/git-settings.ts — new, utility module for git settings
+- src/lib/projects.ts — updated, added repoBranch/repoPath validation
+- src/app/settings/deployment/git/page.tsx — replaced placeholder with full page
+- tests/git-settings.test.ts — new, 34 unit tests
+- tests/e2e/git-settings.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Reused existing /settings/deployment/git route (already in sidebar nav) rather than creating new /settings/deployment/git-settings
+- VCS provider stored in settings JSONB rather than a dedicated column — avoids schema migration for a simple enum
+- Clone buttons open GitHub's import page with pre-filled URL — no backend clone logic needed
+- ZIP download constructs GitHub archive URL directly — no proxy needed
+- GitLab "Configure GitLab" links to external Mintlify docs for GitLab integration setup

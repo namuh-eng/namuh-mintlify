@@ -1138,5 +1138,29 @@
       "Empty name edge case — does the form prevent submit or show error?",
       "Concurrent edits from multiple tabs"
     ]
+  },
+  {
+    "feature_id": "settings-003",
+    "tests_written": [
+      "parseGitHubUrl parses standard and www GitHub URLs",
+      "buildCloneUrl builds correct clone URL",
+      "buildZipDownloadUrl builds correct ZIP URL with branch",
+      "isValidBranchName accepts/rejects branch names correctly",
+      "isValidRepoPath validates paths correctly",
+      "getRepoDisplayName returns owner/repo or fallback",
+      "validateUpdateProjectRequest accepts valid repoBranch/repoPath",
+      "validateUpdateProjectRequest rejects invalid branch/path values",
+      "E2E: page loads with heading, breadcrumb, form fields",
+      "E2E: GitHub clone buttons visible",
+      "E2E: GitLab section with switch button visible"
+    ],
+    "needs_deeper_qa": [
+      "Clone as public/private actually opens GitHub import page with correct URL",
+      "Download as ZIP triggers correct download URL",
+      "Install GitHub App redirects to GitHub apps page",
+      "Switch to GitLab persists vcsProvider in project settings JSONB",
+      "Branch and path save via PUT API and reflect after refresh",
+      "Error handling when API calls fail"
+    ]
   }
 ]
