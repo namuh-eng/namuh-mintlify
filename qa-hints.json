@@ -202,5 +202,33 @@
       "Race condition: rapid clicking Continue creates duplicate orgs",
       "Org/project created but wizard fails at later step — orphaned records"
     ]
+  },
+  {
+    "feature_id": "feature-002",
+    "tests_written": [
+      "normalizePath converts to lowercase, trims slashes, collapses slashes, converts backslashes",
+      "titleFromPath converts kebab-case to title case, uses last segment",
+      "validatePagePath accepts valid paths, rejects empty/special chars/path traversal/too long",
+      "validatePageTitle accepts valid titles, rejects empty/too long",
+      "validateCreatePageRequest validates path+title, normalizes path, includes optional content/description",
+      "validateCreatePageRequest rejects missing path/title/null body",
+      "validateUpdatePageRequest accepts title/content/isPublished updates, rejects empty/invalid",
+      "buildPageTree builds flat and nested trees, sorts folders before files",
+      "E2E: editor page loads with Navigation and Files tabs",
+      "E2E: shows empty state when no pages exist",
+      "E2E: can open create page modal",
+      "E2E: can switch between Navigation and Files tabs",
+      "E2E: create page modal validates required fields"
+    ],
+    "needs_deeper_qa": [
+      "Full CRUD flow: create page, view in tree, edit content, save, delete — requires authenticated session",
+      "Page path uniqueness within project — duplicate path returns 409",
+      "Page tree hierarchy — deeply nested paths render correct folder structure",
+      "Content editor save — verify PUT updates content in DB and re-renders",
+      "Delete page confirmation — verify page removed from tree and content area clears",
+      "Concurrent page edits by multiple users — last-write-wins, no conflict resolution",
+      "Large MDX content — performance of textarea with very long content",
+      "File list view vs Navigation view — both should select and display the same page"
+    ]
   }
 ]

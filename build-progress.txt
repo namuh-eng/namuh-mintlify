@@ -314,3 +314,49 @@ Date: 2026-04-08
 - Wizard state is client-side only — refreshing the page restarts the wizard
 - Used lucide-react GitBranch icon for GitHub step (no GitHub logo icon in lucide-react)
 - Back navigation preserves previously entered data (state not cleared)
+
+## Iteration 9 — feature-002: Page CRUD (Editor)
+Date: 2026-04-08
+
+### What was built
+- Page utility library (`src/lib/pages.ts`) with normalizePath, titleFromPath, validatePagePath, validatePageTitle, validateCreatePageRequest, validateUpdatePageRequest, buildPageTree
+- API route `GET /api/projects/[id]/pages` — list all pages for a project
+- API route `POST /api/projects/[id]/pages` — create a new page (path uniqueness enforced per project)
+- API route `GET /api/projects/[id]/pages/[pageId]` — get a single page with content
+- API route `PUT /api/projects/[id]/pages/[pageId]` — update page title, path, content, description, isPublished
+- API route `DELETE /api/projects/[id]/pages/[pageId]` — delete a page
+- Editor page (`/editor/main`) — full-featured editor matching Mintlify design:
+  - Navigation tab: hierarchical tree view of pages grouped by path segments (folders before files)
+  - Files tab: flat list of all pages by path
+  - Create page modal with path and title inputs, validation, API submission
+  - Delete page confirmation modal
+  - Content area: page header with title, path, publish status, delete and save buttons
+  - MDX content textarea editor with monospace font
+  - Empty state with "Select a page to edit" prompt
+- Editor layout (`/editor/layout.tsx`) wraps with DashboardShell
+- Updated smoke tests with editor page load test
+
+### Test results
+- 30 new unit tests (pages.test.ts) — all passing
+- 5 new E2E tests (pages.spec.ts) — written, QA will verify
+- 194 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/pages.ts — new, page path/validation/tree utilities
+- src/app/api/projects/[id]/pages/route.ts — new, GET + POST page API routes
+- src/app/api/projects/[id]/pages/[pageId]/route.ts — new, GET + PUT + DELETE page API routes
+- src/app/editor/layout.tsx — new, editor route layout with DashboardShell
+- src/app/editor/main/page.tsx — new, editor page with tree sidebar, modals, content editor
+- tests/pages.test.ts — new, 30 unit tests
+- tests/e2e/pages.spec.ts — new, 5 E2E tests
+- tests/e2e/smoke.spec.ts — updated, added editor page smoke test
+
+### Decisions
+- Pages API nested under /api/projects/[id]/pages — ensures project scoping
+- Path normalization: lowercase, trim slashes, collapse duplicates, convert backslashes
+- Page path unique per project — enforced at API level with 409 Conflict response
+- Tree built client-side from flat page list using buildPageTree utility
+- Folders inferred from path segments, sorted before files alphabetically
+- Content editing via plain textarea — rich MDX editor planned for later feature
+- Project resolved from first project in user's org (single-project-active model)
