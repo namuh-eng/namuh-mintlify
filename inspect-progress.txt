@@ -97,3 +97,41 @@
 ### What's next:
 - Iteration 4: Editor page deep dive — test visual/markdown modes, file tree, toolbar, publish, comments
 - Then: Analytics, Settings sub-pages, Agents sub-pages
+
+## Iteration 4 — Editor Page Deep Dive (2026-04-08)
+
+### What was done:
+- Navigated to Editor page and inspected thoroughly with Ever CLI
+- Tested **Navigation view** vs **Files view** in left panel
+  - Navigation view shows docs.json structure with groups and pages
+  - Files view shows Git repo file tree (directories + files)
+- Tested **Visual mode** — rich WYSIWYG editor with rendered MDX components (Cards, CardGroups, Callouts)
+- Tested **Markdown mode** — code editor with line numbers, MDX syntax highlighting, raw frontmatter
+- Tested **"Add new" dropdown** — options: Add (Tab), Wrap with (Dropdown, Anchor, Language, Product, Version)
+- Tested **Branch selector** — popover with search/filter, branch list with "Default" badge, "Create new branch" button
+- Tested **Publish button** — popover with site URL and Publish button (disabled when no changes)
+- Tested **Ask AI button** — opens right sidebar panel (premium upsell: "Enable the Agent" for free tier)
+- Tested **Live Preview** — renders docs page inline in the editor
+- Tested **Page Settings** — dialog with: Title, Slug, External URL, Description, Icon, Sidebar title, OG Image URL, Tag toggle, Hidden toggle, Keywords, Mode dropdown
+- Tested **Configurations panel** — full docs.json visual editor with 10 sections: Overview, Visual Branding, Typography, Header & Topbar, Footer, Content Features, Assistant & Search, Integrations, API Documentation, Advanced
+- Visual Branding section: Theme dropdown, Primary/Light/Dark colors with hex pickers, Light/Dark logo paths, Logo link
+- Content Features section: Thumbnail, Code block theme, LaTeX support toggle, Icon library
+- Tested **Comments sidebar** — "This page" filter, close button, instruction text
+- Tested **Table of Contents** — right panel auto-generated from headings
+- Took 12 screenshots of editor states
+
+### Key findings:
+- Editor is a 3-panel layout: nav/files tree (resizable 280-550px) + visual/markdown editor + TOC/comments
+- Visual editor is Tiptap/ProseMirror-based with contenteditable blocks
+- Markdown mode shows raw MDX with syntax highlighting and line numbers
+- "Add new" in nav offers navigation structure additions (tabs, dropdowns, anchors), not just pages
+- Branch selector supports creating new branches for preview deployments
+- Configurations panel is a full visual GUI for docs.json — effectively replaces manual JSON editing
+- Page settings expose all frontmatter fields (title, slug, description, icon, hidden, tag, keywords, mode)
+- Ask AI is a premium feature (requires paid plan)
+- Live Preview renders docs page inline without opening separate tab
+- File uploads accept .json, .json.gz, .gz files (for importing configurations)
+
+### What's next:
+- Iteration 5: Analytics page deep dive — test sub-tabs, charts, date picker, humans/agents toggle
+- Then: Settings sub-pages, Agents sub-pages
