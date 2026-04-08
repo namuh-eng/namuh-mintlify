@@ -471,3 +471,94 @@ export const userPreferences = pgTable(
   },
   (table) => [t.uniqueIndex("user_prefs_user_idx").on(table.userId)],
 );
+
+// ── Suggestion Status ─────────────────────────────────────────────────────────
+
+export const suggestionStatusEnum = pgEnum("suggestion_status", [
+  "pending",
+  "accepted",
+  "rejected",
+]);
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+
+export const comments = pgTable(
+  "comments",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    pageId: t
+      .uuid("page_id")
+      .notNull()
+      .references(() => pages.id, { onDelete: "cascade" }),
+    userId: t.text("user_id").notNull(),
+    parentId: t.uuid("parent_id"),
+    content: t.text().notNull(),
+    resolved: t.boolean().default(false).notNull(),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: t
+      .timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    t.index("comment_page_idx").on(table.pageId),
+    t.index("comment_user_idx").on(table.userId),
+    t.index("comment_parent_idx").on(table.parentId),
+  ],
+);
+
+// ── Suggestions ───────────────────────────────────────────────────────────────
+
+export const suggestions = pgTable(
+  "suggestions",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    pageId: t
+      .uuid("page_id")
+      .notNull()
+      .references(() => pages.id, { onDelete: "cascade" }),
+    userId: t.text("user_id").notNull(),
+    diff: t.text().notNull(),
+    status: suggestionStatusEnum().default("pending").notNull(),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: t
+      .timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    t.index("suggestion_page_idx").on(table.pageId),
+    t.index("suggestion_user_idx").on(table.userId),
+    t.index("suggestion_status_idx").on(table.status),
+  ],
+);
+
+// ── Branches ──────────────────────────────────────────────────────────────────
+
+export const branches = pgTable(
+  "branches",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    projectId: t
+      .uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: t.varchar({ length: 256 }).notNull(),
+    isDefault: t.boolean("is_default").default(false).notNull(),
+    createdBy: t.text("created_by"),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    t.index("branch_project_idx").on(table.projectId),
+    t.uniqueIndex("branch_project_name_idx").on(table.projectId, table.name),
+  ],
+);
