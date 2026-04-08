@@ -2651,3 +2651,39 @@ Date: 2026-04-09
 - KaTeX configured with `throwOnError: false` for graceful degradation
 - CDN-hosted KaTeX CSS stylesheet (jsdelivr) auto-loaded when latex enabled
 - LaTeX processing happens after MDX rendering, so it works with all content types
+
+## Iteration 59 — feature-031: Contextual AI Menu
+Date: 2026-04-09
+
+### What was built
+- Contextual AI menu — one-click buttons to send page content to external AI tools
+- Support for 8 AI tools: ChatGPT, Claude, Cursor, Perplexity, Google AI Studio, Grok, Devin, Windsurf
+- `src/lib/contextual-ai-menu.ts` — AI tool registry, config type, URL builder, enabled tools filter
+- `src/components/docs/contextual-ai-menu.tsx` — Client component with Sparkles icon button and dropdown menu
+- Integrated into `PageHeaderActions` (page-chrome.tsx) — appears before copy/more-actions buttons
+- Configurable per project via `docsConfig.contextualAiMenu` (enabled flag + tools array)
+- URL builder truncates content >4000 chars to prevent URL overflow
+- Added `.ai-menu-header` CSS styling to globals.css
+
+### Test results
+- 17 new unit tests (contextual-ai-menu.test.ts) — all passing
+- 4 new E2E tests (contextual-ai-menu.spec.ts) — written, QA will verify
+- 1512 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/contextual-ai-menu.ts — new, AI tool registry and helpers
+- src/components/docs/contextual-ai-menu.tsx — new, menu component
+- src/lib/docs-config.ts — added contextualAiMenu config type, defaults, merge logic
+- src/components/docs/page-chrome.tsx — integrated ContextualAiMenu into PageHeaderActions
+- src/app/docs/[subdomain]/[...slug]/page.tsx — pass contextualAiMenu config to PageHeaderActions
+- src/app/globals.css — added .ai-menu-header styles
+- tests/contextual-ai-menu.test.ts — new, 17 unit tests
+- tests/e2e/contextual-ai-menu.spec.ts — new, 4 E2E tests
+
+### Decisions
+- Used Sparkles icon from lucide-react for the AI menu button
+- Menu disabled by default (empty tools list) — must be explicitly enabled per project
+- URL builder includes page title + content as markdown with source URL for context
+- Tools like Cursor/Devin/Windsurf that don't support URL-based prompts just open their homepage
+- Content truncated to 4000 chars max to keep URLs manageable

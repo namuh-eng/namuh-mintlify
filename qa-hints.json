@@ -31,11 +31,11 @@
       "API route GET /api/uploads/presign returns download URL"
     ],
     "needs_deeper_qa": [
-      "Real S3 upload via presigned URL — unit tests mock the SDK",
-      "CORS headers on S3 bucket — verify browser can PUT directly",
-      "Large file upload (near 50MB limit) — only validated client-side",
-      "Concurrent uploads to same key — race condition handling",
-      "Presigned URL expiry — verify 15-minute window works correctly"
+      "Real S3 upload via presigned URL \u2014 unit tests mock the SDK",
+      "CORS headers on S3 bucket \u2014 verify browser can PUT directly",
+      "Large file upload (near 50MB limit) \u2014 only validated client-side",
+      "Concurrent uploads to same key \u2014 race condition handling",
+      "Presigned URL expiry \u2014 verify 15-minute window works correctly"
     ]
   },
   {
@@ -55,11 +55,11 @@
       "E2E: auth API session endpoint returns null for unauthenticated"
     ],
     "needs_deeper_qa": [
-      "Full Google OAuth flow — requires real Google account login via browser",
-      "Session persistence after OAuth callback — verify cookie is set and session created in DB",
-      "Session expiry and refresh — Better Auth cookie cache set to 5 minutes",
-      "Middleware redirect with return URL — currently redirects to /login without preserving original URL",
-      "Concurrent session handling — multiple tabs/devices",
+      "Full Google OAuth flow \u2014 requires real Google account login via browser",
+      "Session persistence after OAuth callback \u2014 verify cookie is set and session created in DB",
+      "Session expiry and refresh \u2014 Better Auth cookie cache set to 5 minutes",
+      "Middleware redirect with return URL \u2014 currently redirects to /login without preserving original URL",
+      "Concurrent session handling \u2014 multiple tabs/devices",
       "Test-only /api/test/create-session route is NOT accessible in production (NODE_ENV guard)"
     ]
   },
@@ -82,11 +82,11 @@
       "E2E: validates empty org name"
     ],
     "needs_deeper_qa": [
-      "Full flow: Google OAuth → first login → onboarding → create org → dashboard",
-      "Slug collision handling — if org name produces duplicate slug, suffix is appended",
-      "Concurrent org creation by same user — race condition on membership",
-      "User with existing org visits /onboarding — should redirect to /dashboard",
-      "Org name with only special characters — slug would be empty, should return error"
+      "Full flow: Google OAuth \u2192 first login \u2192 onboarding \u2192 create org \u2192 dashboard",
+      "Slug collision handling \u2014 if org name produces duplicate slug, suffix is appended",
+      "Concurrent org creation by same user \u2014 race condition on membership",
+      "User with existing org visits /onboarding \u2014 should redirect to /dashboard",
+      "Org name with only special characters \u2014 slug would be empty, should return error"
     ]
   },
   {
@@ -110,11 +110,11 @@
     ],
     "needs_deeper_qa": [
       "Full create+list+delete flow with real authenticated session",
-      "API key validation in API middleware — keys work for authenticating API requests",
-      "Only admin role can create/delete keys — viewer/editor should get 403",
+      "API key validation in API middleware \u2014 keys work for authenticating API requests",
+      "Only admin role can create/delete keys \u2014 viewer/editor should get 403",
       "Concurrent key creation by multiple users in same org",
-      "Key prefix collision — extremely unlikely but no unique constraint on keyPrefix",
-      "Copy to clipboard on the 'shown once' modal — requires HTTPS or localhost"
+      "Key prefix collision \u2014 extremely unlikely but no unique constraint on keyPrefix",
+      "Copy to clipboard on the 'shown once' modal \u2014 requires HTTPS or localhost"
     ]
   },
   {
@@ -135,12 +135,12 @@
     ],
     "needs_deeper_qa": [
       "Sidebar collapse animation and state persistence across navigations",
-      "Org switcher dropdown — creating new org from dropdown",
+      "Org switcher dropdown \u2014 creating new org from dropdown",
       "Profile menu logout actually clears session and redirects",
-      "Theme switcher (System/Light/Dark) — currently visual only, no state management",
-      "Mobile responsiveness — sidebar should collapse on small screens",
-      "Settings layout shares same shell — verify settings pages show sidebar",
-      "Products pages layout shares same shell — verify products pages show sidebar",
+      "Theme switcher (System/Light/Dark) \u2014 currently visual only, no state management",
+      "Mobile responsiveness \u2014 sidebar should collapse on small screens",
+      "Settings layout shares same shell \u2014 verify settings pages show sidebar",
+      "Products pages layout shares same shell \u2014 verify products pages show sidebar",
       "Trial banner dismiss persists (currently resets on page reload)"
     ]
   },
@@ -163,13 +163,13 @@
       "E2E: new project page loads"
     ],
     "needs_deeper_qa": [
-      "Full create project flow with authenticated session — requires Google OAuth login",
-      "Settings General page save — verify PUT /api/projects/:id updates name and subdomain in DB",
-      "Project slug collision within same org — timestamp suffix appended",
-      "DELETE /api/projects/:id — cannot delete last project (400 response)",
-      "DELETE /api/projects/:id — only admin role allowed (editor/viewer get 403)",
-      "Sidebar project selector — shows list of projects, active project highlighted",
-      "New project page — full form submission and redirect to dashboard"
+      "Full create project flow with authenticated session \u2014 requires Google OAuth login",
+      "Settings General page save \u2014 verify PUT /api/projects/:id updates name and subdomain in DB",
+      "Project slug collision within same org \u2014 timestamp suffix appended",
+      "DELETE /api/projects/:id \u2014 cannot delete last project (400 response)",
+      "DELETE /api/projects/:id \u2014 only admin role allowed (editor/viewer get 403)",
+      "Sidebar project selector \u2014 shows list of projects, active project highlighted",
+      "New project page \u2014 full form submission and redirect to dashboard"
     ]
   },
   {
@@ -190,17 +190,17 @@
       "E2E: step 2 shows GitHub connection with skip option",
       "E2E: step 3 shows project creation after skipping GitHub",
       "E2E: validates empty project name on step 3",
-      "E2E: full wizard flow org → skip GitHub → project → success",
+      "E2E: full wizard flow org \u2192 skip GitHub \u2192 project \u2192 success",
       "E2E: back button navigates to previous step"
     ],
     "needs_deeper_qa": [
-      "Full wizard flow with real Google OAuth session — end-to-end from login to dashboard",
-      "GitHub repository URL validation — currently accepts any URL, needs GitHub-specific check",
+      "Full wizard flow with real Google OAuth session \u2014 end-to-end from login to dashboard",
+      "GitHub repository URL validation \u2014 currently accepts any URL, needs GitHub-specific check",
       "Subdomain preview live update as user types project name",
-      "Step 2 Connect repository button with actual GitHub repo URL — verify it's stored on project",
-      "Wizard state lost on page refresh — user must restart from step 1",
+      "Step 2 Connect repository button with actual GitHub repo URL \u2014 verify it's stored on project",
+      "Wizard state lost on page refresh \u2014 user must restart from step 1",
       "Race condition: rapid clicking Continue creates duplicate orgs",
-      "Org/project created but wizard fails at later step — orphaned records"
+      "Org/project created but wizard fails at later step \u2014 orphaned records"
     ]
   },
   {
@@ -221,14 +221,14 @@
       "E2E: create page modal validates required fields"
     ],
     "needs_deeper_qa": [
-      "Full CRUD flow: create page, view in tree, edit content, save, delete — requires authenticated session",
-      "Page path uniqueness within project — duplicate path returns 409",
-      "Page tree hierarchy — deeply nested paths render correct folder structure",
-      "Content editor save — verify PUT updates content in DB and re-renders",
-      "Delete page confirmation — verify page removed from tree and content area clears",
-      "Concurrent page edits by multiple users — last-write-wins, no conflict resolution",
-      "Large MDX content — performance of textarea with very long content",
-      "File list view vs Navigation view — both should select and display the same page"
+      "Full CRUD flow: create page, view in tree, edit content, save, delete \u2014 requires authenticated session",
+      "Page path uniqueness within project \u2014 duplicate path returns 409",
+      "Page tree hierarchy \u2014 deeply nested paths render correct folder structure",
+      "Content editor save \u2014 verify PUT updates content in DB and re-renders",
+      "Delete page confirmation \u2014 verify page removed from tree and content area clears",
+      "Concurrent page edits by multiple users \u2014 last-write-wins, no conflict resolution",
+      "Large MDX content \u2014 performance of textarea with very long content",
+      "File list view vs Navigation view \u2014 both should select and display the same page"
     ]
   },
   {
@@ -251,16 +251,16 @@
       "E2E: add-new dropdown shows component options"
     ],
     "needs_deeper_qa": [
-      "Visual mode WYSIWYG — verify Tiptap renders headings/bold/italic/links correctly",
-      "Mode toggle preserves content — switch visual→markdown→visual without data loss",
-      "Auto-save with 2s debounce — verify content persists to DB after typing stops",
-      "Toolbar formatting in visual mode — bold/italic/heading toggle Tiptap marks",
-      "Page settings panel — save title/slug/description changes via API",
-      "Table of contents — extracted from headings, updates on content change",
-      "Add new dropdown — insert Tab/Dropdown/Anchor/Card/Columns snippets at cursor",
-      "Markdown line numbers — scroll sync between gutter and textarea",
-      "Large document performance — visual editor with 500+ lines",
-      "MDX component rendering in visual mode — Card, Note, Tab components"
+      "Visual mode WYSIWYG \u2014 verify Tiptap renders headings/bold/italic/links correctly",
+      "Mode toggle preserves content \u2014 switch visual\u2192markdown\u2192visual without data loss",
+      "Auto-save with 2s debounce \u2014 verify content persists to DB after typing stops",
+      "Toolbar formatting in visual mode \u2014 bold/italic/heading toggle Tiptap marks",
+      "Page settings panel \u2014 save title/slug/description changes via API",
+      "Table of contents \u2014 extracted from headings, updates on content change",
+      "Add new dropdown \u2014 insert Tab/Dropdown/Anchor/Card/Columns snippets at cursor",
+      "Markdown line numbers \u2014 scroll sync between gutter and textarea",
+      "Large document performance \u2014 visual editor with 500+ lines",
+      "MDX component rendering in visual mode \u2014 Card, Note, Tab components"
     ]
   },
   {
@@ -319,16 +319,16 @@
       "Integration: steps + code blocks render correctly"
     ],
     "needs_deeper_qa": [
-      "Visual comparison of Card grid against Mintlify screenshots — icon size, spacing, hover effect",
-      "SVG icons for all icon names used in real Mintlify content — only 15 common icons mapped",
-      "Ask AI button dispatches custom event — verify parent component handles it",
-      "Syntax highlighting accuracy — basic regex-based, may mis-highlight in edge cases",
-      "Syntax highlighting inside code blocks with HTML entities — escaping order matters",
-      "Code block with very long filename — header tab overflow handling",
+      "Visual comparison of Card grid against Mintlify screenshots \u2014 icon size, spacing, hover effect",
+      "SVG icons for all icon names used in real Mintlify content \u2014 only 15 common icons mapped",
+      "Ask AI button dispatches custom event \u2014 verify parent component handles it",
+      "Syntax highlighting accuracy \u2014 basic regex-based, may mis-highlight in edge cases",
+      "Syntax highlighting inside code blocks with HTML entities \u2014 escaping order matters",
+      "Code block with very long filename \u2014 header tab overflow handling",
       "CodeGroup copy button copies correct panel content (not other tab's content)",
-      "Callout title with special characters (quotes, angle brackets) — XSS safety",
+      "Callout title with special characters (quotes, angle brackets) \u2014 XSS safety",
       "Steps with embedded code blocks inside step content",
-      "Dark mode color contrast — syntax highlighting colors readable on dark background"
+      "Dark mode color contrast \u2014 syntax highlighting colors readable on dark background"
     ]
   },
   {
@@ -350,12 +350,12 @@
       "dashboard home loads with activity section"
     ],
     "needs_deeper_qa": [
-      "Simulated build completion via setTimeout — verify status transitions in real-time",
+      "Simulated build completion via setTimeout \u2014 verify status transitions in real-time",
       "Expanded deployment row layout matches Mintlify screenshots pixel-perfectly",
       "Trigger deployment button handles concurrent clicks",
       "Deployment list pagination (currently limited to 50)",
       "Project status badge updates after deployment completes",
-      "Activity table Live vs Previews tabs — Previews is placeholder"
+      "Activity table Live vs Previews tabs \u2014 Previews is placeholder"
     ]
   },
   {
@@ -406,7 +406,7 @@
       "getGithubLinkProps returns correct external link props",
       "getGithubLinkProps returns null for undefined URL",
       "AskAiButton component exported and dispatches toggle-ask-ai event",
-      "E2E: search button visible with ⌘K",
+      "E2E: search button visible with \u2318K",
       "E2E: Ask AI button visible",
       "E2E: Support link visible",
       "E2E: Dashboard button visible",
@@ -414,12 +414,12 @@
       "E2E: Search modal opens on click"
     ],
     "needs_deeper_qa": [
-      "Ask AI button integration — currently dispatches event but no AI panel implemented yet",
-      "GitHub link only shows when project settings have githubUrl — test with real project data",
-      "Support mailto link — verify opens email client",
-      "Mobile responsive behavior — search text hides, Ask AI text hides, Support link hides",
+      "Ask AI button integration \u2014 currently dispatches event but no AI panel implemented yet",
+      "GitHub link only shows when project settings have githubUrl \u2014 test with real project data",
+      "Support mailto link \u2014 verify opens email client",
+      "Mobile responsive behavior \u2014 search text hides, Ask AI text hides, Support link hides",
       "Light theme styles for all new topbar elements",
-      "Dashboard button navigation — verify it reaches authenticated dashboard"
+      "Dashboard button navigation \u2014 verify it reaches authenticated dashboard"
     ]
   },
   {
@@ -436,30 +436,30 @@
     ],
     "needs_deeper_qa": [
       "End-to-end trigger + status check with real API key and project",
-      "Rate limiting not implemented yet — needs QA to verify behavior under load",
-      "Simulated build completion timing — verify status transitions (queued → in_progress → succeeded)",
-      "Cross-org access control — verify key from org A cannot trigger deployments for org B projects",
-      "Assistant key type should be rejected (403) — not tested E2E"
+      "Rate limiting not implemented yet \u2014 needs QA to verify behavior under load",
+      "Simulated build completion timing \u2014 verify status transitions (queued \u2192 in_progress \u2192 succeeded)",
+      "Cross-org access control \u2014 verify key from org A cannot trigger deployments for org B projects",
+      "Assistant key type should be rejected (403) \u2014 not tested E2E"
     ]
   },
   {
     "feature_id": "api-002",
     "tests_written": [
-      "validateCreateMessageRequest — valid request, missing fp, empty messages, null body, optional threadId, retrievalPageSize clamping",
-      "validateSearchRequest — valid query, empty query, missing query, pageSize defaults/clamps, null body",
-      "validateGetPageContentRequest — valid path, empty/missing path, path normalization, null body",
-      "buildSearchQuery — case-insensitive pattern, SQL wildcard escaping (%, _)",
-      "formatSearchResult — correct shape, content truncation for long pages",
-      "formatPageContentResponse — correct shape",
+      "validateCreateMessageRequest \u2014 valid request, missing fp, empty messages, null body, optional threadId, retrievalPageSize clamping",
+      "validateSearchRequest \u2014 valid query, empty query, missing query, pageSize defaults/clamps, null body",
+      "validateGetPageContentRequest \u2014 valid path, empty/missing path, path normalization, null body",
+      "buildSearchQuery \u2014 case-insensitive pattern, SQL wildcard escaping (%, _)",
+      "formatSearchResult \u2014 correct shape, content truncation for long pages",
+      "formatPageContentResponse \u2014 correct shape",
       "E2E: all 3 endpoints return 401 without auth / with invalid key"
     ],
     "needs_deeper_qa": [
-      "Real Bedrock streaming — unit tests only cover validation, not actual AI responses",
-      "Search relevance — only keyword ILIKE matching, no semantic/vector search",
-      "Conversation persistence — fire-and-forget DB insert, edge cases with concurrent writes",
-      "Very large messages array — no size limit enforced on messages count",
-      "Rate limiting — no rate limiting on assistant endpoints",
-      "Multi-project orgs — search returns results from ALL projects in the org"
+      "Real Bedrock streaming \u2014 unit tests only cover validation, not actual AI responses",
+      "Search relevance \u2014 only keyword ILIKE matching, no semantic/vector search",
+      "Conversation persistence \u2014 fire-and-forget DB insert, edge cases with concurrent writes",
+      "Very large messages array \u2014 no size limit enforced on messages count",
+      "Rate limiting \u2014 no rate limiting on assistant endpoints",
+      "Multi-project orgs \u2014 search returns results from ALL projects in the org"
     ]
   },
   {
@@ -503,7 +503,7 @@
       "Page path tooltip shows full path on hover",
       "Tables sort correctly by views desc with real DB data",
       "Date range changes trigger API refetch and chart update",
-      "Referral grouping edge cases (empty referrer → $direct)",
+      "Referral grouping edge cases (empty referrer \u2192 $direct)",
       "Concurrent date range changes while data is loading"
     ]
   },
@@ -522,7 +522,7 @@
       "Date range params preserved on Views tab"
     ],
     "needs_deeper_qa": [
-      "Chart rendering with real data — only verified structure in unit tests",
+      "Chart rendering with real data \u2014 only verified structure in unit tests",
       "Date range picker interaction on Views tab specifically",
       "Large dataset performance with many pages in top pages table",
       "API response format when no analytics events exist"
@@ -542,8 +542,8 @@
       "E2E: Chat panel has clear conversation button"
     ],
     "needs_deeper_qa": [
-      "Actual Bedrock streaming response — unit tests only cover client-side parsing",
-      "Long conversation with many messages — scroll behavior under load",
+      "Actual Bedrock streaming response \u2014 unit tests only cover client-side parsing",
+      "Long conversation with many messages \u2014 scroll behavior under load",
       "Mobile responsiveness of fixed-bottom chat panel",
       "Concurrent chat sessions across multiple tabs",
       "Source citation links resolve to correct doc pages",
@@ -566,7 +566,7 @@
       "copy page button copies content to clipboard"
     ],
     "needs_deeper_qa": [
-      "Clipboard API may not work in all browsers — test copy page in Safari/Firefox",
+      "Clipboard API may not work in all browsers \u2014 test copy page in Safari/Firefox",
       "Heading anchor smooth scroll + URL hash update in real page with many headings",
       "More actions dropdown positioning when page is scrolled",
       "Light theme styling for page action buttons and dropdown",
@@ -593,10 +593,10 @@
       "E2E: TOC hidden on narrow viewports"
     ],
     "needs_deeper_qa": [
-      "Scroll spy active state tracking with IntersectionObserver — rootMargin thresholds may need tuning",
+      "Scroll spy active state tracking with IntersectionObserver \u2014 rootMargin thresholds may need tuning",
       "Smooth scroll behavior across browsers (Safari quirks)",
-      "TOC with very many headings — overflow scroll behavior",
-      "URL hash update on click — back button behavior",
+      "TOC with very many headings \u2014 overflow scroll behavior",
+      "URL hash update on click \u2014 back button behavior",
       "Light theme TOC styling contrast"
     ]
   },
@@ -615,11 +615,11 @@
       "E2E: recent searches shown from localStorage"
     ],
     "needs_deeper_qa": [
-      "Real database search — API endpoint needs live data to verify ranking",
-      "Debounce timing — verify 200ms delay feels responsive",
+      "Real database search \u2014 API endpoint needs live data to verify ranking",
+      "Debounce timing \u2014 verify 200ms delay feels responsive",
       "Keyboard navigation (arrow up/down, Enter) with grouped results",
       "Recent searches persistence across page navigations",
-      "Client-side fallback when API fails — graceful degradation",
+      "Client-side fallback when API fails \u2014 graceful degradation",
       "Light theme styling for new search modal elements",
       "Very long search queries (close to 200 char limit)",
       "Search with special characters (quotes, backslashes, SQL wildcards)"
@@ -658,8 +658,8 @@
       "E2E: 400 for invalid job ID format"
     ],
     "needs_deeper_qa": [
-      "Full authenticated flow: create job → get job → send message (requires valid API key)",
-      "Simulated background processing transitions (pending → running → succeeded)",
+      "Full authenticated flow: create job \u2192 get job \u2192 send message (requires valid API key)",
+      "Simulated background processing transitions (pending \u2192 running \u2192 succeeded)",
       "Concurrent message sends to same job",
       "Message ordering in messages array",
       "Job status transition to 409 Conflict when sending message to succeeded/failed job"
@@ -682,10 +682,10 @@
       "E2E: preserves date range in URL"
     ],
     "needs_deeper_qa": [
-      "Real conversation data — only tested with empty state in E2E",
-      "CSV download in browser — downloadCsv triggers blob/link but not testable in unit tests",
+      "Real conversation data \u2014 only tested with empty state in E2E",
+      "CSV download in browser \u2014 downloadCsv triggers blob/link but not testable in unit tests",
       "Category classification accuracy on real user messages",
-      "Large dataset performance — chatHistory limited to 50, categories computed from 200 conversations",
+      "Large dataset performance \u2014 chatHistory limited to 50, categories computed from 200 conversations",
       "Date range filtering edge cases (timezone boundaries)",
       "Agent mode empty state rendering"
     ]
@@ -706,8 +706,8 @@
     ],
     "needs_deeper_qa": [
       "Verify search events are tracked when users search docs (data query field populated)",
-      "Test with real search data — empty state vs populated state",
-      "Case-insensitive query grouping — verify LOWER() works with unicode",
+      "Test with real search data \u2014 empty state vs populated state",
+      "Case-insensitive query grouping \u2014 verify LOWER() works with unicode",
       "Performance with large number of search events (1000+)",
       "Chart rendering with many data points (90 day range)"
     ]
@@ -732,10 +732,10 @@
       "E2E: agent mode shows agent empty state"
     ],
     "needs_deeper_qa": [
-      "Bulk actions — select all / individual checkboxes work but no batch actions implemented yet",
-      "Filter dialog outside-click-to-close not implemented — uses Close button",
-      "Status badges use JSONB data.status field — verify with real feedback events",
-      "Abusive flag filtering — only testable with real flagged entries",
+      "Bulk actions \u2014 select all / individual checkboxes work but no batch actions implemented yet",
+      "Filter dialog outside-click-to-close not implemented \u2014 uses Close button",
+      "Status badges use JSONB data.status field \u2014 verify with real feedback events",
+      "Abusive flag filtering \u2014 only testable with real flagged entries",
       "CSV export with special characters in comment text",
       "Very long page paths truncation in tables",
       "Concurrent filter + sub-tab interaction edge cases"
@@ -758,8 +758,8 @@
       "E2E: breadcrumb navigation"
     ],
     "needs_deeper_qa": [
-      "Invite flow with real second user account — only tested validation logic",
-      "Role change via dropdown — needs real multi-user scenario",
+      "Invite flow with real second user account \u2014 only tested validation logic",
+      "Role change via dropdown \u2014 needs real multi-user scenario",
       "Remove member confirmation + cascading effects on projects",
       "Cannot change own role / cannot remove self guards",
       "Edge case: inviting already-member email returns 409"
@@ -781,10 +781,10 @@
       "sidebar shows Agent link"
     ],
     "needs_deeper_qa": [
-      "Create job flow with real database — unit tests only cover utility functions",
+      "Create job flow with real database \u2014 unit tests only cover utility functions",
       "Follow-up message sending in job detail view",
       "Auto-refresh polling when jobs are active (pending/running)",
-      "Job status transitions (pending → running → succeeded) reflected in UI",
+      "Job status transitions (pending \u2192 running \u2192 succeeded) reflected in UI",
       "PR link opens in new tab correctly",
       "Message scroll-to-bottom on new messages"
     ]
@@ -806,14 +806,14 @@
       "proxy forwards valid external requests"
     ],
     "needs_deeper_qa": [
-      "Real API playground interaction — click Send, verify response renders",
-      "OpenAPI spec stored in project settings — upload/paste flow via settings UI",
-      "API reference page detection — pages under api-reference/ with frontmatter api field",
+      "Real API playground interaction \u2014 click Send, verify response renders",
+      "OpenAPI spec stored in project settings \u2014 upload/paste flow via settings UI",
+      "API reference page detection \u2014 pages under api-reference/ with frontmatter api field",
       "Response tab switching (body vs headers)",
       "Large response body handling and formatting",
       "Auth header pre-fill with actual token from project settings",
-      "Concurrent requests — multiple Send clicks",
-      "Error states — network failures, timeouts, malformed responses",
+      "Concurrent requests \u2014 multiple Send clicks",
+      "Error states \u2014 network failures, timeouts, malformed responses",
       "Light theme visual correctness for all playground elements"
     ]
   },
@@ -857,12 +857,12 @@
       "E2E: jobs tab still accessible via ?tab=jobs"
     ],
     "needs_deeper_qa": [
-      "Real Slack OAuth flow — only UI shell built, no actual OAuth",
-      "Real GitHub App installation — only UI shell, no actual OAuth",
-      "Agent toggle with Pro plan — need a pro-plan org to test enable/disable",
+      "Real Slack OAuth flow \u2014 only UI shell built, no actual OAuth",
+      "Real GitHub App installation \u2014 only UI shell, no actual OAuth",
+      "Agent toggle with Pro plan \u2014 need a pro-plan org to test enable/disable",
       "Connected repos list rendering with real data from GitHub API",
       "Linear Agent promo card persistence across page reloads (state is local)",
-      "Plan gating API enforcement — PUT with agentEnabled:true on free plan should return 403"
+      "Plan gating API enforcement \u2014 PUT with agentEnabled:true on free plan should return 403"
     ]
   },
   {
@@ -902,7 +902,7 @@
       "stat card count overrides work"
     ],
     "needs_deeper_qa": [
-      "Visual match with original screenshot — stat card layout, spacing, typography",
+      "Visual match with original screenshot \u2014 stat card layout, spacing, typography",
       "Agent tab navigation preserves date range and trafficSource query params",
       "Agent visitors vs MCP searches tabs both show on both sub-pages",
       "Tab active state styling matches when on MCP Searches page"
@@ -923,13 +923,13 @@
       "E2E: save triggers API call and shows success message"
     ],
     "needs_deeper_qa": [
-      "Actual S3 upload flow — presigned URL + PUT upload — only mocked in unit tests",
-      "Logo/favicon preview after upload — needs real S3 presigned GET URL",
+      "Actual S3 upload flow \u2014 presigned URL + PUT upload \u2014 only mocked in unit tests",
+      "Logo/favicon preview after upload \u2014 needs real S3 presigned GET URL",
       "Color picker native input behavior varies across browsers",
-      "Dark mode toggle persistence — does it reload correctly after save?",
+      "Dark mode toggle persistence \u2014 does it reload correctly after save?",
       "Very large image uploads (near 50MB limit)",
-      "SVG upload security — XSS vectors in SVG files",
-      "Settings merge when project already has other settings — verify no data loss"
+      "SVG upload security \u2014 XSS vectors in SVG files",
+      "Settings merge when project already has other settings \u2014 verify no data loss"
     ]
   },
   {
@@ -969,13 +969,13 @@
       "validates feedback payload (page, rating, comment)",
       "rejects missing/invalid fields",
       "truncates long comments to 2000 chars",
-      "widget state machine: idle → rated → submitting → submitted",
+      "widget state machine: idle \u2192 rated \u2192 submitting \u2192 submitted",
       "POST /api/docs/:subdomain/feedback returns 404 for unknown subdomain",
       "POST /api/docs/:subdomain/feedback rejects invalid payload"
     ],
     "needs_deeper_qa": [
       "Verify widget renders correctly on actual docs pages with real data",
-      "Test thumbs up/down click → textarea appears → submit flow in browser",
+      "Test thumbs up/down click \u2192 textarea appears \u2192 submit flow in browser",
       "Toast confirmation appears and auto-dismisses after 3 seconds",
       "Feedback appears in dashboard analytics/feedback page after submission",
       "Light theme styling for the feedback widget",
@@ -1029,11 +1029,11 @@
       "E2E: schedule description updates with frequency"
     ],
     "needs_deeper_qa": [
-      "Actual workflow creation with real DB — unit tests validate logic only",
-      "Repo selector dropdown — shows \"No repositories available\" placeholder, needs connected repos",
-      "Custom cron input validation — no client-side validation of cron expression",
-      "Form submission error handling — network errors, server errors",
-      "Slack notification toggle — no actual Slack integration yet",
+      "Actual workflow creation with real DB \u2014 unit tests validate logic only",
+      "Repo selector dropdown \u2014 shows \"No repositories available\" placeholder, needs connected repos",
+      "Custom cron input validation \u2014 no client-side validation of cron expression",
+      "Form submission error handling \u2014 network errors, server errors",
+      "Slack notification toggle \u2014 no actual Slack integration yet",
       "Auto-merge toggle state persisted correctly in DB"
     ]
   },
@@ -1054,10 +1054,10 @@
     ],
     "needs_deeper_qa": [
       "Sidebar scroll behavior when page content is very tall",
-      "Mobile/responsive layout — sidebar may need to collapse on small screens",
+      "Mobile/responsive layout \u2014 sidebar may need to collapse on small screens",
       "Keyboard navigation through sidebar nav items",
       "Visual match to Mintlify settings sidebar (icon alignment, spacing, colors)",
-      "Old routes (/settings/organization/*, /settings/deployment/general) — verify no broken links from external sources"
+      "Old routes (/settings/organization/*, /settings/deployment/general) \u2014 verify no broken links from external sources"
     ]
   },
   {
@@ -1075,10 +1075,10 @@
       "E2E: remove domain button present"
     ],
     "needs_deeper_qa": [
-      "Real DNS verification — unit tests cover logic but actual DNS resolution needs live test",
+      "Real DNS verification \u2014 unit tests cover logic but actual DNS resolution needs live test",
       "Domain verification with Cloudflare auto-configure integration not tested",
       "TLS certificate provisioning not implemented (would need ACME/Let's Encrypt)",
-      "Concurrent domain updates — race condition if two users save simultaneously",
+      "Concurrent domain updates \u2014 race condition if two users save simultaneously",
       "Edge case: domain already used by another project"
     ]
   },
@@ -1094,10 +1094,10 @@
     ],
     "needs_deeper_qa": [
       "Visual check: footer centered below pagination on real docs page",
-      "Tooltip positioning on small viewports — may overflow",
+      "Tooltip positioning on small viewports \u2014 may overflow",
       "Social icons match expected brand icons (X, GitHub, LinkedIn)",
-      "Light theme footer styling — colors, borders, tooltip shadow",
-      "Footer with 0 social links — only powered-by should show"
+      "Light theme footer styling \u2014 colors, borders, tooltip shadow",
+      "Footer with 0 social links \u2014 only powered-by should show"
     ]
   },
   {
@@ -1116,7 +1116,7 @@
       "search_ and get_page_ tool cards displayed"
     ],
     "needs_deeper_qa": [
-      "Clipboard copy behavior (navigator.clipboard) — mocked in test env",
+      "Clipboard copy behavior (navigator.clipboard) \u2014 mocked in test env",
       "Correct project slug resolution when user has multiple projects",
       "Visual match with original Mintlify MCP page styling",
       "Mobile responsive layout of URL bar and tool cards"
@@ -1134,8 +1134,8 @@
     ],
     "needs_deeper_qa": [
       "Save changes actually persists to DB and reflects in sidebar/topbar (requires auth session)",
-      "Subdomain uniqueness conflict handling — what happens if subdomain already taken",
-      "Empty name edge case — does the form prevent submit or show error?",
+      "Subdomain uniqueness conflict handling \u2014 what happens if subdomain already taken",
+      "Empty name edge case \u2014 does the form prevent submit or show error?",
       "Concurrent edits from multiple tabs"
     ]
   },
@@ -1177,7 +1177,7 @@
       "E2E: Spending Controls section with Change Tier button"
     ],
     "needs_deeper_qa": [
-      "Visual layout match with original — two-column stats grid alignment",
+      "Visual layout match with original \u2014 two-column stats grid alignment",
       "Progress bar width matches actual percentage under various usage levels",
       "Billing date formatting across timezones",
       "Tab switching preserves billing data (no re-fetch flash)"
@@ -1230,8 +1230,8 @@
       "E2E: page loads with name inputs, saves name, toggle visible, GitHub section visible, rejects empty first name"
     ],
     "needs_deeper_qa": [
-      "GitHub OAuth redirect flow not tested — button is UI-only placeholder",
-      "Email notifications toggle saves to DB — verify persistence across page reloads",
+      "GitHub OAuth redirect flow not tested \u2014 button is UI-only placeholder",
+      "Email notifications toggle saves to DB \u2014 verify persistence across page reloads",
       "Profile image update not implemented (user table has image field)",
       "Concurrent save + toggle race condition"
     ]
@@ -1250,11 +1250,11 @@
       "E2E: confirmation dialog opens/closes, requires name typing"
     ],
     "needs_deeper_qa": [
-      "Actual DELETE /api/orgs/[id] — requires real org + admin session",
-      "Actual DELETE /api/projects/[id] with reason body — project deletion flow",
+      "Actual DELETE /api/orgs/[id] \u2014 requires real org + admin session",
+      "Actual DELETE /api/projects/[id] with reason body \u2014 project deletion flow",
       "Redirect to /dashboard after project deletion",
       "Redirect to /login after org deletion",
-      "Cascade delete verification — all child data removed",
+      "Cascade delete verification \u2014 all child data removed",
       "Non-admin users should see 403 on delete attempts",
       "Last project deletion edge case (prevented by existing API logic)"
     ]
@@ -1270,11 +1270,11 @@
       "Deploy env filtering excludes sensitive vars"
     ],
     "needs_deeper_qa": [
-      "Actual Docker build + ECR push — requires Docker running",
-      "App Runner service creation — requires IAM permissions and may take 5+ minutes",
-      "Health check DB connectivity — test env may not have real DB connection",
-      "Deploy script with real credentials — verify env vars reach the service",
-      "Custom domain configuration — not implemented in deploy script yet"
+      "Actual Docker build + ECR push \u2014 requires Docker running",
+      "App Runner service creation \u2014 requires IAM permissions and may take 5+ minutes",
+      "Health check DB connectivity \u2014 test env may not have real DB connection",
+      "Deploy script with real credentials \u2014 verify env vars reach the service",
+      "Custom domain configuration \u2014 not implemented in deploy script yet"
     ]
   },
   {
@@ -1304,7 +1304,7 @@
       "Export downloads valid JSON",
       "Color pickers work with swatch preview",
       "Adding/removing topbar links, social links, custom integrations",
-      "Real-time config preview (not implemented — save required)"
+      "Real-time config preview (not implemented \u2014 save required)"
     ]
   },
   {
@@ -1324,10 +1324,10 @@
       "publish button disabled when no changes"
     ],
     "needs_deeper_qa": [
-      "Real comment CRUD with authenticated user — mocked auth in unit tests",
+      "Real comment CRUD with authenticated user \u2014 mocked auth in unit tests",
       "Branch creation + switching actually persists across page reloads",
       "Resolve/reopen comment permission enforcement (admin/editor only)",
-      "Suggestion accept/reject flow — applying diff to page content",
+      "Suggestion accept/reject flow \u2014 applying diff to page content",
       "Concurrent comments on same page from multiple users",
       "Thread reply ordering with rapid successive posts"
     ]
@@ -1346,12 +1346,12 @@
       "Component extraction recognizes all new tags in MDX content"
     ],
     "needs_deeper_qa": [
-      "Mermaid client-side rendering via dynamic import — needs real page with mermaid content",
+      "Mermaid client-side rendering via dynamic import \u2014 needs real page with mermaid content",
       "Banner dismiss persistence across page navigations (currently resets)",
       "View language preference persistence across pages (localStorage) not implemented yet",
       "Tooltip positioning edge cases near viewport edges",
       "Nested Expandable depth limits and styling at >3 levels",
-      "Columns responsive reflow on mobile — CSS only, needs viewport testing"
+      "Columns responsive reflow on mobile \u2014 CSS only, needs viewport testing"
     ]
   },
   {
@@ -1373,7 +1373,7 @@
       "webhook endpoint processes valid push events"
     ],
     "needs_deeper_qa": [
-      "Real GitHub App OAuth install flow — simulated in build",
+      "Real GitHub App OAuth install flow \u2014 simulated in build",
       "Webhook signature verification with actual GitHub-signed payloads",
       "Auto-deploy triggering with real GitHub push events",
       "Multiple repos per connection with concurrent pushes",
@@ -1394,12 +1394,12 @@
       "GET /api/deployments/previews returns preview list"
     ],
     "needs_deeper_qa": [
-      "Real preview deployment build process — only simulated with timeout",
-      "Preview URL DNS/hosting — URLs are generated but don't resolve",
-      "Branch selector in editor auto-creating previews — not wired to editor",
-      "Preview auth toggle in settings restricting access to org members — not implemented",
-      "Concurrent preview deployments for the same branch — no dedup logic",
-      "Preview cleanup/expiry — previews persist indefinitely"
+      "Real preview deployment build process \u2014 only simulated with timeout",
+      "Preview URL DNS/hosting \u2014 URLs are generated but don't resolve",
+      "Branch selector in editor auto-creating previews \u2014 not wired to editor",
+      "Preview auth toggle in settings restricting access to org members \u2014 not implemented",
+      "Concurrent preview deployments for the same branch \u2014 no dedup logic",
+      "Preview cleanup/expiry \u2014 previews persist indefinitely"
     ]
   },
   {
@@ -1418,9 +1418,9 @@
       "E2E: text/plain content type"
     ],
     "needs_deeper_qa": [
-      "Test with real project data — create a project with published pages and verify output format",
+      "Test with real project data \u2014 create a project with published pages and verify output format",
       "Verify caching headers (Cache-Control: public, max-age=3600)",
-      "Large page count performance — test with 100+ pages",
+      "Large page count performance \u2014 test with 100+ pages",
       "Unicode/special characters in page titles and content",
       "Verify only published pages are included (unpublished pages should be excluded)"
     ]
@@ -1439,9 +1439,9 @@
       "E2E: redirects UI add/remove in configs panel"
     ],
     "needs_deeper_qa": [
-      "Actual 301 redirect behavior in browser — verify HTTP status code is 308/301 (permanentRedirect)",
+      "Actual 301 redirect behavior in browser \u2014 verify HTTP status code is 308/301 (permanentRedirect)",
       "Redirect with query parameters or hash fragments",
-      "Redirect chain detection (A→B→C)",
+      "Redirect chain detection (A\u2192B\u2192C)",
       "Saving redirects via configs panel and verifying persistence after reload",
       "Edge case: redirect to external URL (currently only supports internal paths)"
     ]
@@ -1486,7 +1486,7 @@
     "needs_deeper_qa": [
       "Verify custom CSS actually applies styles on docs page in browser",
       "Verify custom JS executes on docs page (e.g. analytics script)",
-      "Test XSS vectors in custom CSS/JS fields — ensure no admin-side injection",
+      "Test XSS vectors in custom CSS/JS fields \u2014 ensure no admin-side injection",
       "Test very large CSS/JS payloads (performance impact)",
       "Verify CSS is injected after default styles (specificity)",
       "Verify JS is injected at end of body (load order)",
@@ -1507,9 +1507,9 @@
       "end-to-end: snippet + variable resolution then MDX render"
     ],
     "needs_deeper_qa": [
-      "Recursive snippet inclusion (snippet referencing another snippet) — not implemented, could cause infinite loops",
+      "Recursive snippet inclusion (snippet referencing another snippet) \u2014 not implemented, could cause infinite loops",
       "Variable resolution with special characters in values (HTML entities, quotes)",
-      "Snippet content with frontmatter — currently includes raw frontmatter in output",
+      "Snippet content with frontmatter \u2014 currently includes raw frontmatter in output",
       "Performance with many snippets on a single page",
       "Snippet pages are correctly hidden in editor sidebar file tree (not just docs nav)"
     ]
@@ -1537,11 +1537,11 @@
       "E2E: sidebar renders method badges for API pages"
     ],
     "needs_deeper_qa": [
-      "Real OpenAPI spec fetch from external URL — mocked in unit tests",
+      "Real OpenAPI spec fetch from external URL \u2014 mocked in unit tests",
       "Virtual pages rendering in docs site with real project + spec stored in DB",
       "AsyncAPI channel pages with actual WebSocket message schemas",
       "Go code example correctness for complex request bodies",
-      "Sidebar grouping with many endpoints (10+ tags) — visual layout",
+      "Sidebar grouping with many endpoints (10+ tags) \u2014 visual layout",
       "Prev/next pagination between virtual pages and DB pages",
       "Auto-regeneration of pages when spec changes on deploy"
     ]
@@ -1561,13 +1561,13 @@
       "getAvailableLocalesForPage returns locales that have the page translated"
     ],
     "needs_deeper_qa": [
-      "Language switcher navigation — verify URL updates correctly on locale switch",
-      "RTL language support (Arabic, Hebrew) — page layout direction",
-      "hreflang tags in HTML head — verify correct values via view-source",
-      "Navigation sidebar updates per-locale — different page trees per language",
+      "Language switcher navigation \u2014 verify URL updates correctly on locale switch",
+      "RTL language support (Arabic, Hebrew) \u2014 page layout direction",
+      "hreflang tags in HTML head \u2014 verify correct values via view-source",
+      "Navigation sidebar updates per-locale \u2014 different page trees per language",
       "Default language pages accessible without locale prefix",
       "SEO: sitemap entries for multi-language pages",
-      "Edge case: page exists in only some languages — switcher shows correct options"
+      "Edge case: page exists in only some languages \u2014 switcher shows correct options"
     ]
   },
   {
@@ -1606,12 +1606,33 @@
       "KaTeX CSS URL validation"
     ],
     "needs_deeper_qa": [
-      "Visual rendering fidelity — KaTeX CSS may differ from Mintlify production",
+      "Visual rendering fidelity \u2014 KaTeX CSS may differ from Mintlify production",
       "Complex LaTeX edge cases (nested environments, aligned equations)",
       "Performance with many math expressions on a single page",
       "Interaction with other content features (Mermaid, code blocks with $ signs)",
-      "CDN availability of KaTeX CSS — fallback if CDN is down",
-      "Math inside component blocks (Tabs, Accordions, Cards) — may need separate processing"
+      "CDN availability of KaTeX CSS \u2014 fallback if CDN is down",
+      "Math inside component blocks (Tabs, Accordions, Cards) \u2014 may need separate processing"
+    ]
+  },
+  {
+    "feature_id": "feature-031",
+    "tests_written": [
+      "AI_TOOLS registry has 8+ tools with required fields",
+      "getEnabledAiTools returns empty when disabled or no tools",
+      "getEnabledAiTools returns correct tools in order, skips unknown",
+      "buildAiToolUrl builds correct URLs for ChatGPT, Claude, Perplexity, Google AI Studio, Grok",
+      "buildAiToolUrl truncates long content",
+      "buildAiToolUrl returns empty for unknown tool",
+      "E2E: AI menu hidden when not configured",
+      "E2E: dropdown shows tool options when clicked"
+    ],
+    "needs_deeper_qa": [
+      "Verify AI tool URLs actually open correct pages with content pre-loaded",
+      "Test with project settings that have contextualAiMenu enabled in DB",
+      "Cross-browser: verify window.open behavior and popup blockers",
+      "Test with very long page content (code-heavy docs)",
+      "Visual: verify menu styling matches original Mintlify design",
+      "Test toggling menu open/closed rapidly"
     ]
   }
 ]
