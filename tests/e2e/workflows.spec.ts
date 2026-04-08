@@ -28,7 +28,7 @@ test.describe("Workflows template picker", () => {
     await page.getByTestId("template-card-changelog").click();
     await page.waitForURL("**/products/workflows/new?template=changelog");
     await expect(
-      page.getByRole("heading", { name: /New workflow: Changelog/ }),
+      page.getByRole("heading", { name: /Changelog/ }),
     ).toBeVisible();
   });
 
@@ -53,5 +53,52 @@ test.describe("Workflows template picker", () => {
         name: "What do you want to automate?",
       }),
     ).toBeVisible();
+  });
+});
+
+test.describe("Workflow creation form", () => {
+  test("shows trigger type radio buttons", async ({ page }) => {
+    await page.goto("/products/workflows/new?template=changelog");
+    await expect(page.getByTestId("trigger-on_pr_merge")).toBeVisible();
+    await expect(page.getByTestId("trigger-on_schedule")).toBeVisible();
+  });
+
+  test("switching to schedule shows frequency buttons", async ({ page }) => {
+    await page.goto("/products/workflows/new?template=changelog");
+    await page.getByTestId("trigger-on_schedule").click();
+    await expect(page.getByTestId("freq-daily")).toBeVisible();
+    await expect(page.getByTestId("freq-weekly")).toBeVisible();
+    await expect(page.getByTestId("freq-monthly")).toBeVisible();
+    await expect(page.getByTestId("freq-custom")).toBeVisible();
+  });
+
+  test("PR merge trigger shows repo search", async ({ page }) => {
+    await page.goto("/products/workflows/new?template=changelog");
+    await page.getByTestId("trigger-on_pr_merge").click();
+    await expect(page.getByTestId("repo-search")).toBeVisible();
+  });
+
+  test("shows settings toggles", async ({ page }) => {
+    await page.goto("/products/workflows/new");
+    await expect(page.getByTestId("toggle-auto-merge")).toBeVisible();
+    await expect(page.getByTestId("toggle-context-repos")).toBeVisible();
+  });
+
+  test("shows slack notification toggle", async ({ page }) => {
+    await page.goto("/products/workflows/new");
+    await expect(page.getByTestId("toggle-slack")).toBeVisible();
+  });
+
+  test("create button is disabled with empty name", async ({ page }) => {
+    await page.goto("/products/workflows/new");
+    const btn = page.getByTestId("create-workflow-btn");
+    await expect(btn).toBeDisabled();
+  });
+
+  test("schedule description updates with frequency", async ({ page }) => {
+    await page.goto("/products/workflows/new?template=broken-link-detection");
+    await expect(page.getByText(/Runs weekly on Mondays/)).toBeVisible();
+    await page.getByTestId("freq-daily").click();
+    await expect(page.getByText(/Runs daily at/)).toBeVisible();
   });
 });

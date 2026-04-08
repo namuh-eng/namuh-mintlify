@@ -379,6 +379,50 @@ export const assistantUsage = pgTable(
   (table) => [t.uniqueIndex("assistant_usage_project_idx").on(table.projectId)],
 );
 
+// ── Workflow Trigger Type ─────────────────────────────────────────────────────
+
+export const workflowTriggerTypeEnum = pgEnum("workflow_trigger_type", [
+  "on_pr_merge",
+  "on_schedule",
+]);
+
+// ── Workflows ─────────────────────────────────────────────────────────────────
+
+export const workflows = pgTable(
+  "workflows",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    projectId: t
+      .uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: t.varchar({ length: 256 }).notNull(),
+    triggerType: workflowTriggerTypeEnum("trigger_type").notNull(),
+    triggerConfig: t
+      .jsonb("trigger_config")
+      .$type<{
+        repos?: string[];
+        frequency?: "daily" | "weekly" | "monthly" | "custom";
+        time?: string;
+        customCron?: string;
+      }>()
+      .default({}),
+    prompt: t.text().notNull(),
+    autoMerge: t.boolean("auto_merge").default(true).notNull(),
+    contextRepos: t.jsonb("context_repos").$type<string[]>().default([]),
+    slackNotify: t.boolean("slack_notify").default(false).notNull(),
+    createdAt: t
+      .timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: t
+      .timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [t.index("workflow_project_idx").on(table.projectId)],
+);
+
 // ── Audit Logs ─────────────────────────────────────────────────────────────────
 
 export const auditLogs = pgTable(
