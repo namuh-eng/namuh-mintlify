@@ -25,7 +25,7 @@ export function MdxContent({ html }: MdxContentProps) {
     for (const btn of tabButtons) {
       btn.addEventListener("click", () => {
         const tabIndex = btn.dataset.tab;
-        const tabContainer = btn.closest(".tabs, .code-group");
+        const tabContainer = btn.closest(".tabs, .code-group, .view");
         if (!tabContainer || tabIndex === undefined) return;
 
         // Deactivate all tabs and panels in this container
@@ -81,6 +81,43 @@ export function MdxContent({ html }: MdxContentProps) {
             detail: { code: codeText, language: lang },
           });
           btn.dispatchEvent(event);
+        }
+      });
+    }
+
+    // Wire up banner dismiss buttons
+    const bannerDismissButtons =
+      container.querySelectorAll<HTMLButtonElement>(".banner-dismiss");
+    for (const btn of bannerDismissButtons) {
+      btn.addEventListener("click", () => {
+        const banner = btn.closest(".banner");
+        if (banner) {
+          (banner as HTMLElement).style.display = "none";
+        }
+      });
+    }
+
+    // Render Mermaid diagrams client-side
+    const mermaidBlocks =
+      container.querySelectorAll<HTMLPreElement>("pre.mermaid");
+    if (mermaidBlocks.length > 0) {
+      import("mermaid").then((mod) => {
+        const mermaid = mod.default;
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "dark",
+          themeVariables: {
+            primaryColor: "#16a34a",
+            primaryTextColor: "#e5e7eb",
+            lineColor: "#6b7280",
+          },
+        });
+        for (const block of mermaidBlocks) {
+          const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
+          const graphDef = block.textContent || "";
+          mermaid.render(id, graphDef).then(({ svg }) => {
+            block.innerHTML = svg;
+          });
         }
       });
     }

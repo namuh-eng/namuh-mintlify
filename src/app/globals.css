@@ -943,6 +943,250 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* ── Mermaid ───────────────────────────────────────────────────────────────── */
+
+pre.mermaid {
+  margin: 16px 0;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  text-align: center;
+  overflow-x: auto;
+}
+
+pre.mermaid svg {
+  max-width: 100%;
+}
+
+/* ── Expandable ────────────────────────────────────────────────────────────── */
+
+.expandable {
+  margin: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.expandable-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #e5e7eb;
+  list-style: none;
+}
+
+.expandable-summary::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid #6b7280;
+  border-bottom: 2px solid #6b7280;
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+}
+
+.expandable[open] > .expandable-summary::before {
+  transform: rotate(45deg);
+}
+
+.expandable-summary::-webkit-details-marker {
+  display: none;
+}
+
+.expandable-content {
+  padding: 0 14px 12px;
+  font-size: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.expandable .expandable {
+  border-left: 2px solid rgba(22, 163, 74, 0.3);
+  border-radius: 0;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  margin-left: 8px;
+}
+
+/* ── Tooltip ───────────────────────────────────────────────────────────────── */
+
+.tooltip {
+  position: relative;
+  display: inline;
+  border-bottom: 1px dotted #6b7280;
+  cursor: help;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: #e5e7eb;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ── Update / Changelog ────────────────────────────────────────────────────── */
+
+.update-entry {
+  position: relative;
+  margin: 24px 0;
+  padding-left: 24px;
+  border-left: 2px solid rgba(22, 163, 74, 0.4);
+}
+
+.update-date {
+  font-size: 13px;
+  color: #16a34a;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.update-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin: 0 0 8px;
+}
+
+.update-body {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* ── View ──────────────────────────────────────────────────────────────────── */
+
+.view {
+  margin: 16px 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.view > .tab-bar {
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.view > .tab-panels > .tab-panel {
+  padding: 16px;
+}
+
+/* ── Banner ─────────────────────────────────────────────────────────────────── */
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 16px;
+  margin: 16px 0;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.banner-info {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #93bbfd;
+}
+
+.banner-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.banner-success {
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  color: #4ade80;
+}
+
+.banner-content {
+  flex: 1;
+}
+
+.banner-content p {
+  margin: 0;
+}
+
+.banner-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.banner-dismiss:hover {
+  opacity: 1;
+}
+
+/* ── Badge ──────────────────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.badge-default {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+}
+
+.badge-green {
+  background: rgba(22, 163, 74, 0.15);
+  color: #4ade80;
+}
+
+.badge-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.badge-blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93bbfd;
+}
+
+.badge-yellow {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.badge-purple {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
 /* ── Pagination ────────────────────────────────────────────────────────────── */
 
 .docs-pagination {

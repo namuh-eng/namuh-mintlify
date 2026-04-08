@@ -963,7 +963,7 @@
     "dependent_on": [
       "feature-004"
     ],
-    "build_pass": false,
+    "build_pass": true,
     "qa_pass": false
   },
   {

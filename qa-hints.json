@@ -1331,5 +1331,27 @@
       "Concurrent comments on same page from multiple users",
       "Thread reply ordering with rapid successive posts"
     ]
+  },
+  {
+    "feature_id": "feature-004b",
+    "tests_written": [
+      "Mermaid renders pre block with escaped content and class",
+      "Expandable renders as collapsible details with title",
+      "Nested Expandables render inside parent",
+      "Tooltip renders inline with dotted underline and hover text",
+      "Update renders timeline entry with date and title",
+      "View renders tab-like switcher with ViewPanel children",
+      "Banner renders with variant class and dismiss button",
+      "Badge renders as inline colored pill with color variants",
+      "Component extraction recognizes all new tags in MDX content"
+    ],
+    "needs_deeper_qa": [
+      "Mermaid client-side rendering via dynamic import — needs real page with mermaid content",
+      "Banner dismiss persistence across page navigations (currently resets)",
+      "View language preference persistence across pages (localStorage) not implemented yet",
+      "Tooltip positioning edge cases near viewport edges",
+      "Nested Expandable depth limits and styling at >3 levels",
+      "Columns responsive reflow on mobile — CSS only, needs viewport testing"
+    ]
   }
 ]

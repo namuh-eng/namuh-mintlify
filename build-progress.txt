@@ -2179,3 +2179,43 @@ Date: 2026-04-09
 - Branch selector creates a virtual "main" default if no branches exist in DB
 - Only admins/editors can resolve comments, review suggestions, and create branches
 - Publish button disabled state uses clsx for conditional styling
+
+## Iteration 47 — feature-004b: Extended MDX Component Library
+Date: 2026-04-09
+
+### What was built
+- Extended MDX renderer with 7 new components: Mermaid, Expandable, Tooltip, Update/Changelog, View, Banner, Badge
+- Mermaid: renders as `<pre class="mermaid">` with escaped content; client-side rendering via dynamic import of mermaid library
+- Expandable: nested collapsible `<details>` sections for API property trees, supports recursive nesting with indented green border
+- Tooltip: inline `<span>` with dotted underline and hover popup text via CSS
+- Update/Changelog: timeline entry with green left border, date header, optional title, content body
+- View: tab-like switcher using ViewPanel children, reuses tab-bar/tab-panel pattern from Tabs component
+- Banner: full-width dismissible bar with info/warning/success variants, dismiss button hides via JS
+- Badge: inline colored pill with 6 color variants (default, green, red, blue, yellow, purple)
+- CSS styles for all 7 components in globals.css with dark theme
+- Client-side interactivity in mdx-content.tsx: Banner dismiss, Mermaid rendering, View tab switching (extended existing tab selector to include .view containers)
+- Installed mermaid package for client-side diagram rendering
+
+### Test results
+- 23 new unit tests (mdx-extended-components.test.ts) — all passing
+- 6 new E2E tests (mdx-extended-components.spec.ts) — written, QA will verify
+- 1193 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/mdx-renderer.ts — added 7 new components to KNOWN_COMPONENTS, WRAPPER_COMPONENTS, and renderComponentBlock switch
+- src/app/globals.css — added CSS for Mermaid, Expandable, Tooltip, Update, View, Banner, Badge
+- src/components/docs/mdx-content.tsx — added Banner dismiss, Mermaid client rendering, extended tab selector for .view
+- tests/mdx-extended-components.test.ts — new, 23 unit tests
+- tests/e2e/mdx-extended-components.spec.ts — new, 6 E2E tests
+- package.json — added mermaid dependency
+- prd.json — feature-004b build_pass set to true
+- qa-hints.json — added feature-004b QA hints
+
+### Decisions
+- Mermaid renders client-side via dynamic import to keep SSR lightweight; content is HTML-escaped in pre tag
+- Expandable uses details/summary HTML5 pattern (same as Accordion) but with distinct styling (green nested borders)
+- Added Expandable and View to WRAPPER_COMPONENTS so nested content is properly extracted
+- View reuses existing tab-bar/tab-panel CSS pattern — extended tab click handler to recognize .view containers
+- Badge uses color prop with predefined variants; unknown colors render as class names for extensibility
+- Banner dismiss is ephemeral (per-page-load) — no localStorage persistence for simplicity
