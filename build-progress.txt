@@ -110,3 +110,39 @@ Date: 2026-04-08
 - Test-only session creation route guarded by NODE_ENV=test — won't respond in production
 - Playwright config split into 3 projects: auth-setup, default (authenticated), unauthenticated (auth.spec.ts)
 - emailAndPassword not explicitly enabled — Mintlify uses Google OAuth only
+
+## Iteration 4 — auth-002: Organization Creation & Onboarding
+Date: 2026-04-08
+
+### What was built
+- Org utility module (`src/lib/orgs.ts`) with slugify, validateOrgName, validateCreateOrgRequest functions
+- API route `GET /api/orgs` — list orgs the authenticated user belongs to (with role)
+- API route `POST /api/orgs` — create org, auto-generate slug, add creator as admin member
+- Onboarding page (`src/app/onboarding/page.tsx`) — dark card with org name input, validates on submit, creates org via API, redirects to dashboard
+- Middleware updated to protect `/onboarding` route (unauthenticated → /login)
+- Login/signup callback URLs changed from `/dashboard` to `/onboarding` (onboarding page auto-skips to dashboard if user already has an org)
+- Slug collision handling: appends timestamp suffix if slug already exists
+
+### Test results
+- 14 new unit tests (orgs.test.ts: 9, auth.test.ts: +2 for onboarding middleware) — all passing
+- 4 new E2E tests (onboarding.spec.ts) — written, QA will verify
+- 87 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/orgs.ts — new, slug generation + validation utilities
+- src/app/api/orgs/route.ts — new, GET + POST org API routes
+- src/app/onboarding/page.tsx — new, org creation onboarding page
+- src/middleware.ts — updated, added /onboarding protection
+- src/app/(auth)/login/page.tsx — updated, callbackURL → /onboarding
+- src/app/(auth)/signup/page.tsx — updated, callbackURL → /onboarding
+- tests/orgs.test.ts — new, 9 unit tests
+- tests/auth.test.ts — updated, +2 tests for onboarding middleware logic
+- tests/e2e/onboarding.spec.ts — new, 4 E2E tests
+
+### Decisions
+- OAuth callback redirects to /onboarding instead of /dashboard — onboarding page checks if user has org and skips to /dashboard if so
+- Slug generated from org name (lowercase, hyphens, no special chars) — if collision, append base-36 timestamp suffix
+- Org creator automatically becomes admin member via orgMemberships insert
+- Onboarding page is client component with loading state while checking for existing orgs
+- Removed autoFocus from input (Biome accessibility rule)

@@ -62,5 +62,31 @@
       "Concurrent session handling — multiple tabs/devices",
       "Test-only /api/test/create-session route is NOT accessible in production (NODE_ENV guard)"
     ]
+  },
+  {
+    "feature_id": "auth-002",
+    "tests_written": [
+      "slugify converts name to lowercase kebab-case",
+      "slugify strips special characters",
+      "slugify collapses multiple hyphens",
+      "slugify trims leading/trailing hyphens",
+      "slugify handles unicode by stripping non-ascii",
+      "validateOrgName accepts valid names, rejects empty/too-short/too-long",
+      "validateCreateOrgRequest rejects missing/non-string name",
+      "validateCreateOrgRequest returns trimmed name for valid input",
+      "middleware redirects unauthenticated user from /onboarding to /login",
+      "middleware allows authenticated user to access /onboarding",
+      "E2E: redirects new user without org to /onboarding",
+      "E2E: shows org creation form on /onboarding",
+      "E2E: creates org and redirects to dashboard",
+      "E2E: validates empty org name"
+    ],
+    "needs_deeper_qa": [
+      "Full flow: Google OAuth → first login → onboarding → create org → dashboard",
+      "Slug collision handling — if org name produces duplicate slug, suffix is appended",
+      "Concurrent org creation by same user — race condition on membership",
+      "User with existing org visits /onboarding — should redirect to /dashboard",
+      "Org name with only special characters — slug would be empty, should return error"
+    ]
   }
 ]
