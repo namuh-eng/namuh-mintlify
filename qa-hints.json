@@ -1200,5 +1200,25 @@
       "Check empty state rendering on mobile/narrow viewports",
       "Verify agent empty state CTA links to real integrations settings page"
     ]
+  },
+  {
+    "feature_id": "settings-004",
+    "tests_written": [
+      "defaults returned when no existing addons settings",
+      "partial feedback settings merged with defaults",
+      "partial ciChecks merged with defaults",
+      "partial previews merged with defaults",
+      "full override preserves all values",
+      "getDefaultAddons returns fresh copy each time",
+      "validates CI check dropdown values",
+      "rejects invalid CI check values"
+    ],
+    "needs_deeper_qa": [
+      "Toggle state persistence across page navigation",
+      "Settings save round-trip with actual API (mocked in unit tests)",
+      "Visual match to original Mintlify add-ons page",
+      "Disabled states for features requiring public GitHub repos or sales contact",
+      "Concurrent toggle clicks before save completes"
+    ]
   }
 ]

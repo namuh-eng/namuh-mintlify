@@ -1959,3 +1959,35 @@ Date: 2026-04-09
 - Agent empty state now shows "Connect integrations" instead of "Enable the Agent" — matches PRD spec for onboarding context
 - Editor empty state uses onClick (not href) to trigger the existing create modal — keeps user in-context
 - CTA buttons use emerald-600 background matching the app's accent color
+
+## Iteration 41 — settings-004: Add-ons Settings
+Date: 2026-04-09
+
+### What was built
+- Add-ons settings page at `/settings/project/addons` — replaced placeholder with full implementation
+- Addons utility module (`src/lib/addons.ts`) with types, defaults, merge logic, validation
+- 3 sections matching original Mintlify UI:
+  - **Feedback**: 5 toggle switches (thumbs rating, edit suggestions, raise issues, contextual feedback, code snippet feedback) with icons, labels, descriptions
+  - **CI/CD checks**: 2 dropdown selects (broken links, grammar linter) with Disabled/Enabled options
+  - **Previews**: 2 toggle switches (preview deployments, preview auth)
+- All settings stored in `project.settings.addons` JSONB field
+- Save button persists to API via PUT `/api/projects/[id]`
+- Dark theme with emerald accent, matching existing settings pages
+
+### Test results
+- 8 new unit tests (addons-settings.test.ts) — all passing
+- 5 new E2E tests (addons-settings.spec.ts) — written, QA will verify
+- 1053 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/addons.ts — new, types + defaults + merge + validation
+- src/app/settings/project/addons/page.tsx — replaced placeholder with full implementation
+- tests/addons-settings.test.ts — new, 8 unit tests
+- tests/e2e/addons-settings.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Stored addons in project.settings.addons JSONB — flexible, no schema migration needed
+- Used mergeAddons() to safely handle missing/partial saved state
+- Toggle switches use role="switch" + aria-checked for accessibility
+- CI check values constrained to "disabled" | "enabled" enum
