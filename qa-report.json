@@ -76,5 +76,22 @@
       }
     ],
     "fix_description": "Installed the missing `react-is` dependency, then re-ran auth QA to verify real Google OAuth, DB-backed session creation, persistence, sign-out, protected-route redirects, and the test-only session route guard."
+  },
+  {
+    "feature_id": "auth-002",
+    "attempt": 1,
+    "status": "pass",
+    "tested_steps": [
+      "Ran `make test` and confirmed the unit suite passed with 1521 tests.",
+      "Ran `npx playwright test tests/e2e/smoke.spec.ts` and confirmed the 11 smoke tests passed.",
+      "Ran `npx playwright test tests/e2e/onboarding.spec.ts` and confirmed 12 onboarding tests passed, including empty-slug validation, existing-org redirect, and concurrent org creation.",
+      "Used Ever CLI against `http://localhost:3015/login` with the real Google OAuth account `ashleyha0317@gmail.com`; Google redirected back into the clone and, with no org membership present, the authenticated user landed on `/onboarding`.",
+      "Completed the live onboarding flow in Ever: created organization `Auth 002 QA Org`, skipped the optional GitHub step, created project `Auth 002 QA Project`, reached the success screen, and then landed on the dashboard.",
+      "Queried Postgres after the live flow and confirmed the real OAuth user had an `admin` membership for org slug `auth-002-qa-org`, plus project slug `auth-002-qa-project` with subdomain `auth-002-qa-org-auth-002-qa-project`.",
+      "Navigated the authenticated browser back to `/onboarding` after org creation and confirmed it redirected to `/dashboard`, satisfying the existing-org redirect path.",
+      "Started a temporary `PLAYWRIGHT_TEST=true` dev server, created two isolated authenticated test sessions through `/api/test/create-session`, posted the same org name twice to `/api/orgs`, and confirmed slug collision handling returned `slug-collision-org` and `slug-collision-org-mnqomz3k`."
+    ],
+    "bugs_found": [],
+    "fix_description": "no fix needed"
   }
 ]
