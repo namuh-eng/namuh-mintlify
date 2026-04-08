@@ -2493,3 +2493,55 @@ Date: 2026-04-09
 - `.mdx` extension stripped from Snippet file prop for flexible authoring
 - Frontmatter variables override project-level variables (higher specificity wins)
 - Missing snippets render as a Note callout warning instead of breaking the page
+## Iteration 55 — feature-027: OpenAPI/AsyncAPI Auto-Documentation
+Date: 2026-04-09
+
+### What was built
+- New `src/lib/openapi.ts` module with comprehensive auto-generation:
+  - `fetchSpecFromUrl()` — fetches OpenAPI/AsyncAPI specs from URL with 10s timeout
+  - `endpointToSlug()` — converts operationId (camelCase→kebab) or method+path to URL slug
+  - `endpointToTitle()` — generates human-readable title from summary/operationId/method
+  - `generateVirtualPages()` — creates virtual page entries from OpenAPI 3.x spec endpoints
+  - `isAsyncApiSpec()` / `generateAsyncApiPages()` — AsyncAPI 3.0 channel documentation
+  - `renderAsyncApiChannelPage()` — HTML renderer for WebSocket channels (WS badge, subscribe/publish sections)
+  - `generateGoExample()` — Go code example generation for API endpoints
+  - `buildVirtualApiNav()` — sidebar nav groups from virtual pages
+  - `findVirtualPage()` / `findVirtualAsyncApiPage()` — path-based lookup
+- Virtual pages are auto-generated from OpenAPI spec at request time (no DB pages needed):
+  - Each endpoint becomes a navigable page under `api-reference/{slug}`
+  - Endpoints grouped by OpenAPI tags in sidebar with method badges (GET/POST/PUT/DEL)
+  - Pages render with method+URL header, code examples (cURL/Python/JS/Go), response tabs, parameters, auth section, and API playground
+- AsyncAPI support: WebSocket channels rendered with WS badge, subscribe/publish operations
+- Go language added to code examples (4 languages now: cURL, Python, JavaScript, Go)
+- New API route `POST /api/projects/[id]/openapi-spec` — fetches and stores spec from URL
+- New API route `GET /api/projects/[id]/openapi-spec` — retrieves stored spec
+- Updated docs slug page to merge virtual pages into sidebar nav and render auto-generated content
+- Updated configs panel with descriptive help text for OpenAPI/AsyncAPI spec URL field
+
+### Test results
+- 39 new unit tests (openapi-autodocs.test.ts) — all passing
+- 5 new E2E tests (openapi-autodocs.spec.ts) — written, QA will verify
+- 1 existing test updated (api-reference.test.ts) — updated for Go example
+- 1399 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/openapi.ts — new, auto-generation core (virtual pages, AsyncAPI, Go examples)
+- src/lib/api-reference.ts — added Go import and 4th language to generateCodeExamples
+- src/app/docs/[subdomain]/[...slug]/page.tsx — integrated virtual page resolution and rendering
+- src/app/api/projects/[id]/openapi-spec/route.ts — new, spec fetch/store API
+- src/components/editor/configs-panel.tsx — added help text and fetch status to API docs form
+- tests/openapi-autodocs.test.ts — new, 39 unit tests
+- tests/e2e/openapi-autodocs.spec.ts — new, 5 E2E tests
+- tests/api-reference.test.ts — updated existing test for 4 languages
+- prd.json — feature-027 build_pass set to true
+- qa-hints.json — added feature-027 QA hints
+
+### Decisions
+- Virtual pages are generated at request time from stored spec, not persisted to DB — keeps pages table clean
+- Slug deduplication handles operationId collisions by appending suffix
+- Endpoints grouped by first OpenAPI tag; defaults to "Endpoints" when untagged
+- AsyncAPI channels use "WS" badge (reuses method-hook CSS class)
+- Go examples use standard net/http — no third-party Go libraries
+- DB pages take priority over virtual pages when both exist for same path
+- Virtual pages are merged into sidebar nav and searchable pages for full integration

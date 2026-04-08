@@ -23,6 +23,16 @@ import { getFooterSettings } from "@/lib/docs-footer";
 import { extractToc } from "@/lib/editor";
 import { buildDocsNav, renderMdxContent } from "@/lib/mdx-renderer";
 import {
+  type VirtualApiPage,
+  type VirtualAsyncApiPage,
+  findVirtualAsyncApiPage,
+  findVirtualPage,
+  generateAsyncApiPages,
+  generateVirtualPages,
+  isAsyncApiSpec,
+  renderAsyncApiChannelPage,
+} from "@/lib/openapi";
+import {
   type OpenApiEndpoint,
   parseOpenApiSpec,
   renderApiPlaygroundHtml,
@@ -181,9 +191,26 @@ export default async function DocsPage({ params }: DocsPageProps) {
     permanentRedirect(`/docs/${subdomain}/${dest}`);
   }
 
-  // Find the current page
+  // ── OpenAPI/AsyncAPI virtual pages ────────────────────────────────────────
+  const settings = (project.settings || {}) as Record<string, unknown>;
+  const spec = settings.openApiSpec as Record<string, unknown> | undefined;
+  let virtualPages: VirtualApiPage[] = [];
+  let asyncPages: VirtualAsyncApiPage[] = [];
+
+  if (spec && typeof spec === "object") {
+    if (isAsyncApiSpec(spec)) {
+      asyncPages = generateAsyncApiPages(spec);
+    } else {
+      virtualPages = generateVirtualPages(spec);
+    }
+  }
+
+  // Find the current page — check DB first, then virtual pages
   const currentPage = allPages.find((p) => p.path === targetPath);
-  if (!currentPage) {
+  const virtualPage = findVirtualPage(virtualPages, targetPath);
+  const asyncPage = findVirtualAsyncApiPage(asyncPages, targetPath);
+
+  if (!currentPage && !virtualPage && !asyncPage) {
     notFound();
   }
 
@@ -194,93 +221,134 @@ export default async function DocsPage({ params }: DocsPageProps) {
     title: p.title,
     frontmatter: p.frontmatter as Record<string, unknown> | null,
   }));
+
+  // Add virtual pages to nav as virtual entries with apiMethod for badges
+  for (const vp of virtualPages) {
+    // Don't add if a DB page already exists for this path
+    if (!allPages.some((p) => p.path === vp.path)) {
+      navPages.push({
+        id: vp.id,
+        path: vp.path,
+        title: vp.title,
+        frontmatter: { api: `${vp.method} ${vp.endpoint.path}` },
+      });
+    }
+  }
+  for (const ap of asyncPages) {
+    if (!allPages.some((p) => p.path === ap.path)) {
+      navPages.push({
+        id: ap.id,
+        path: ap.path,
+        title: ap.title,
+        frontmatter: { api: `HOOK ${ap.channel.name}` },
+      });
+    }
+  }
+
   const nav = buildDocsNav(navPages);
 
-  // Resolve snippets and variables before rendering
-  const snippetPages = allPages
-    .filter((p) => p.path.startsWith("snippets/"))
-    .map((p) => ({ path: p.path, content: p.content || "" }));
-
-  const projectVars = (docsConfig as unknown as Record<string, unknown>)
-    .variables as Record<string, string> | undefined;
-  const variables = buildVariablesMap(
-    currentPage.frontmatter as Record<string, unknown> | null,
-    projectVars,
-  );
-
-  let contentToRender = currentPage.content || "";
-  contentToRender = resolveSnippets(contentToRender, snippetPages);
-  contentToRender = resolveVariables(contentToRender, variables);
-
-  // Render content
-  const renderedHtml = renderMdxContent(contentToRender);
-
-  // Check if this is an API reference page and render playground
-  const isApiReferencePage = targetPath.startsWith("api-reference");
-  const settings = (project.settings || {}) as Record<string, unknown>;
+  // ── Rendering ─────────────────────────────────────────────────────────────
   const footerSettings = getFooterSettings(settings);
+  let renderedHtml = "";
   let apiPlaygroundHtml = "";
   let apiReferenceHtml = "";
+  let pageTitle = "";
+  let pageDescription = "";
+  let pageContent = "";
 
-  if (isApiReferencePage && settings.openApiSpec) {
-    const endpoints = parseOpenApiSpec(settings.openApiSpec);
-    // Match endpoints to this page via frontmatter or path
-    const frontmatter = (currentPage.frontmatter || {}) as Record<
-      string,
-      unknown
-    >;
-    const apiMethod = (frontmatter.api as string) || "";
-    // Format: "GET /users/{id}" or just render all endpoints for index pages
-    const matchedEndpoints: OpenApiEndpoint[] = [];
-
-    if (apiMethod) {
-      const [method, ...pathParts] = apiMethod.split(" ");
-      const apiPath = pathParts.join(" ");
-      const found = endpoints.find(
-        (e) => e.method === method?.toUpperCase() && e.path === apiPath,
-      );
-      if (found) matchedEndpoints.push(found);
+  if (asyncPage && !currentPage) {
+    // Render auto-generated AsyncAPI channel page
+    pageTitle = asyncPage.title;
+    pageDescription = asyncPage.description;
+    apiReferenceHtml = renderAsyncApiChannelPage(asyncPage);
+  } else if (virtualPage && !currentPage) {
+    // Render auto-generated OpenAPI endpoint page
+    pageTitle = virtualPage.title;
+    pageDescription = virtualPage.description;
+    apiReferenceHtml = renderApiReferencePage(virtualPage.endpoint);
+    if (docsConfig.apiDocs.playgroundEnabled) {
+      apiPlaygroundHtml = renderApiPlaygroundHtml(virtualPage.endpoint);
     }
+  } else if (currentPage) {
+    // Render DB page (existing behavior)
+    pageTitle = currentPage.title;
+    pageDescription = currentPage.description || "";
+    pageContent = currentPage.content || "";
 
-    if (matchedEndpoints.length > 0) {
-      apiPlaygroundHtml = matchedEndpoints
-        .map((ep) => renderApiPlaygroundHtml(ep))
-        .join("\n");
-      // Also render the structured API reference layout
-      apiReferenceHtml = matchedEndpoints
-        .map((ep) => renderApiReferencePage(ep))
-        .join("\n");
+    // Resolve snippets and variables before rendering
+    const snippetPages = allPages
+      .filter((p) => p.path.startsWith("snippets/"))
+      .map((p) => ({ path: p.path, content: p.content || "" }));
+
+    const projectVars = (docsConfig as unknown as Record<string, unknown>)
+      .variables as Record<string, string> | undefined;
+    const variables = buildVariablesMap(
+      currentPage.frontmatter as Record<string, unknown> | null,
+      projectVars,
+    );
+
+    let contentToRender = pageContent;
+    contentToRender = resolveSnippets(contentToRender, snippetPages);
+    contentToRender = resolveVariables(contentToRender, variables);
+    renderedHtml = renderMdxContent(contentToRender);
+
+    // Check if this DB page also matches an OpenAPI endpoint
+    const isApiReferencePage = targetPath.startsWith("api-reference");
+    if (isApiReferencePage && spec) {
+      const endpoints = parseOpenApiSpec(spec);
+      const frontmatter = (currentPage.frontmatter || {}) as Record<
+        string,
+        unknown
+      >;
+      const apiMethod = (frontmatter.api as string) || "";
+      const matchedEndpoints: OpenApiEndpoint[] = [];
+
+      if (apiMethod) {
+        const [method, ...pathParts] = apiMethod.split(" ");
+        const apiPath = pathParts.join(" ");
+        const found = endpoints.find(
+          (e) => e.method === method?.toUpperCase() && e.path === apiPath,
+        );
+        if (found) matchedEndpoints.push(found);
+      }
+
+      if (matchedEndpoints.length > 0) {
+        apiPlaygroundHtml = matchedEndpoints
+          .map((ep) => renderApiPlaygroundHtml(ep))
+          .join("\n");
+        apiReferenceHtml = matchedEndpoints
+          .map((ep) => renderApiReferencePage(ep))
+          .join("\n");
+      }
     }
   }
 
   // Extract TOC from raw content
-  const toc = extractToc(currentPage.content || "");
+  const toc = extractToc(pageContent);
 
-  // Find prev/next pages
-  const currentIdx = allPages.findIndex((p) => p.path === targetPath);
+  // Build flat list of all pages (DB + virtual) for prev/next
+  const allNavPaths = navPages.map((p) => ({ path: p.path, title: p.title }));
+  const currentIdx = allNavPaths.findIndex((p) => p.path === targetPath);
   const prevPage =
     currentIdx > 0
       ? {
-          path: allPages[currentIdx - 1].path,
-          title: allPages[currentIdx - 1].title,
+          path: allNavPaths[currentIdx - 1].path,
+          title: allNavPaths[currentIdx - 1].title,
         }
       : null;
   const nextPage =
-    currentIdx < allPages.length - 1
+    currentIdx < allNavPaths.length - 1
       ? {
-          path: allPages[currentIdx + 1].path,
-          title: allPages[currentIdx + 1].title,
+          path: allNavPaths[currentIdx + 1].path,
+          title: allNavPaths[currentIdx + 1].title,
         }
       : null;
 
   // Get group name for breadcrumb
   const groupName = getGroupName(targetPath);
 
-  // Build searchable pages list
-  const searchablePages = allPages.map((p) => ({
-    path: p.path,
-    title: p.title,
-  }));
+  // Build searchable pages list (DB + virtual)
+  const searchablePages = allNavPaths;
 
   return (
     <div className="docs-layout">
@@ -316,16 +384,16 @@ export default async function DocsPage({ params }: DocsPageProps) {
           <article className="docs-article">
             <div className="docs-title-row">
               <h1 className="docs-page-title" data-testid="page-title">
-                {currentPage.title}
+                {pageTitle}
               </h1>
               <PageHeaderActions
-                title={currentPage.title}
-                content={currentPage.content || ""}
+                title={pageTitle}
+                content={pageContent}
                 pageUrl={`/docs/${subdomain}/${targetPath}`}
               />
             </div>
-            {currentPage.description && (
-              <p className="docs-page-description">{currentPage.description}</p>
+            {pageDescription && (
+              <p className="docs-page-description">{pageDescription}</p>
             )}
 
             <MdxContent html={renderedHtml} />

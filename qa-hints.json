@@ -1513,5 +1513,37 @@
       "Performance with many snippets on a single page",
       "Snippet pages are correctly hidden in editor sidebar file tree (not just docs nav)"
     ]
+  },
+  {
+    "feature_id": "feature-027",
+    "tests_written": [
+      "endpointToSlug converts camelCase/PascalCase operationId to kebab-case",
+      "endpointToSlug falls back to method + path without operationId",
+      "endpointToTitle uses summary, then operationId, then METHOD /path",
+      "generateVirtualPages creates one page per endpoint with correct path/method/group",
+      "generateVirtualPages deduplicates slug collisions",
+      "generateVirtualPages defaults group to Endpoints when no tags",
+      "isAsyncApiSpec detects asyncapi version field",
+      "generateAsyncApiPages creates pages from channels with subscribe/publish ops",
+      "renderAsyncApiChannelPage renders WS badge, subscribe, publish sections",
+      "generateGoExample produces valid Go code with auth and body",
+      "buildVirtualApiNav groups pages by tag label",
+      "findVirtualPage and findVirtualAsyncApiPage locate by path",
+      "fetchSpecFromUrl returns null for empty/whitespace URLs",
+      "generateCodeExamples now returns 4 languages (cURL, Python, JS, Go)",
+      "E2E: openapi-spec API requires auth",
+      "E2E: configs panel has API spec URL field",
+      "E2E: api-reference route returns page or 404",
+      "E2E: sidebar renders method badges for API pages"
+    ],
+    "needs_deeper_qa": [
+      "Real OpenAPI spec fetch from external URL — mocked in unit tests",
+      "Virtual pages rendering in docs site with real project + spec stored in DB",
+      "AsyncAPI channel pages with actual WebSocket message schemas",
+      "Go code example correctness for complex request bodies",
+      "Sidebar grouping with many endpoints (10+ tags) — visual layout",
+      "Prev/next pagination between virtual pages and DB pages",
+      "Auto-regeneration of pages when spec changes on deploy"
+    ]
   }
 ]
