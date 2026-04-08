@@ -599,5 +599,30 @@
       "URL hash update on click — back button behavior",
       "Light theme TOC styling contrast"
     ]
+  },
+  {
+    "feature_id": "feature-016",
+    "tests_written": [
+      "buildTsQuery converts queries to tsquery format with prefix matching",
+      "extractSnippet extracts content around matched query with markdown stripping",
+      "highlightMatches wraps matched text in mark tags with XSS protection",
+      "getBreadcrumb converts paths to readable breadcrumb parts",
+      "groupResultsBySection groups results by first breadcrumb segment",
+      "E2E: Cmd+K opens search modal with focused input",
+      "E2E: search button click opens modal",
+      "E2E: Escape closes modal",
+      "E2E: typing query shows results",
+      "E2E: recent searches shown from localStorage"
+    ],
+    "needs_deeper_qa": [
+      "Real database search — API endpoint needs live data to verify ranking",
+      "Debounce timing — verify 200ms delay feels responsive",
+      "Keyboard navigation (arrow up/down, Enter) with grouped results",
+      "Recent searches persistence across page navigations",
+      "Client-side fallback when API fails — graceful degradation",
+      "Light theme styling for new search modal elements",
+      "Very long search queries (close to 200 char limit)",
+      "Search with special characters (quotes, backslashes, SQL wildcards)"
+    ]
   }
 ]

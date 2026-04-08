@@ -953,3 +953,35 @@ Date: 2026-04-09
 - Smooth scroll uses native scrollIntoView API — no polyfill needed for modern browsers
 - pushState used instead of replaceState to preserve back-button navigation through anchors
 - Padding relative to level-2 baseline (H2=8px, H3=20px) for clean visual hierarchy
+
+## Iteration 15 — feature-016: Docs Site Search
+Date: 2026-04-09
+
+### What was built
+- Full-text search library (`src/lib/search.ts`) with tsquery builder (prefix matching), snippet extraction (markdown stripping, query-centered window), HTML-safe highlight, breadcrumb generation, and result grouping by section
+- Public search API endpoint (`GET /api/docs/[subdomain]/search?q=...&limit=...`) — no auth required, ILIKE matching on title/description/content/path with relevance-based ordering (title > description > path > content), returns results with snippets and breadcrumbs
+- Upgraded search modal (`src/components/docs/search-modal.tsx`) — API-backed search with 200ms debounce, client-side fallback on API error, abort controller for request cancellation, keyboard navigation (arrow up/down, Enter), recent searches from localStorage (max 5), results grouped by section with title/snippet/breadcrumb, footer with keyboard hints
+- CSS styles for new search elements: section titles, result content layout with snippet, active result highlight, loading state, recent searches, footer with keyboard hints, light theme variants
+
+### Test results
+- 23 new unit tests (search.test.ts) — all passing
+- 5 new E2E tests (docs-search.spec.ts) — written, QA will verify
+- 516 total unit tests — all passing
+- make check (typecheck + lint) — passing
+
+### Files changed
+- src/lib/search.ts — new, search utilities (tsquery, snippet, highlight, breadcrumb, grouping)
+- src/app/api/docs/[subdomain]/search/route.ts — new, public search API endpoint
+- src/components/docs/search-modal.tsx — rewritten, API-backed search with full UX
+- src/app/globals.css — updated, added search modal section/snippet/footer/light theme styles
+- tests/search.test.ts — new, 23 unit tests
+- tests/e2e/docs-search.spec.ts — new, 5 E2E tests
+
+### Decisions
+- Used ILIKE with relevance ordering (CASE WHEN) instead of Postgres tsvector — simpler, works without schema migration, good enough for docs-scale data
+- buildTsQuery still built for future tsvector upgrade — adds :* prefix matching for type-ahead
+- 200ms debounce on search input — balances responsiveness with API load
+- Client-side fallback (filterPages) when API fails — graceful degradation
+- Recent searches stored in localStorage (max 5) — persists across sessions
+- Results grouped by first path segment — matches Mintlify's section-based layout
+- Snippets strip markdown and center around first query match (160 char window)
