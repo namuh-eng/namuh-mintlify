@@ -254,6 +254,45 @@ More text.`;
     expect(htmlToMarkdown(markdownToHtml(markdown))).toBe(markdown);
   });
 
+  it("preserves spacing between adjacent MDX blocks after a visual-editor round-trip", () => {
+    const markdown = `# QA Title
+
+This is **bold** and *italic* with a [link](https://example.com).
+
+## Section One
+
+Paragraph text.
+
+<Card title="Quickstart" icon="book" href="/docs">
+  Ship docs faster
+</Card>
+
+<Note>
+  Remember to deploy.
+</Note>
+
+<Tab title="cURL">
+  curl https://example.com
+</Tab>
+
+<Language code="typescript" />
+
+<Version tag="v1" />
+<Language code="typescript" />`;
+
+    const roundTrip = htmlToMarkdown(markdownToHtml(markdown));
+
+    expect(roundTrip).toContain("This is **bold** and *italic*");
+    expect(roundTrip).toContain("Paragraph text.");
+    expect(roundTrip).toContain("</Card>\n\n<Note>");
+    expect(roundTrip).toContain("</Note>\n\n<Tab");
+    expect(roundTrip).toContain("</Tab>\n\n<Language");
+    expect(roundTrip).toContain('<Version tag="v1" />\n\n<Language');
+    expect(roundTrip).not.toContain("</Card><Note>");
+    expect(roundTrip).not.toContain("</Note><Tab");
+    expect(roundTrip).not.toContain("</Tab><Language");
+  });
+
   it("renders markdown images as markdown after round-trip", () => {
     const markdown = "![Diagram](https://placehold.co/600x400/png)";
     expect(htmlToMarkdown(markdownToHtml(markdown))).toBe(markdown);

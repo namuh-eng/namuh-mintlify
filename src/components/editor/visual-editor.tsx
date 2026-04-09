@@ -300,7 +300,7 @@ function htmlToMarkdown(html: string): string {
       const token = `__MDX_PREVIEW_${previewIndex}__`;
       previewSources.set(token, decodeSource(source));
       previewIndex += 1;
-      return token;
+      return `\n\n${token}\n\n`;
     },
   );
 
@@ -332,7 +332,10 @@ function htmlToMarkdown(html: string): string {
   );
 
   md = md.replace(/<hr\s*\/?>/gi, "---\n\n");
-  md = md.replace(/<p>(.*?)<\/p>/gi, "$1\n\n");
+  md = md.replace(/<p>([\s\S]*?)<\/p>/gi, (_match, paragraph) => {
+    const normalizedParagraph = String(paragraph).trim();
+    return normalizedParagraph ? `${normalizedParagraph}\n\n` : "";
+  });
   md = md.replace(/<li>(.*?)<\/li>/gi, "- $1\n");
   md = md.replace(/<\/?[uo]l>/gi, "");
   md = md.replace(/<br\s*\/?>/gi, "\n");
