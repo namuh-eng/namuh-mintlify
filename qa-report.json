@@ -201,5 +201,23 @@
     ],
     "bugs_found": [],
     "fix_description": "no fix needed"
+  },
+  {
+    "feature_id": "feature-002",
+    "attempt": 1,
+    "status": "pass",
+    "tested_steps": [
+      "Ran `make test` and confirmed the unit suite passed with 1534 tests.",
+      "Restarted the local dev server in `PLAYWRIGHT_TEST=true` mode so the authenticated Playwright fixture could use the test-session route, then ran `npx playwright test tests/e2e/smoke.spec.ts` and confirmed all 11 smoke tests passed.",
+      "Used Ever CLI on `http://localhost:3015/editor/main` with the live authenticated session to verify the editor shell, switch between Navigation and Files, create a nested page at `qa-loop-20260409/deep/leaf`, and confirm the new hierarchy rendered in both views. Saved evidence to `ralph/screenshots/qa/feature-002-editor-saved.jpg`.",
+      "Attempted to create the same path again through the create-page modal and confirmed the UI surfaced `A page with this path already exists in this project` without creating a duplicate row.",
+      "Selected the new page, switched to Markdown mode, saved non-trivial MDX content, and verified the editor re-rendered the page header/path plus the derived TOC from the saved headings.",
+      "Created an isolated API-backed QA session through `POST /api/test/create-session`, verified `POST /api/projects/:id/pages` enforced path uniqueness with `409`, verified `PUT /api/projects/:id/pages/:pageId` persisted content updates, and queried Postgres to confirm the page row stored the expected `path`, `title`, and `content`.",
+      "Updated the same page with a 135017 byte MDX payload through the real API and confirmed the save returned `200 OK`, covering the large-content path.",
+      "Created a second editor session in the same org via the test-session route plus a direct membership insert, issued overlapping `PUT /api/projects/:id/pages/:pageId` requests from both sessions, and confirmed the final stored content was the later write (`from user2 final`), i.e. last-write-wins with no conflict handling.",
+      "Used the live UI delete confirmation to remove `qa-loop-20260409/deep/leaf`, then verified the page disappeared from the file tree and the content area reset to `Select a page to edit`. Saved evidence to `ralph/screenshots/qa/feature-002-editor-after-delete.jpg`."
+    ],
+    "bugs_found": [],
+    "fix_description": "no fix needed"
   }
 ]
