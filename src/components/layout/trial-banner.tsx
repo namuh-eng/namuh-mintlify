@@ -2,20 +2,50 @@
 
 import { X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  type ResolvedDashboardTheme,
+  getStoredTrialBannerDismissed,
+  setStoredTrialBannerDismissed,
+} from "./shell-preferences";
 
-export function TrialBanner() {
+export function TrialBanner({
+  theme = "dark",
+}: {
+  theme?: ResolvedDashboardTheme;
+}) {
   const [dismissed, setDismissed] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  if (dismissed) return null;
+  useEffect(() => {
+    setDismissed(getStoredTrialBannerDismissed());
+    setReady(true);
+  }, []);
+
+  if (!ready || dismissed) return null;
+
+  const bannerTheme =
+    theme === "light"
+      ? {
+          container: "bg-amber-100 border-amber-200 text-amber-900",
+          title: "text-amber-950",
+          link: "text-amber-800 hover:text-amber-950",
+          dismiss: "text-amber-700 hover:text-amber-950",
+        }
+      : {
+          container: "bg-amber-900/30 border-amber-700/30 text-amber-200",
+          title: "text-amber-100",
+          link: "text-amber-200 hover:text-amber-100",
+          dismiss: "text-amber-400 hover:text-amber-200",
+        };
 
   return (
     <div
-      className="flex items-center justify-between px-4 py-2 bg-amber-900/30 border-b border-amber-700/30 text-sm"
+      className={`flex items-center justify-between border-b px-4 py-2 text-sm ${bannerTheme.container}`}
       data-testid="trial-banner"
     >
-      <p className="text-amber-200">
-        <strong className="text-amber-100">
+      <p>
+        <strong className={bannerTheme.title}>
           Your team is on a free trial.
         </strong>{" "}
         Your trial ends on April 19, 2026. You will be switched to the Hobby
@@ -24,14 +54,17 @@ export function TrialBanner() {
       <div className="flex items-center gap-3 shrink-0">
         <Link
           href="/settings"
-          className="text-amber-200 hover:text-amber-100 font-medium underline underline-offset-2"
+          className={`font-medium underline underline-offset-2 ${bannerTheme.link}`}
         >
           Explore upgrades
         </Link>
         <button
           type="button"
-          onClick={() => setDismissed(true)}
-          className="text-amber-400 hover:text-amber-200 transition-colors"
+          onClick={() => {
+            setDismissed(true);
+            setStoredTrialBannerDismissed(true);
+          }}
+          className={`transition-colors ${bannerTheme.dismiss}`}
           aria-label="Dismiss banner"
         >
           <X size={16} />

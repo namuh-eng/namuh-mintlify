@@ -22,10 +22,10 @@ test.describe("Dashboard Layout", () => {
     await page.goto("/dashboard");
     const sidebar = page.getByTestId("sidebar");
     await expect(sidebar.getByText("Agents")).toBeVisible();
-    await expect(sidebar.getByText("Agent")).toBeVisible();
-    await expect(sidebar.getByText("Assistant")).toBeVisible();
-    await expect(sidebar.getByText("Workflows")).toBeVisible();
-    await expect(sidebar.getByText("MCP")).toBeVisible();
+    await expect(sidebar.getByRole("link", { name: "Agent New" })).toBeVisible();
+    await expect(sidebar.getByRole("link", { name: "Assistant" })).toBeVisible();
+    await expect(sidebar.getByRole("link", { name: "Workflows" })).toBeVisible();
+    await expect(sidebar.getByRole("link", { name: "MCP" })).toBeVisible();
   });
 
   test("sidebar has org switcher with org name", async ({ page }) => {
@@ -40,6 +40,25 @@ test.describe("Dashboard Layout", () => {
     await page.goto("/dashboard");
     await expect(
       page.getByRole("button", { name: "Collapse sidebar" }),
+    ).toBeVisible();
+  });
+
+  test("sidebar collapse persists after reload", async ({ page }) => {
+    await page.goto("/dashboard");
+    await page.getByRole("button", { name: "Collapse sidebar" }).click();
+    await expect(page.getByTestId("sidebar")).toHaveAttribute(
+      "data-collapsed",
+      "true",
+    );
+
+    await page.reload();
+
+    await expect(page.getByTestId("sidebar")).toHaveAttribute(
+      "data-collapsed",
+      "true",
+    );
+    await expect(
+      page.getByRole("button", { name: "Expand sidebar" }),
     ).toBeVisible();
   });
 
@@ -65,10 +84,33 @@ test.describe("Dashboard Layout", () => {
     await expect(page.getByText("Log Out")).toBeVisible();
   });
 
+  test("theme switcher persists the selected shell theme", async ({ page }) => {
+    await page.goto("/dashboard");
+    await page.getByRole("button", { name: "Profile menu" }).click();
+    await page.getByTestId("theme-light").click();
+
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
+
+    await page.reload();
+
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  });
+
   test("trial banner is visible", async ({ page }) => {
     await page.goto("/dashboard");
     await expect(page.getByTestId("trial-banner")).toBeVisible();
     await expect(page.getByText("free trial")).toBeVisible();
+  });
+
+  test("trial banner dismissal persists after reload", async ({ page }) => {
+    await page.goto("/dashboard");
+    await page.getByRole("button", { name: "Dismiss banner" }).click();
+    await expect(page.getByTestId("trial-banner")).toBeHidden();
+
+    await page.reload();
+
+    await expect(page.getByTestId("trial-banner")).toBeHidden();
   });
 
   test("dashboard shows greeting", async ({ page }) => {
@@ -77,5 +119,23 @@ test.describe("Dashboard Layout", () => {
     await expect(
       page.getByText(/Good (morning|afternoon|evening)/),
     ).toBeVisible();
+  });
+
+  test("mobile layout uses an off-canvas sidebar", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/dashboard");
+
+    await expect(page.getByTestId("sidebar")).toHaveAttribute(
+      "data-mobile-open",
+      "false",
+    );
+    await expect(page.getByTestId("sidebar-mobile-toggle")).toBeVisible();
+
+    await page.getByTestId("sidebar-mobile-toggle").click();
+    await expect(page.getByTestId("sidebar")).toHaveAttribute(
+      "data-mobile-open",
+      "true",
+    );
+    await expect(page.getByText("Home")).toBeVisible();
   });
 });
