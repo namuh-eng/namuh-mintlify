@@ -233,6 +233,18 @@ describe("MDX Component Library (feature-004a)", () => {
       expect(html).toContain("syntax-keyword");
     });
 
+    it("does not corrupt injected syntax highlight markup", () => {
+      const md =
+        "```typescript\nexport function greet(name: string) {\n  return `hello, ${name}`;\n}\n```";
+      const html = renderMdxContent(md);
+      expect(html).toContain('<span class="syntax-keyword">function</span>');
+      expect(html).toContain('<span class="syntax-keyword">return</span>');
+      expect(html).not.toContain("<span <span");
+      expect(html).not.toContain(
+        '<span <span class="syntax-keyword">class</span>=',
+      );
+    });
+
     it("highlights string literals in code", () => {
       const md = '```javascript\nconst name = "world";\n```';
       const html = renderMdxContent(md);

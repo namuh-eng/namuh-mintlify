@@ -239,5 +239,31 @@
     ],
     "bugs_found": [],
     "fix_description": "no fix needed"
+  },
+  {
+    "feature_id": "feature-004",
+    "attempt": 1,
+    "status": "pass",
+    "tested_steps": [
+      "Ran `make test` and confirmed the full unit suite passed with 1538 tests before deeper QA.",
+      "Ran `npx playwright test tests/e2e/smoke.spec.ts` and confirmed all 11 smoke tests passed.",
+      "Seeded a deterministic public docs project at `/docs/feature004-qa/*` and verified `GET /api/docs/feature004-qa` returned the published pages `introduction`, `long-form`, and `quickstart`.",
+      "Used Ever CLI on `/docs/feature004-qa/introduction` to compare the rendered layout and components against Mintlify reference screenshots, then verified tabs switch content, copy buttons show `Copied!`, accordion sections expand/collapse correctly, and dark/light mode both render coherently. Saved evidence to `ralph/screenshots/qa/feature-004-introduction-initial.jpg`, `ralph/screenshots/qa/feature-004-components-lower.jpg`, and `ralph/screenshots/qa/feature-004-light-mode.jpg`.",
+      "Verified TOC behavior on the live docs page: clicking `Multi-language code` activated the matching TOC item, and the long-form page generated a full H2/H3 TOC through Section 14.",
+      "Verified pagination and 404 handling on the public docs site: `quickstart` exposed a working previous link back to `Long Form`, and targeted Playwright coverage passed for nonexistent subdomain/slug responses.",
+      "Ran `npx vitest run tests/mdx-components.test.ts` and `PLAYWRIGHT_TEST=true npx playwright test tests/e2e/docs-toc.spec.ts tests/e2e/mdx-components.spec.ts tests/e2e/docs-site.spec.ts`; all targeted docs renderer/TOC/docs-site checks passed after the fix.",
+      "Ran `make check` and confirmed typecheck plus Biome passed, then reran `make test` and confirmed the unit suite passed with 1539 tests.",
+      "Started `PLAYWRIGHT_TEST=true make test-e2e` because the renderer is shared UI, and confirmed the repo-wide suite still has many pre-existing unrelated failures outside feature-004 coverage (analytics, agent pages, add-ons, API reference, and generic docs-layout specs)."
+    ],
+    "bugs_found": [
+      {
+        "severity": "major",
+        "description": "Syntax highlighting for rendered code blocks corrupted the generated HTML, causing literal `class=\"syntax-keyword\">...` fragments to appear inside docs code blocks.",
+        "expected": "Rendered code blocks should show clean highlighted code with keyword spans applied only to source tokens, matching Mintlify-style presentation.",
+        "actual": "The keyword pass rewrote tokens inside its own injected `<span class=\"syntax-keyword\">` markup, so the docs page rendered malformed code like `class=\"syntax-keyword\">function` and `class=\"syntax-keyword\">return` in the visible output.",
+        "reproduction": "Open `/docs/feature004-qa/introduction` before the fix and inspect the TypeScript/Python code blocks under `Multi-language code`."
+      }
+    ],
+    "fix_description": "Reworked the syntax-highlighting keyword pass to highlight text tokens in a single pass without mutating injected markup, then added a deterministic test-only docs-page seeder so the TOC/browser coverage runs against real published docs content."
   }
 ]
