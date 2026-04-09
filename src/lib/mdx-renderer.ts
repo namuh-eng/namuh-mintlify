@@ -194,15 +194,13 @@ function applySyntaxHighlighting(code: string, lang: string): string {
     const part = parts[idx];
     // Skip HTML tags
     if (part.startsWith("<")) continue;
-    let textPart = part;
-    for (const kw of SYNTAX_KEYWORDS) {
-      const regex = new RegExp(`(?<![\\w-])${kw}(?![\\w-])`, "g");
-      textPart = textPart.replace(
-        regex,
-        `<span class="syntax-keyword">${kw}</span>`,
-      );
-    }
-    parts[idx] = textPart;
+    parts[idx] = part.replace(
+      /(?<![\w-])([A-Za-z_][A-Za-z0-9_]*)(?![\w-])/g,
+      (token) =>
+        SYNTAX_KEYWORDS.has(token)
+          ? `<span class="syntax-keyword">${token}</span>`
+          : token,
+    );
   }
   result = parts.join("");
 
