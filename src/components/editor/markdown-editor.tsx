@@ -1,7 +1,7 @@
 "use client";
 
 import { generateLineNumbers } from "@/lib/editor";
-import { useCallback, useRef, useSyncExternalStore } from "react";
+import { useCallback, useRef } from "react";
 
 interface MarkdownEditorProps {
   value: string;
@@ -27,8 +27,9 @@ export function MarkdownEditor({
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       onChange(e.target.value);
+      onCursorChange?.(e.target.selectionStart);
     },
-    [onChange],
+    [onChange, onCursorChange],
   );
 
   const handleKeyUp = useCallback(
@@ -63,10 +64,11 @@ export function MarkdownEditor({
         requestAnimationFrame(() => {
           target.selectionStart = start + 2;
           target.selectionEnd = start + 2;
+          onCursorChange?.(start + 2);
         });
       }
     },
-    [value, onChange],
+    [value, onChange, onCursorChange],
   );
 
   return (

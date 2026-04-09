@@ -358,12 +358,11 @@ export function EditorToolbar({
             <button
               type="button"
               data-testid="publish-btn"
-              disabled={!hasUnsavedChanges && !isSaving}
               className={clsx(
                 "ml-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
                 hasUnsavedChanges || isSaving
                   ? "text-white bg-emerald-600 hover:bg-emerald-500"
-                  : "text-gray-500 bg-gray-800 cursor-not-allowed",
+                  : "text-gray-300 bg-gray-800 hover:bg-gray-700",
               )}
             >
               Publish

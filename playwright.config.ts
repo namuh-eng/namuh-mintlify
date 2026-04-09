@@ -31,6 +31,9 @@ export default defineConfig({
   webServer: {
     command: "PLAYWRIGHT_TEST=true npm run dev",
     port: 3015,
-    reuseExistingServer: !process.env.CI,
+    // Avoid reusing a normal local dev server that does not expose the
+    // test-only auth bootstrap route required by authenticated E2E specs.
+    reuseExistingServer:
+      !process.env.CI && process.env.PLAYWRIGHT_TEST === "true",
   },
 });

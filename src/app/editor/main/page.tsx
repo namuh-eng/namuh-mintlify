@@ -175,7 +175,7 @@ function CreatePageModal({
   projectId,
 }: {
   onClose: () => void;
-  onCreated: () => void;
+  onCreated: (pageId: string) => void;
   projectId: string;
 }) {
   const [path, setPath] = useState("");
@@ -200,7 +200,7 @@ function CreatePageModal({
         setSaving(false);
         return;
       }
-      onCreated();
+      onCreated(data.page.id);
       onClose();
     } catch {
       setError("Network error");
@@ -370,7 +370,7 @@ export default function EditorPage() {
   const [showComments, setShowComments] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentBranch, setCurrentBranch] = useState("main");
-  const [cursorPos, setCursorPos] = useState(0);
+  const [cursorPos, setCursorPos] = useState<number | null>(null);
   const visualEditorRef = useRef<VisualEditorHandle | null>(null);
 
   // Auto-save setup
@@ -448,6 +448,20 @@ export default function EditorPage() {
     const data = await res.json();
     if (data.pages) {
       setPages(data.pages);
+      setSelectedPageId((current) => {
+        if (data.pages.length === 0) {
+          return null;
+        }
+
+        if (
+          current &&
+          data.pages.some((page: PageListItem) => page.id === current)
+        ) {
+          return current;
+        }
+
+        return data.pages[0].id;
+      });
     }
   }, [projectId]);
 
@@ -459,6 +473,7 @@ export default function EditorPage() {
   useEffect(() => {
     if (!projectId || !selectedPageId) {
       setSelectedPage(null);
+      setCursorPos(null);
       return;
     }
     async function fetchPage() {
@@ -467,8 +482,10 @@ export default function EditorPage() {
       );
       const data = await res.json();
       if (data.page) {
+        const initialContent = data.page.content || "";
         setSelectedPage(data.page);
-        setContent(data.page.content || "");
+        setContent(initialContent);
+        setCursorPos(initialContent.length);
         setHasUnsavedChanges(false);
         setActionError("");
       }
@@ -514,6 +531,10 @@ export default function EditorPage() {
     fetchPages();
   }
 
+  function getInsertCursorPos() {
+    return cursorPos ?? content.length;
+  }
+
   // Toolbar formatting handlers
   function handleBold() {
     if (editorMode === "visual") {
@@ -523,7 +544,7 @@ export default function EditorPage() {
 
     const { newText, newCursorPos } = insertSnippetAtCursor(
       content,
-      cursorPos,
+      getInsertCursorPos(),
       "**bold**",
     );
     setContent(newText);
@@ -540,7 +561,7 @@ export default function EditorPage() {
 
     const { newText, newCursorPos } = insertSnippetAtCursor(
       content,
-      cursorPos,
+      getInsertCursorPos(),
       "*italic*",
     );
     setContent(newText);
@@ -557,7 +578,7 @@ export default function EditorPage() {
 
     const { newText, newCursorPos } = insertSnippetAtCursor(
       content,
-      cursorPos,
+      getInsertCursorPos(),
       "## Heading",
     );
     setContent(newText);
@@ -574,7 +595,7 @@ export default function EditorPage() {
 
     const { newText, newCursorPos } = insertSnippetAtCursor(
       content,
-      cursorPos,
+      getInsertCursorPos(),
       "[Link text](https://example.com)",
     );
     setContent(newText);
@@ -591,7 +612,7 @@ export default function EditorPage() {
 
     const { newText, newCursorPos } = insertSnippetAtCursor(
       content,
-      cursorPos,
+      getInsertCursorPos(),
       "![Image alt](https://placehold.co/1200x630/png)",
     );
     setContent(newText);
@@ -608,7 +629,7 @@ export default function EditorPage() {
 
     const { newText, newCursorPos } = insertSnippetAtCursor(
       content,
-      cursorPos,
+      getInsertCursorPos(),
       mdxSnippets.codeBlock,
     );
     setContent(newText);
@@ -621,7 +642,7 @@ export default function EditorPage() {
     const snippet = mdxSnippets[key];
     const { newText, newCursorPos } = insertSnippetAtCursor(
       content,
-      cursorPos,
+      getInsertCursorPos(),
       snippet,
     );
     setContent(newText);
@@ -984,7 +1005,8 @@ export default function EditorPage() {
         <CreatePageModal
           projectId={projectId}
           onClose={() => setShowCreateModal(false)}
-          onCreated={() => {
+          onCreated={(pageId) => {
+            setSelectedPageId(pageId);
             fetchPages();
           }}
         />

@@ -1,9 +1,52 @@
-import { expect, test } from "@playwright/test";
+import { type Page, expect, test } from "@playwright/test";
+
+async function ensureEditorPageExists(page: Page) {
+  await page.goto("/editor/main");
+  await page.evaluate(async () => {
+    const projectsResponse = await fetch("/api/projects");
+    const projectsData = (await projectsResponse.json()) as {
+      projects?: Array<{ id: string }>;
+    };
+    const projectId = projectsData.projects?.[0]?.id;
+
+    if (!projectId) {
+      throw new Error("No project found for editor tests");
+    }
+
+    const pagesResponse = await fetch(`/api/projects/${projectId}/pages`);
+    const pagesData = (await pagesResponse.json()) as {
+      pages?: Array<{ id: string }>;
+    };
+
+    if ((pagesData.pages?.length ?? 0) > 0) {
+      return;
+    }
+
+    const createResponse = await fetch(`/api/projects/${projectId}/pages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path: `editor-e2e-${Date.now()}`,
+        title: "Editor E2E",
+        content: "# Editor E2E\n\nTesting content.",
+      }),
+    });
+
+    if (!createResponse.ok) {
+      throw new Error(`Failed to create editor page: ${createResponse.status}`);
+    }
+  });
+}
 
 test.describe("Dual-mode MDX Editor", () => {
+  test.beforeEach(async ({ page }) => {
+    await ensureEditorPageExists(page);
+  });
+
   test("renders editor page with toolbar and mode toggle", async ({ page }) => {
     await page.goto("/editor/main");
     await expect(page.getByTestId("editor-page")).toBeVisible();
+    await expect(page.getByTestId("page-title")).toBeVisible();
     // Toolbar should have Visual / Markdown toggle tabs
     await expect(page.getByTestId("mode-visual")).toBeVisible();
     await expect(page.getByTestId("mode-markdown")).toBeVisible();
@@ -12,6 +55,7 @@ test.describe("Dual-mode MDX Editor", () => {
   test("defaults to visual mode", async ({ page }) => {
     await page.goto("/editor/main");
     await expect(page.getByTestId("editor-page")).toBeVisible();
+    await expect(page.getByTestId("page-title")).toBeVisible();
     // Visual mode tab should be active by default
     const visualTab = page.getByTestId("mode-visual");
     await expect(visualTab).toHaveAttribute("data-active", "true");
@@ -20,6 +64,7 @@ test.describe("Dual-mode MDX Editor", () => {
   test("switches between visual and markdown modes", async ({ page }) => {
     await page.goto("/editor/main");
     await expect(page.getByTestId("editor-page")).toBeVisible();
+    await expect(page.getByTestId("page-title")).toBeVisible();
 
     // Click markdown mode
     await page.getByTestId("mode-markdown").click();
@@ -33,6 +78,7 @@ test.describe("Dual-mode MDX Editor", () => {
   test("markdown editor shows line numbers", async ({ page }) => {
     await page.goto("/editor/main");
     await expect(page.getByTestId("editor-page")).toBeVisible();
+    await expect(page.getByTestId("page-title")).toBeVisible();
 
     // Switch to markdown mode
     await page.getByTestId("mode-markdown").click();
@@ -42,6 +88,7 @@ test.describe("Dual-mode MDX Editor", () => {
   test("publish button shows popover with site URL", async ({ page }) => {
     await page.goto("/editor/main");
     await expect(page.getByTestId("editor-page")).toBeVisible();
+    await expect(page.getByTestId("page-title")).toBeVisible();
 
     // Click publish button
     const publishBtn = page.getByTestId("publish-btn");
@@ -53,6 +100,7 @@ test.describe("Dual-mode MDX Editor", () => {
   test("toolbar has formatting buttons", async ({ page }) => {
     await page.goto("/editor/main");
     await expect(page.getByTestId("editor-page")).toBeVisible();
+    await expect(page.getByTestId("page-title")).toBeVisible();
 
     // Toolbar formatting buttons visible
     await expect(page.getByTestId("toolbar-bold")).toBeVisible();
@@ -63,12 +111,13 @@ test.describe("Dual-mode MDX Editor", () => {
   test("add-new dropdown shows component options", async ({ page }) => {
     await page.goto("/editor/main");
     await expect(page.getByTestId("editor-page")).toBeVisible();
+    await expect(page.getByTestId("page-title")).toBeVisible();
 
     const addNewBtn = page.getByTestId("add-new-dropdown-btn");
     await expect(addNewBtn).toBeVisible();
     await addNewBtn.click();
 
     // Should show component options
-    await expect(page.getByText("Tab")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Tab" })).toBeVisible();
   });
 });
