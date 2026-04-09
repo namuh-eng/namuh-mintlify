@@ -109,7 +109,7 @@
     "core": false,
     "dependent_on": ["auth-001", "auth-002", "feature-001"],
     "build_pass": true,
-    "qa_pass": false
+    "qa_pass": true
   },
   {
     "id": "feature-002",

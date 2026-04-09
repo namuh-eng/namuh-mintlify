@@ -185,5 +185,21 @@
     ],
     "bugs_found": [],
     "fix_description": "no fix needed"
+  },
+  {
+    "feature_id": "onboard-001",
+    "attempt": 1,
+    "status": "pass",
+    "tested_steps": [
+      "Ran `make test` and confirmed the unit suite passed with 1530 tests.",
+      "Ran `npx playwright test tests/e2e/smoke.spec.ts` against the Playwright-configured dev server and confirmed all 11 smoke tests passed.",
+      "Ran `npx playwright test tests/e2e/onboarding.spec.ts` and confirmed all 16 onboarding checks passed, including GitHub URL validation, refresh resume, GitHub repo persistence, existing-org redirect, and concurrent org creation protection.",
+      "Used Ever CLI on `http://localhost:3015/login` with the real Google test account `ashleyha0317@gmail.com`, clicked `Continue with Google`, and verified the live OAuth flow established a real Better Auth session and landed on the authenticated dashboard. Saved evidence to `ralph/screenshots/qa/onboard-001-google-session-dashboard.jpg`.",
+      "Navigated the real Google-authenticated browser session to `/onboarding` and verified users who already belong to an org are redirected back to `/dashboard` instead of seeing the wizard.",
+      "Created a fresh QA user via the test-session route, then exercised the real onboarding backend sequence with live API calls: `POST /api/orgs`, `POST /api/projects` with `repoUrl=https://github.com/acme/docs` and `createInitialDeployment=true`, `GET /api/projects`, and `GET /api/deployments`.",
+      "Queried Postgres for `qa-onboard-1775699930@example.com` and confirmed the onboarding flow persisted exactly one organization, one project with the GitHub repo URL, the derived subdomain `qa-onboard-org-20260409-mnqtw6ax-qa-onboard-docs`, project status `active`, and the initial deployment status `succeeded`."
+    ],
+    "bugs_found": [],
+    "fix_description": "no fix needed"
   }
 ]
