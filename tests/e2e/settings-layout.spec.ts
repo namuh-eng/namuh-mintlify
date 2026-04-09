@@ -38,7 +38,7 @@ test.describe("Settings layout shell", () => {
     page,
   }) => {
     await page.goto("/settings/advanced/exports");
-    await expect(page.getByText("Exports")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Exports" })).toBeVisible();
     await expect(
       page.getByText("This settings page is coming soon"),
     ).toBeVisible();

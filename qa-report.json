@@ -128,5 +128,42 @@
       }
     ],
     "fix_description": "Replaced the assistant-route project scoping query with `inArray(...)`, enforced assistant-only key type checks across the assistant v1 routes, and tightened the API-key E2E coverage to exercise real assistant/admin bearer-key behavior."
+  },
+  {
+    "feature_id": "design-001",
+    "attempt": 1,
+    "status": "pass",
+    "tested_steps": [
+      "Ran `make test` and confirmed the unit suite passed with 1527 tests.",
+      "Ran `npx playwright test tests/e2e/smoke.spec.ts` and confirmed 11 smoke tests passed against the authenticated dashboard routes.",
+      "Used Ever CLI with the real Google-authenticated browser session on `http://localhost:3015` to verify the dashboard shell on `/dashboard`, `/settings/project/general`, and `/products/agent`, including the shared sidebar/top bar layout and active navigation states. Saved a reference screenshot to `ralph/screenshots/qa/design-001-dashboard-shell.jpg`.",
+      "Verified the shell state behaviors manually in Ever: sidebar collapse persisted across navigation via `localStorage`, theme selection persisted across route changes, the trial banner dismissed and stayed dismissed after navigation, and the org/project dropdown exposed the current workspace plus project selection actions.",
+      "Re-ran `tests/e2e/dashboard-layout.spec.ts` and confirmed all 16 layout-shell checks passed, including profile navigation, theme persistence, trial banner persistence, mobile off-canvas sidebar behavior, and logout redirect handling.",
+      "Re-ran `tests/e2e/settings-layout.spec.ts` and confirmed all 7 settings-shell checks passed, verifying the settings area shares the same dashboard shell."
+    ],
+    "bugs_found": [
+      {
+        "severity": "minor",
+        "description": "The dashboard layout E2E spec treated the Radix profile-menu item as a `link`, so the profile navigation check timed out even though the menu item was rendered and clickable as a `menuitem`.",
+        "expected": "The test should target the actual accessible role emitted by the profile menu so the workspace-profile navigation is verified correctly.",
+        "actual": "Playwright waited 30 seconds for `getByRole('link', { name: 'Your profile' })` even though the visible control had role `menuitem`.",
+        "reproduction": "Run `npx playwright test tests/e2e/dashboard-layout.spec.ts` before the fix and observe the timeout in `profile menu links to the workspace profile page`."
+      },
+      {
+        "severity": "minor",
+        "description": "The dashboard layout E2E spec executed the logout assertion before later shell checks, invalidating the shared auth state and producing false login-page failures for theme, banner, greeting, and mobile tests.",
+        "expected": "The logout case should run after the rest of the authenticated shell assertions, or otherwise use isolated auth state.",
+        "actual": "After the logout test deleted the shared session, subsequent tests loaded `/login` instead of the dashboard shell.",
+        "reproduction": "Run `npx playwright test tests/e2e/dashboard-layout.spec.ts` before the fix and inspect the later failures showing the sign-in page instead of the dashboard."
+      },
+      {
+        "severity": "minor",
+        "description": "The settings layout E2E spec used an ambiguous `getByText('Exports')` locator that matched the sidebar item, breadcrumb, and page heading.",
+        "expected": "The placeholder-page assertion should target the page heading specifically.",
+        "actual": "Playwright strict mode rejected the locator with three matches even though the Exports page rendered correctly.",
+        "reproduction": "Run `npx playwright test tests/e2e/settings-layout.spec.ts` before the fix and observe the strict mode violation in `placeholder pages render with coming soon message`."
+      }
+    ],
+    "fix_description": "Updated the dashboard/settings layout E2E specs to target the actual accessible roles, avoid invalidating shared auth state mid-suite, and use precise placeholder-page assertions; the product shell itself passed the manual and automated QA checks."
   }
 ]

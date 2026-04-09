@@ -93,24 +93,12 @@ test.describe("Dashboard Layout", () => {
   test("profile menu links to the workspace profile page", async ({ page }) => {
     await page.goto("/dashboard");
     await page.getByRole("button", { name: "Profile menu" }).click();
-    await page.getByRole("link", { name: "Your profile" }).click();
+    await page.getByRole("menuitem", { name: "Your profile" }).click();
 
     await page.waitForURL("**/settings/workspace/profile");
     await expect(
       page.getByRole("heading", { name: "My Profile" }),
     ).toBeVisible();
-  });
-
-  test("profile menu logout clears the session and redirects to login", async ({
-    page,
-  }) => {
-    await page.goto("/dashboard");
-    await page.getByRole("button", { name: "Profile menu" }).click();
-    await page.getByText("Log Out").click();
-
-    await page.waitForURL("**/login");
-    await page.goto("/dashboard");
-    await page.waitForURL("**/login?returnTo=%2Fdashboard");
   });
 
   test("theme switcher persists the selected shell theme", async ({ page }) => {
@@ -166,5 +154,17 @@ test.describe("Dashboard Layout", () => {
       "true",
     );
     await expect(page.getByText("Home")).toBeVisible();
+  });
+
+  test("profile menu logout clears the session and redirects to login", async ({
+    page,
+  }) => {
+    await page.goto("/dashboard");
+    await page.getByRole("button", { name: "Profile menu" }).click();
+    await page.getByText("Log Out").click();
+
+    await page.waitForURL("**/login");
+    await page.goto("/dashboard");
+    await page.waitForURL("**/login?returnTo=%2Fdashboard");
   });
 });
