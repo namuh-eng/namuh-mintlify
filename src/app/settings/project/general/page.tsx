@@ -1,5 +1,6 @@
 "use client";
 
+import { getStoredActiveProjectId } from "@/components/layout/shell-preferences";
 import { useEffect, useState } from "react";
 
 interface ProjectData {
@@ -27,7 +28,11 @@ export default function SettingsGeneralPage() {
       .then((res) => res.json())
       .then((data) => {
         if (data.projects?.length > 0) {
-          const p = data.projects[0];
+          const activeProjectId = getStoredActiveProjectId();
+          const p =
+            data.projects.find(
+              (candidate: ProjectData) => candidate.id === activeProjectId,
+            ) ?? data.projects[0];
           setProject(p);
           setName(p.name);
           setSubdomain(p.subdomain ?? p.slug);

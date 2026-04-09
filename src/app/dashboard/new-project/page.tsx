@@ -1,5 +1,6 @@
 "use client";
 
+import { setStoredActiveProjectId } from "@/components/layout/shell-preferences";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -45,6 +46,8 @@ export default function NewProjectPage() {
         return;
       }
 
+      const data = await res.json();
+      setStoredActiveProjectId(data.project.id);
       router.push("/dashboard");
       router.refresh();
     } catch {

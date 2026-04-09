@@ -1,3 +1,4 @@
+import { ACTIVE_PROJECT_COOKIE, findActiveProject } from "@/lib/active-project";
 import { db } from "@/lib/db";
 import {
   deployments,
@@ -7,6 +8,7 @@ import {
 } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { and, desc, eq } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardHomeClient } from "./dashboard-home-client";
 
@@ -38,10 +40,10 @@ export default async function DashboardPage() {
     .select()
     .from(projects)
     .where(eq(projects.orgId, orgId))
-    .orderBy(projects.createdAt)
-    .limit(1);
+    .orderBy(projects.createdAt);
 
-  const project = orgProjects[0] ?? null;
+  const activeProjectId = (await cookies()).get(ACTIVE_PROJECT_COOKIE)?.value;
+  const project = findActiveProject(orgProjects, activeProjectId);
 
   type DeploymentRow = {
     id: string;

@@ -1,7 +1,9 @@
+import { ACTIVE_PROJECT_COOKIE, findActiveProject } from "@/lib/active-project";
 import { db } from "@/lib/db";
 import { orgMemberships, organizations, projects } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { eq } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardLayoutClient } from "./dashboard-layout-client";
 
@@ -50,6 +52,9 @@ export async function DashboardShell({ children }: DashboardShellProps) {
     .where(eq(projects.orgId, org.id))
     .orderBy(projects.createdAt);
 
+  const activeProjectId = (await cookies()).get(ACTIVE_PROJECT_COOKIE)?.value;
+  const activeProject = findActiveProject(orgProjects, activeProjectId);
+
   return (
     <DashboardLayoutClient
       orgName={org.name}
@@ -58,6 +63,7 @@ export async function DashboardShell({ children }: DashboardShellProps) {
       userEmail={session.user.email}
       userImage={session.user.image ?? undefined}
       projects={orgProjects}
+      activeProjectId={activeProject?.id}
     >
       {children}
     </DashboardLayoutClient>

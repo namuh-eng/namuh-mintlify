@@ -48,4 +48,32 @@ test.describe("Project CRUD", () => {
     const isLogin = url.includes("/login");
     expect(isNewProject || isLogin).toBe(true);
   });
+
+  test("new project becomes active and settings follow the selected project", async ({
+    page,
+  }) => {
+    const projectName = `Project QA ${Date.now()}`;
+
+    await page.goto("/dashboard/new-project");
+    await page.getByLabel(/project name/i).fill(projectName);
+    await page
+      .getByLabel(/github repository url/i)
+      .fill("https://github.com/example/project-qa");
+    await page.getByRole("button", { name: /create project/i }).click();
+
+    await page.waitForURL(/\/dashboard$/);
+    await expect(
+      page.locator("aside button").filter({ hasText: projectName }).first(),
+    ).toBeVisible();
+
+    await page.locator("aside button").filter({ hasText: projectName }).click();
+    await page.getByRole("link", { name: "QA Project" }).click();
+    await page.waitForURL(/\/dashboard$/);
+    await expect(
+      page.locator("aside button").filter({ hasText: "QA Project" }).first(),
+    ).toBeVisible();
+
+    await page.goto("/settings/project/general");
+    await expect(page.getByLabel(/project name/i)).toHaveValue("QA Project");
+  });
 });
