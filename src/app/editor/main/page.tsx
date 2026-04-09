@@ -60,6 +60,21 @@ interface PageListItem {
 
 type ActiveTab = "navigation" | "files" | "configurations";
 
+async function getErrorMessage(
+  response: Response,
+  fallback: string,
+): Promise<string> {
+  try {
+    const data = (await response.json()) as {
+      error?: string;
+      message?: string;
+    };
+    return data.error || data.message || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 // ── File Tree Node Component ─────────────────────────────────────────────
 
 function TreeNodeItem({
@@ -76,11 +91,11 @@ function TreeNodeItem({
   const [expanded, setExpanded] = useState(true);
   const isFolder = node.type === "folder";
   const isSelected = node.pageId === selectedPageId;
+  const canSelect = Boolean(node.pageId);
 
   return (
     <div>
-      <button
-        type="button"
+      <div
         className={clsx(
           "flex items-center gap-1.5 w-full text-left px-2 py-1 text-sm rounded-md transition-colors",
           isSelected
@@ -88,21 +103,21 @@ function TreeNodeItem({
             : "text-gray-400 hover:bg-white/[0.06] hover:text-gray-200",
         )}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
-        onClick={() => {
-          if (isFolder) {
-            setExpanded(!expanded);
-          } else if (node.pageId) {
-            onSelectPage(node.pageId);
-          }
-        }}
       >
         {isFolder ? (
           <>
-            {expanded ? (
-              <ChevronDown size={14} className="shrink-0 text-gray-500" />
-            ) : (
-              <ChevronRight size={14} className="shrink-0 text-gray-500" />
-            )}
+            <button
+              type="button"
+              className="shrink-0 text-gray-500 hover:text-gray-300"
+              onClick={() => setExpanded(!expanded)}
+              aria-label={expanded ? "Collapse section" : "Expand section"}
+            >
+              {expanded ? (
+                <ChevronDown size={14} className="shrink-0" />
+              ) : (
+                <ChevronRight size={14} className="shrink-0" />
+              )}
+            </button>
             {expanded ? (
               <FolderOpen size={14} className="shrink-0 text-gray-500" />
             ) : (
@@ -115,8 +130,23 @@ function TreeNodeItem({
             <FileText size={14} className="shrink-0 text-gray-500" />
           </>
         )}
-        <span className="truncate">{node.title || node.name}</span>
-      </button>
+        <button
+          type="button"
+          className="min-w-0 flex-1 truncate text-left"
+          onClick={() => {
+            if (canSelect && node.pageId) {
+              onSelectPage(node.pageId);
+              return;
+            }
+
+            if (isFolder) {
+              setExpanded(!expanded);
+            }
+          }}
+        >
+          <span className="truncate">{node.title || node.name}</span>
+        </button>
+      </div>
       {isFolder && expanded && node.children.length > 0 && (
         <div>
           {node.children.map((child) => (
@@ -258,9 +288,11 @@ function DeletePageModal({
   projectId: string;
 }) {
   const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleDelete() {
     setDeleting(true);
+    setError("");
     try {
       const res = await fetch(`/api/projects/${projectId}/pages/${page.id}`, {
         method: "DELETE",
@@ -268,8 +300,12 @@ function DeletePageModal({
       if (res.ok) {
         onDeleted();
         onClose();
+        return;
       }
+      setError(await getErrorMessage(res, "Failed to delete page"));
+      setDeleting(false);
     } catch {
+      setError("Network error");
       setDeleting(false);
     }
   }
@@ -284,6 +320,7 @@ function DeletePageModal({
           <code className="text-emerald-400 text-xs">{page.path}</code>)? This
           action cannot be undone.
         </p>
+        {error ? <p className="text-sm text-red-400 mb-4">{error}</p> : null}
         <div className="flex justify-end gap-2">
           <button
             type="button"
@@ -324,6 +361,7 @@ export default function EditorPage() {
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [actionError, setActionError] = useState("");
   const [editorMode, setEditorMode] = useState<EditorMode>("visual");
   const [showSettings, setShowSettings] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -339,12 +377,23 @@ export default function EditorPage() {
       if (!projectId || !selectedPageId) return;
       setSaving(true);
       try {
-        await fetch(`/api/projects/${projectId}/pages/${selectedPageId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: contentToSave }),
-        });
+        const res = await fetch(
+          `/api/projects/${projectId}/pages/${selectedPageId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: contentToSave }),
+          },
+        );
+        if (!res.ok) {
+          throw new Error(await getErrorMessage(res, "Failed to save page"));
+        }
         setHasUnsavedChanges(false);
+        setActionError("");
+      } catch (error) {
+        setActionError(
+          error instanceof Error ? error.message : "Failed to save page",
+        );
       } finally {
         setSaving(false);
       }
@@ -364,6 +413,7 @@ export default function EditorPage() {
   const handleContentChange = useCallback((newContent: string) => {
     setContent(newContent);
     setHasUnsavedChanges(true);
+    setActionError("");
     autoSaveRef.current?.trigger(newContent);
   }, []);
 
@@ -414,6 +464,7 @@ export default function EditorPage() {
         setSelectedPage(data.page);
         setContent(data.page.content || "");
         setHasUnsavedChanges(false);
+        setActionError("");
       }
     }
     fetchPage();
@@ -428,15 +479,28 @@ export default function EditorPage() {
   // Save page settings
   async function handleSaveSettings(updates: Record<string, unknown>) {
     if (!projectId || !selectedPageId) return;
-    await fetch(`/api/projects/${projectId}/pages/${selectedPageId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
-    // Re-fetch page data
+    const updateResponse = await fetch(
+      `/api/projects/${projectId}/pages/${selectedPageId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      },
+    );
+    if (!updateResponse.ok) {
+      setActionError(
+        await getErrorMessage(updateResponse, "Failed to update page settings"),
+      );
+      return;
+    }
     const res = await fetch(
       `/api/projects/${projectId}/pages/${selectedPageId}`,
     );
+    if (!res.ok) {
+      setActionError(await getErrorMessage(res, "Failed to refresh page"));
+      return;
+    }
+    setActionError("");
     const data = await res.json();
     if (data.page) {
       setSelectedPage(data.page);
@@ -690,21 +754,31 @@ export default function EditorPage() {
             <>
               {/* Page header */}
               <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.08]">
-                <div className="flex items-center gap-3">
-                  <h1
-                    className="text-xl font-semibold text-white"
-                    data-testid="page-title"
-                  >
-                    {selectedPage.title}
-                  </h1>
-                  <code className="text-xs text-gray-500 bg-white/[0.04] px-2 py-0.5 rounded">
-                    {selectedPage.path}
-                  </code>
-                  {selectedPage.isPublished && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-600/20 text-emerald-400 font-medium">
-                      Published
-                    </span>
-                  )}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-3">
+                    <h1
+                      className="text-xl font-semibold text-white"
+                      data-testid="page-title"
+                    >
+                      {selectedPage.title}
+                    </h1>
+                    <code className="text-xs text-gray-500 bg-white/[0.04] px-2 py-0.5 rounded">
+                      {selectedPage.path}
+                    </code>
+                    {selectedPage.isPublished && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-600/20 text-emerald-400 font-medium">
+                        Published
+                      </span>
+                    )}
+                  </div>
+                  {actionError ? (
+                    <p
+                      className="mt-1 text-sm text-red-400"
+                      data-testid="editor-action-error"
+                    >
+                      {actionError}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-2">
                   <button

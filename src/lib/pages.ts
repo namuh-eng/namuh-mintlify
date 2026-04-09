@@ -203,11 +203,19 @@ export function buildPageTree(
           existing.title = page.title;
         }
         current.push(existing);
-      } else if (isLast) {
-        // Upgrade folder to file if we found an existing folder node
-        existing.type = "file";
-        existing.pageId = page.id;
-        existing.title = page.title;
+      } else {
+        if (!isLast && existing.type === "file") {
+          existing.type = "folder";
+        }
+
+        if (isLast) {
+          if (existing.children.length === 0) {
+            existing.type = "file";
+          }
+
+          existing.pageId = page.id;
+          existing.title = page.title;
+        }
       }
 
       current = existing.children;

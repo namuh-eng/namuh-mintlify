@@ -11,7 +11,8 @@ async function resolveProject(
   userId: string,
   projectId: string,
 ): Promise<
-  { ok: true; orgId: string } | { ok: false; response: NextResponse }
+  | { ok: true; orgId: string; role: string }
+  | { ok: false; response: NextResponse }
 > {
   const membership = await db
     .select({ orgId: orgMemberships.orgId, role: orgMemberships.role })
@@ -47,7 +48,7 @@ async function resolveProject(
     };
   }
 
-  return { ok: true, orgId };
+  return { ok: true, orgId, role: membership[0].role };
 }
 
 /** GET /api/projects/[id]/pages — list all pages for a project */
@@ -94,6 +95,13 @@ export async function POST(
   const { id: projectId } = await params;
   const resolved = await resolveProject(session.user.id, projectId);
   if (!resolved.ok) return resolved.response;
+
+  if (resolved.role !== "admin" && resolved.role !== "editor") {
+    return NextResponse.json(
+      { error: "Only admins and editors can manage pages" },
+      { status: 403 },
+    );
+  }
 
   const body = await request.json();
   const validation = validateCreatePageRequest(body);

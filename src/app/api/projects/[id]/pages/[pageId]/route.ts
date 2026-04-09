@@ -12,10 +12,11 @@ async function resolvePageInProject(
   projectId: string,
   pageId: string,
 ): Promise<
-  { ok: true; page: { id: string } } | { ok: false; response: NextResponse }
+  | { ok: true; page: { id: string }; role: string }
+  | { ok: false; response: NextResponse }
 > {
   const membership = await db
-    .select({ orgId: orgMemberships.orgId })
+    .select({ orgId: orgMemberships.orgId, role: orgMemberships.role })
     .from(orgMemberships)
     .where(eq(orgMemberships.userId, userId))
     .limit(1);
@@ -61,7 +62,7 @@ async function resolvePageInProject(
     };
   }
 
-  return { ok: true, page: page[0] };
+  return { ok: true, page: page[0], role: membership[0].role };
 }
 
 /** GET /api/projects/[id]/pages/[pageId] — get a single page with content */
@@ -108,6 +109,13 @@ export async function PUT(
     pageId,
   );
   if (!resolved.ok) return resolved.response;
+
+  if (resolved.role !== "admin" && resolved.role !== "editor") {
+    return NextResponse.json(
+      { error: "Only admins and editors can manage pages" },
+      { status: 403 },
+    );
+  }
 
   const body = await request.json();
   const validation = validateUpdatePageRequest(body);
@@ -163,6 +171,13 @@ export async function DELETE(
     pageId,
   );
   if (!resolved.ok) return resolved.response;
+
+  if (resolved.role !== "admin" && resolved.role !== "editor") {
+    return NextResponse.json(
+      { error: "Only admins and editors can manage pages" },
+      { status: 403 },
+    );
+  }
 
   await db.delete(pages).where(eq(pages.id, pageId));
 

@@ -79,6 +79,33 @@ test.describe("Page management (Editor)", () => {
     await expect(createBtn).toBeDisabled();
   });
 
+  test("keeps section index pages visible alongside nested children", async ({
+    page,
+  }) => {
+    await page.goto("/editor/main");
+
+    await page.getByTestId("add-page-btn").click();
+    await page.getByLabel("Path").fill("guide");
+    await page.getByLabel("Title").fill("Guide Index");
+    await page.getByRole("button", { name: "Create page" }).click();
+
+    await page.getByTestId("add-page-btn").click();
+    await page.getByLabel("Path").fill("guide/setup");
+    await page.getByLabel("Title").fill("Setup");
+    await page.getByRole("button", { name: "Create page" }).click();
+
+    await expect(
+      page.getByRole("button", { name: "Guide Index" }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Setup" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Guide Index" }).click();
+    await expect(page.getByTestId("page-title")).toHaveText("Guide Index");
+
+    await page.getByRole("button", { name: "Setup" }).click();
+    await expect(page.getByTestId("page-title")).toHaveText("Setup");
+  });
+
   test("can create and open a page in the visual editor", async ({ page }) => {
     const suffix = Date.now().toString();
     const path = `qa-${suffix}/intro`;

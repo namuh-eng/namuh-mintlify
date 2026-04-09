@@ -292,6 +292,27 @@ describe("buildPageTree", () => {
     expect(tree[1].type).toBe("file");
   });
 
+  it("keeps nested children visible when a page is also a section index", async () => {
+    const buildTree = await getBuildPageTree();
+    const tree = buildTree([
+      { id: "1", path: "guide", title: "Guide Index" },
+      { id: "2", path: "guide/setup", title: "Setup" },
+      { id: "3", path: "guide/api/reference", title: "Reference" },
+    ]);
+
+    expect(tree).toHaveLength(1);
+    expect(tree[0]).toMatchObject({
+      name: "guide",
+      type: "folder",
+      pageId: "1",
+      title: "Guide Index",
+    });
+    expect(tree[0].children.map((child) => child.path)).toEqual([
+      "guide/api",
+      "guide/setup",
+    ]);
+  });
+
   it("returns empty array for no pages", async () => {
     const buildTree = await getBuildPageTree();
     expect(buildTree([])).toEqual([]);
