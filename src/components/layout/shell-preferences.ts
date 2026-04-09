@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ACTIVE_PROJECT_COOKIE,
+  ACTIVE_PROJECT_STORAGE_KEY,
+} from "@/lib/active-project";
+
 export type DashboardTheme = "system" | "light" | "dark";
 export type ResolvedDashboardTheme = "light" | "dark";
 
@@ -95,4 +100,34 @@ export function getStoredTrialBannerDismissed(): boolean {
 
 export function setStoredTrialBannerDismissed(dismissed: boolean): void {
   writeBoolean(TRIAL_BANNER_KEY, dismissed);
+}
+
+export function getStoredActiveProjectId(): string | null {
+  const storage = getStorage();
+  const stored = storage?.getItem(ACTIVE_PROJECT_STORAGE_KEY);
+  if (stored) {
+    return stored;
+  }
+
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  const activeCookie = document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${ACTIVE_PROJECT_COOKIE}=`));
+
+  return activeCookie
+    ? decodeURIComponent(activeCookie.split("=").slice(1).join("="))
+    : null;
+}
+
+export function setStoredActiveProjectId(projectId: string): void {
+  const storage = getStorage();
+  storage?.setItem(ACTIVE_PROJECT_STORAGE_KEY, projectId);
+
+  if (typeof document !== "undefined") {
+    document.cookie = `${ACTIVE_PROJECT_COOKIE}=${encodeURIComponent(projectId)}; path=/; max-age=31536000; samesite=lax`;
+  }
 }

@@ -26,6 +26,7 @@ interface DashboardLayoutProps {
   userEmail?: string;
   userImage?: string;
   projects?: ProjectInfo[];
+  activeProjectId?: string;
 }
 
 export function DashboardLayoutClient({
@@ -36,6 +37,7 @@ export function DashboardLayoutClient({
   userEmail,
   userImage,
   projects = [],
+  activeProjectId,
 }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -107,6 +109,7 @@ export function DashboardLayoutClient({
         onCloseMobile={() => setMobileSidebarOpen(false)}
         onToggleCollapse={handleToggleDesktopSidebar}
         projects={projects}
+        activeProjectId={activeProjectId}
       />
       <div className={`flex min-w-0 flex-1 flex-col ${layoutTheme.content}`}>
         <TrialBanner theme={resolvedTheme} />

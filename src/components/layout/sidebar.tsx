@@ -1,5 +1,6 @@
 "use client";
 
+import { setStoredActiveProjectId } from "@/components/layout/shell-preferences";
 import { clsx } from "clsx";
 import {
   BarChart3,
@@ -42,7 +43,7 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
   onCloseMobile?: () => void;
   projects?: ProjectInfo[];
-  activeProjectSlug?: string;
+  activeProjectId?: string;
   theme?: "light" | "dark";
 }
 
@@ -89,13 +90,13 @@ export function Sidebar({
   onToggleCollapse,
   onCloseMobile,
   projects = [],
-  activeProjectSlug,
+  activeProjectId,
   theme = "dark",
 }: SidebarProps) {
   const pathname = usePathname();
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
   const activeProject =
-    projects.find((p) => p.slug === activeProjectSlug) ?? projects[0];
+    projects.find((project) => project.id === activeProjectId) ?? projects[0];
   const shellTheme =
     theme === "light"
       ? {
@@ -296,9 +297,14 @@ export function Sidebar({
                     <Link
                       key={project.id}
                       href="/dashboard"
-                      onClick={() => {
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setStoredActiveProjectId(project.id);
                         setOrgDropdownOpen(false);
                         onCloseMobile?.();
+                        if (typeof window !== "undefined") {
+                          window.location.assign("/dashboard");
+                        }
                       }}
                       className={clsx(
                         "flex items-center gap-2 px-3 py-2 text-sm",
