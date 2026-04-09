@@ -31,6 +31,6 @@ export default defineConfig({
   webServer: {
     command: "PLAYWRIGHT_TEST=true npm run dev",
     port: 3015,
-    reuseExistingServer: false,
+    reuseExistingServer: !process.env.CI,
   },
 });

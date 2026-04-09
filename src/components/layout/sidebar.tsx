@@ -5,7 +5,6 @@ import {
   BarChart3,
   Bot,
   ChevronDown,
-  ChevronsLeft,
   ChevronsRight,
   GitBranch,
   Home,
@@ -15,6 +14,7 @@ import {
   Plus,
   Server,
   Settings,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,11 +27,6 @@ interface NavItem {
   badge?: string;
 }
 
-interface NavGroup {
-  title: string;
-  items: NavItem[];
-}
-
 interface ProjectInfo {
   id: string;
   name: string;
@@ -42,9 +37,13 @@ interface SidebarProps {
   orgName: string;
   orgSlug: string;
   collapsed?: boolean;
+  isMobile?: boolean;
+  mobileOpen?: boolean;
   onToggleCollapse?: () => void;
+  onCloseMobile?: () => void;
   projects?: ProjectInfo[];
   activeProjectSlug?: string;
+  theme?: "light" | "dark";
 }
 
 const mainNavItems: NavItem[] = [
@@ -85,23 +84,65 @@ export function Sidebar({
   orgName,
   orgSlug,
   collapsed = false,
+  isMobile = false,
+  mobileOpen = false,
   onToggleCollapse,
+  onCloseMobile,
   projects = [],
   activeProjectSlug,
+  theme = "dark",
 }: SidebarProps) {
   const pathname = usePathname();
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
   const activeProject =
     projects.find((p) => p.slug === activeProjectSlug) ?? projects[0];
-  const displayName = activeProject ? activeProject.name : orgName;
+  const shellTheme =
+    theme === "light"
+      ? {
+          aside: "bg-white border-slate-200",
+          collapsed: "bg-white border-slate-200",
+          primaryText: "text-slate-950",
+          secondaryText: "text-slate-500",
+          hoverText: "hover:text-slate-950",
+          hoverBg: "hover:bg-slate-100",
+          active: "bg-slate-900 text-white",
+          divider: "border-slate-200",
+          dropdown: "bg-white border-slate-200 shadow-xl shadow-slate-900/10",
+          badge: "bg-emerald-500/15 text-emerald-700",
+          chip: "bg-emerald-600 text-white",
+        }
+      : {
+          aside: "bg-[#0f0f0f] border-white/[0.08]",
+          collapsed: "bg-[#0f0f0f] border-white/[0.08]",
+          primaryText: "text-white",
+          secondaryText: "text-gray-400",
+          hoverText: "hover:text-gray-200",
+          hoverBg: "hover:bg-white/[0.06]",
+          active: "bg-white/[0.08] text-white",
+          divider: "border-white/[0.08]",
+          dropdown: "bg-[#1a1a1a] border-white/[0.08] shadow-lg",
+          badge: "bg-emerald-600/20 text-emerald-400",
+          chip: "bg-emerald-600 text-white",
+        };
 
-  if (collapsed) {
+  if (!isMobile && collapsed) {
     return (
-      <aside className="flex flex-col items-center w-16 min-h-screen bg-[#0f0f0f] border-r border-white/[0.08] py-3 gap-2">
+      <aside
+        className={clsx(
+          "flex min-h-screen w-16 flex-col items-center gap-2 border-r py-3",
+          shellTheme.collapsed,
+        )}
+        data-testid="sidebar"
+        data-collapsed="true"
+      >
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="p-2 rounded-md hover:bg-white/[0.06] text-gray-400 mb-2"
+          className={clsx(
+            "mb-2 rounded-md p-2",
+            shellTheme.secondaryText,
+            shellTheme.hoverBg,
+          )}
           aria-label="Expand sidebar"
         >
           <ChevronsRight size={18} />
@@ -111,26 +152,34 @@ export function Sidebar({
             key={item.href}
             href={item.href}
             className={clsx(
-              "p-2 rounded-md transition-colors",
+              "rounded-md p-2 transition-colors",
               isActive(pathname, item.href)
-                ? "bg-white/[0.08] text-white"
-                : "text-gray-400 hover:bg-white/[0.06] hover:text-gray-200",
+                ? shellTheme.active
+                : [
+                    shellTheme.secondaryText,
+                    shellTheme.hoverBg,
+                    shellTheme.hoverText,
+                  ],
             )}
             title={item.label}
           >
             {item.icon}
           </Link>
         ))}
-        <div className="my-1 w-8 border-t border-white/[0.08]" />
+        <div className={clsx("my-1 w-8 border-t", shellTheme.divider)} />
         {agentNavItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={clsx(
-              "p-2 rounded-md transition-colors",
+              "rounded-md p-2 transition-colors",
               isActive(pathname, item.href)
-                ? "bg-white/[0.08] text-white"
-                : "text-gray-400 hover:bg-white/[0.06] hover:text-gray-200",
+                ? shellTheme.active
+                : [
+                    shellTheme.secondaryText,
+                    shellTheme.hoverBg,
+                    shellTheme.hoverText,
+                  ],
             )}
             title={item.label}
           >
@@ -142,128 +191,256 @@ export function Sidebar({
   }
 
   return (
-    <aside
-      className="flex flex-col w-60 min-h-screen bg-[#0f0f0f] border-r border-white/[0.08]"
-      data-testid="sidebar"
-    >
-      {/* Org switcher */}
-      <div className="px-3 py-3">
+    <>
+      {isMobile && mobileOpen && (
         <button
           type="button"
-          onClick={() => setOrgDropdownOpen(!orgDropdownOpen)}
-          className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-white/[0.06] text-sm font-medium text-white transition-colors"
-        >
-          <div className="flex items-center justify-center w-6 h-6 rounded bg-emerald-600 text-white text-xs font-bold shrink-0">
-            {orgName.charAt(0).toUpperCase()}
-          </div>
-          <span className="truncate">{displayName}</span>
-          <ChevronDown size={14} className="ml-auto text-gray-500 shrink-0" />
-        </button>
-        {orgDropdownOpen && (
-          <div className="mt-1 bg-[#1a1a1a] border border-white/[0.08] rounded-lg shadow-lg py-1 z-50">
-            {projects.length > 0 && (
-              <>
-                {projects.map((project) => (
-                  <Link
-                    key={project.id}
-                    href="/dashboard"
-                    onClick={() => setOrgDropdownOpen(false)}
-                    className="px-3 py-2 flex items-center gap-2 text-sm text-white hover:bg-white/[0.06]"
-                  >
-                    <div className="flex items-center justify-center w-5 h-5 rounded bg-emerald-600 text-white text-[10px] font-bold">
-                      {project.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="truncate">{project.name}</span>
-                    {project.slug === activeProject?.slug && (
-                      <span className="ml-auto text-emerald-500">✓</span>
-                    )}
-                  </Link>
-                ))}
-                <div className="border-t border-white/[0.08] my-1" />
-              </>
-            )}
-            {projects.length === 0 && (
-              <>
-                <div className="px-3 py-2 flex items-center gap-2 text-sm text-white">
-                  <div className="flex items-center justify-center w-5 h-5 rounded bg-emerald-600 text-white text-[10px] font-bold">
-                    {orgName.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="truncate">{orgName}</span>
-                  <span className="ml-auto text-emerald-500">✓</span>
-                </div>
-                <div className="border-t border-white/[0.08] my-1" />
-              </>
-            )}
-            <Link
-              href="/dashboard/new-project"
-              onClick={() => setOrgDropdownOpen(false)}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-400 hover:bg-white/[0.06] hover:text-white"
-            >
-              <Plus size={14} />
-              New documentation
-            </Link>
-          </div>
+          aria-label="Close sidebar"
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={onCloseMobile}
+        />
+      )}
+      <aside
+        className={clsx(
+          "flex flex-col border-r transition-transform duration-200",
+          shellTheme.aside,
+          isMobile
+            ? [
+                "fixed inset-y-0 left-0 z-40 w-60 min-h-screen shadow-xl lg:hidden",
+                mobileOpen ? "translate-x-0" : "-translate-x-full",
+              ]
+            : "min-h-screen w-60",
         )}
-      </div>
-
-      {/* Main nav */}
-      <nav className="flex-1 px-3 space-y-0.5">
-        {mainNavItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
+        data-testid="sidebar"
+        data-collapsed="false"
+        data-mobile-open={isMobile ? String(mobileOpen) : undefined}
+      >
+        <div className="px-3 py-3">
+          <div className="mb-1 px-2 text-[11px] font-medium uppercase tracking-[0.18em] text-emerald-500">
+            Organization
+          </div>
+          <button
+            type="button"
+            onClick={() => setOrgDropdownOpen(!orgDropdownOpen)}
             className={clsx(
-              "flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm transition-colors",
-              isActive(pathname, item.href)
-                ? "bg-white/[0.08] text-white font-medium"
-                : "text-gray-400 hover:bg-white/[0.06] hover:text-gray-200",
+              "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-medium transition-colors",
+              shellTheme.primaryText,
+              shellTheme.hoverBg,
             )}
           >
-            {item.icon}
-            <span>{item.label}</span>
-          </Link>
-        ))}
+            <div
+              className={clsx(
+                "flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold",
+                shellTheme.chip,
+              )}
+            >
+              {orgName.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate">{orgName}</div>
+              {activeProject ? (
+                <div
+                  className={clsx("truncate text-xs", shellTheme.secondaryText)}
+                >
+                  {activeProject.name}
+                </div>
+              ) : (
+                <div
+                  className={clsx("truncate text-xs", shellTheme.secondaryText)}
+                >
+                  {orgSlug}
+                </div>
+              )}
+            </div>
+            <ChevronDown
+              size={14}
+              className={clsx("ml-auto shrink-0", shellTheme.secondaryText)}
+            />
+          </button>
+          {orgDropdownOpen && (
+            <div
+              className={clsx(
+                "z-50 mt-1 rounded-lg border py-1",
+                shellTheme.dropdown,
+              )}
+            >
+              <div
+                className={clsx(
+                  "flex items-center gap-2 px-3 py-2 text-sm",
+                  shellTheme.primaryText,
+                )}
+              >
+                <div
+                  className={clsx(
+                    "flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold",
+                    shellTheme.chip,
+                  )}
+                >
+                  {orgName.charAt(0).toUpperCase()}
+                </div>
+                <span className="truncate">{orgName}</span>
+                <span className="ml-auto text-emerald-500">✓</span>
+              </div>
+              {projects.length > 0 && (
+                <>
+                  <div className={clsx("my-1 border-t", shellTheme.divider)} />
+                  <div
+                    className={clsx(
+                      "px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em]",
+                      shellTheme.secondaryText,
+                    )}
+                  >
+                    Projects
+                  </div>
+                  {projects.map((project) => (
+                    <Link
+                      key={project.id}
+                      href="/dashboard"
+                      onClick={() => {
+                        setOrgDropdownOpen(false);
+                        onCloseMobile?.();
+                      }}
+                      className={clsx(
+                        "flex items-center gap-2 px-3 py-2 text-sm",
+                        shellTheme.primaryText,
+                        shellTheme.hoverBg,
+                      )}
+                    >
+                      <div
+                        className={clsx(
+                          "flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold",
+                          shellTheme.chip,
+                        )}
+                      >
+                        {project.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="truncate">{project.name}</span>
+                      {project.slug === activeProject?.slug && (
+                        <span className="ml-auto text-emerald-500">✓</span>
+                      )}
+                    </Link>
+                  ))}
+                </>
+              )}
+              <div className={clsx("my-1 border-t", shellTheme.divider)} />
+              <Link
+                href="/dashboard/new-project"
+                onClick={() => {
+                  setOrgDropdownOpen(false);
+                  onCloseMobile?.();
+                }}
+                className={clsx(
+                  "flex w-full items-center gap-2 px-3 py-2 text-sm",
+                  shellTheme.secondaryText,
+                  shellTheme.hoverBg,
+                  shellTheme.hoverText,
+                )}
+              >
+                <Plus size={14} />
+                New documentation
+              </Link>
+            </div>
+          )}
+        </div>
 
-        {/* Agents group */}
-        <div className="pt-4">
-          <p className="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-gray-500">
-            Agents
-          </p>
-          {agentNavItems.map((item) => (
+        <nav className="flex-1 space-y-0.5 px-3">
+          {mainNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => onCloseMobile?.()}
               className={clsx(
-                "flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm transition-colors",
+                "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors",
                 isActive(pathname, item.href)
-                  ? "bg-white/[0.08] text-white font-medium"
-                  : "text-gray-400 hover:bg-white/[0.06] hover:text-gray-200",
+                  ? `${shellTheme.active} font-medium`
+                  : [
+                      shellTheme.secondaryText,
+                      shellTheme.hoverBg,
+                      shellTheme.hoverText,
+                    ],
               )}
             >
               {item.icon}
               <span>{item.label}</span>
-              {item.badge && (
-                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-600/20 text-emerald-400 font-medium">
-                  {item.badge}
-                </span>
-              )}
             </Link>
           ))}
-        </div>
-      </nav>
 
-      {/* Collapse button */}
-      <div className="px-3 py-3 border-t border-white/[0.08]">
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm text-gray-500 hover:bg-white/[0.06] hover:text-gray-300 transition-colors"
-          aria-label="Collapse sidebar"
-        >
-          <PanelLeft size={18} />
-          <span>Collapse</span>
-        </button>
-      </div>
-    </aside>
+          <div className="pt-4">
+            <p
+              className={clsx(
+                "px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider",
+                shellTheme.secondaryText,
+              )}
+            >
+              Agents
+            </p>
+            {agentNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => onCloseMobile?.()}
+                className={clsx(
+                  "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors",
+                  isActive(pathname, item.href)
+                    ? `${shellTheme.active} font-medium`
+                    : [
+                        shellTheme.secondaryText,
+                        shellTheme.hoverBg,
+                        shellTheme.hoverText,
+                      ],
+                )}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+                {item.badge && (
+                  <span
+                    className={clsx(
+                      "ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-medium",
+                      shellTheme.badge,
+                    )}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+        </nav>
+
+        <div className={clsx("border-t px-3 py-3", shellTheme.divider)}>
+          {isMobile ? (
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              className={clsx(
+                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                shellTheme.secondaryText,
+                shellTheme.hoverBg,
+                shellTheme.hoverText,
+              )}
+              aria-label="Close sidebar"
+            >
+              <X size={18} />
+              <span>Close</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className={clsx(
+                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                shellTheme.secondaryText,
+                shellTheme.hoverBg,
+                shellTheme.hoverText,
+              )}
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeft size={18} />
+              <span>Collapse</span>
+            </button>
+          )}
+        </div>
+      </aside>
+    </>
   );
 }

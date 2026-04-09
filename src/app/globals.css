@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: #09090b;
+  color: #e5e7eb;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="light"] body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
 /* ── Docs Site Layout ──────────────────────────────────────────────────────── */
 
 .docs-layout {
