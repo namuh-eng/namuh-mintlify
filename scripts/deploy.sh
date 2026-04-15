@@ -169,8 +169,7 @@ else
       \"Memory\": \"2048\"
     }" \
     --health-check-configuration "{
-      \"Protocol\": \"HTTP\",
-      \"Path\": \"/api/health\",
+      \"Protocol\": \"TCP\",
       \"Interval\": 10,
       \"Timeout\": 5,
       \"HealthyThreshold\": 1,
