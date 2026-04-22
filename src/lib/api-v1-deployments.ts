@@ -39,23 +39,33 @@ interface DeploymentRow {
 /** Format the trigger-deployment response (just statusId + status). */
 export function formatDeploymentTriggerResponse(
   deployment: DeploymentRow,
-  options?: { simulated?: boolean },
+  options?: {
+    simulated?: boolean;
+    handoff?: "simulated" | "manual_followup_required";
+  },
 ): {
   statusId: string;
   status: string;
   executionMode?: "simulation" | "manual";
+  executionHandoff?: "simulated" | "manual_followup_required";
 } {
   return {
     statusId: deployment.id,
     status: deployment.status,
     executionMode: options?.simulated ? "simulation" : "manual",
+    executionHandoff:
+      options?.handoff ??
+      (options?.simulated ? "simulated" : "manual_followup_required"),
   };
 }
 
 /** Format the deployment status response. Returns null if deployment is null. */
 export function formatDeploymentStatusResponse(
   deployment: DeploymentRow | null,
-  options?: { simulated?: boolean },
+  options?: {
+    simulated?: boolean;
+    handoff?: "simulated" | "manual_followup_required";
+  },
 ): {
   statusId: string;
   status: string;
@@ -65,6 +75,7 @@ export function formatDeploymentStatusResponse(
   endedAt: string | null;
   createdAt: string;
   executionMode?: "simulation" | "manual";
+  executionHandoff?: "simulated" | "manual_followup_required";
 } | null {
   if (!deployment) return null;
 
@@ -77,5 +88,8 @@ export function formatDeploymentStatusResponse(
     endedAt: deployment.endedAt?.toISOString() ?? null,
     createdAt: deployment.createdAt.toISOString(),
     executionMode: options?.simulated ? "simulation" : "manual",
+    executionHandoff:
+      options?.handoff ??
+      (options?.simulated ? "simulated" : "manual_followup_required"),
   };
 }

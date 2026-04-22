@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(
     formatAgentJobResponse(job, {
       simulated: enqueueResult.mode === "simulation",
+      handoff: enqueueResult.handoff,
     }),
     { status: 201 },
   );

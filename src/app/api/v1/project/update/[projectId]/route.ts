@@ -74,6 +74,7 @@ export async function POST(
   return NextResponse.json(
     formatDeploymentTriggerResponse(deployment, {
       simulated: enqueueResult.mode === "simulation",
+      handoff: enqueueResult.handoff,
     }),
     {
       status: 201,

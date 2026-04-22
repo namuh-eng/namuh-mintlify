@@ -73,6 +73,7 @@ describe("formatDeploymentTriggerResponse", () => {
       statusId: "deploy-123",
       status: "queued",
       executionMode: "manual",
+      executionHandoff: "manual_followup_required",
     });
   });
 });

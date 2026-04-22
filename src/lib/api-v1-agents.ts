@@ -30,6 +30,7 @@ export interface AgentJobResponse {
   createdAt: string;
   updatedAt: string;
   executionMode?: "simulation" | "manual";
+  executionHandoff?: "simulated" | "manual_followup_required";
 }
 
 const UUID_RE =
@@ -93,7 +94,10 @@ export function validateSendMessageInput(
 
 export function formatAgentJobResponse(
   job: AgentJob,
-  options?: { simulated?: boolean },
+  options?: {
+    simulated?: boolean;
+    handoff?: "simulated" | "manual_followup_required";
+  },
 ): AgentJobResponse {
   return {
     id: job.id,
@@ -105,5 +109,8 @@ export function formatAgentJobResponse(
     createdAt: job.createdAt.toISOString(),
     updatedAt: job.updatedAt.toISOString(),
     executionMode: options?.simulated ? "simulation" : "manual",
+    executionHandoff:
+      options?.handoff ??
+      (options?.simulated ? "simulated" : "manual_followup_required"),
   };
 }
