@@ -239,10 +239,25 @@ describe("GET /api/analytics/manual-handoffs", () => {
       where: vi.fn().mockResolvedValue([{ count: 1 }]),
     };
 
+    const resolutionChain = {
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([
+        {
+          details: {
+            handoffId: "audit-1",
+            resolvedByUserId: "user-1",
+            resolvedByName: "Test User",
+            resolvedAt: "2026-04-22T11:05:00.000Z",
+          },
+        },
+      ]),
+    };
+
     selectMock
       .mockReturnValueOnce(membershipChain)
       .mockReturnValueOnce(handoffsChain)
-      .mockReturnValueOnce(totalChain);
+      .mockReturnValueOnce(totalChain)
+      .mockReturnValueOnce(resolutionChain);
 
     const { GET } = await import("@/app/api/analytics/manual-handoffs/route");
     const response = await GET(
@@ -258,7 +273,16 @@ describe("GET /api/analytics/manual-handoffs", () => {
           id: "audit-1",
           action: "deployment_manual_handoff_required",
           userId: "user-1",
-          details: { deploymentId: "dep-1", projectId: "proj-1" },
+          details: {
+            deploymentId: "dep-1",
+            projectId: "proj-1",
+            resolution: {
+              handoffId: "audit-1",
+              resolvedByUserId: "user-1",
+              resolvedByName: "Test User",
+              resolvedAt: "2026-04-22T11:05:00.000Z",
+            },
+          },
           createdAt: "2026-04-22T11:00:00.000Z",
         },
       ],

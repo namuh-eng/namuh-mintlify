@@ -56,6 +56,9 @@ export async function POST(
         handoffId: handoff.id,
         originalAction: handoff.action,
         originalDetails: handoff.details ?? {},
+        resolvedByUserId: session.user.id,
+        resolvedByName: session.user.name ?? null,
+        resolvedAt: new Date().toISOString(),
       },
     })
     .returning({

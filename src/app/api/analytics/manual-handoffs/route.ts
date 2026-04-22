@@ -100,9 +100,44 @@ export async function GET(request: NextRequest) {
       ),
     );
 
+  let resolutionMetadata = new Map<string, Record<string, unknown>>();
+
+  if (includeResolved && handoffs.length > 0) {
+    const resolutionRows = await db
+      .select({
+        details: auditLogs.details,
+      })
+      .from(auditLogs)
+      .where(
+        and(
+          eq(auditLogs.orgId, membership.orgId),
+          inArray(
+            auditLogs.action,
+            handoffs.map((handoff) => `${handoff.action}_resolved`),
+          ),
+        ),
+      );
+
+    resolutionMetadata = new Map(
+      resolutionRows.flatMap((row) => {
+        const details = (row.details ?? {}) as Record<string, unknown>;
+        const handoffId = details.handoffId;
+        if (typeof handoffId !== "string") return [];
+        return [[handoffId, details] as const];
+      }),
+    );
+  }
+
   return NextResponse.json({
     handoffs: handoffs.map((row) => ({
       ...row,
+      details: {
+        ...(row.details ?? {}),
+        resolution:
+          includeResolved && resolutionMetadata.has(row.id)
+            ? resolutionMetadata.get(row.id)
+            : undefined,
+      },
       createdAt: row.createdAt.toISOString(),
     })),
     total: total[0]?.count ?? 0,

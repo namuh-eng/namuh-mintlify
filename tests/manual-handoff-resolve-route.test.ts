@@ -55,7 +55,9 @@ describe("POST /api/analytics/manual-handoffs/[id]/resolve", () => {
   });
 
   it("creates a resolution audit record", async () => {
-    getSessionMock.mockResolvedValue({ user: { id: "user-1" } });
+    getSessionMock.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
 
     const membershipChain = {
       from: vi.fn().mockReturnThis(),
@@ -95,6 +97,17 @@ describe("POST /api/analytics/manual-handoffs/[id]/resolve", () => {
     const response = await POST(makeNextRequest("http://localhost:3000"), {
       params: Promise.resolve({ id: "audit-1" }),
     });
+
+    expect(valuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        details: expect.objectContaining({
+          handoffId: "audit-1",
+          resolvedByUserId: "user-1",
+          resolvedByName: "Test User",
+          resolvedAt: expect.any(String),
+        }),
+      }),
+    );
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
