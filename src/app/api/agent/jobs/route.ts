@@ -7,7 +7,7 @@
 
 import { enqueueAgentJob } from "@/lib/async-execution";
 import { db } from "@/lib/db";
-import { agentJobs, orgMemberships, projects } from "@/lib/db/schema";
+import { agentJobs, auditLogs, orgMemberships, projects } from "@/lib/db/schema";
 import { createRequestId, logger } from "@/lib/logger";
 import { getServerSession } from "@/lib/session";
 import { desc, eq } from "drizzle-orm";
@@ -165,6 +165,20 @@ export async function POST(request: NextRequest) {
     .returning();
 
   const enqueueResult = await enqueueAgentJob(job.id);
+
+  if (enqueueResult.handoff === "manual_followup_required") {
+    await db.insert(auditLogs).values({
+      orgId: project.orgId,
+      userId: session.user.id,
+      action: "agent_job_manual_handoff_required",
+      details: {
+        requestId,
+        jobId: job.id,
+        projectId: project.id,
+        executionMode: enqueueResult.mode,
+      },
+    });
+  }
 
   logger.info("agent_jobs_create_completed", {
     requestId,

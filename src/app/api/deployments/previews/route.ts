@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { enqueuePreviewDeployment } from "@/lib/async-execution";
 import { db } from "@/lib/db";
 import {
+  auditLogs,
   deployments,
   orgMemberships,
   organizations,
@@ -202,6 +203,21 @@ export async function POST(request: Request) {
     deployment.id,
     ctx.project.id,
   );
+
+  if (enqueueResult.handoff === "manual_followup_required") {
+    await db.insert(auditLogs).values({
+      orgId: ctx.orgId,
+      userId: session.user.id,
+      action: "preview_deployment_manual_handoff_required",
+      details: {
+        requestId,
+        deploymentId: deployment.id,
+        projectId: ctx.project.id,
+        branch: validation.branch,
+        executionMode: enqueueResult.mode,
+      },
+    });
+  }
 
   logger.info("previews_create_completed", {
     requestId,

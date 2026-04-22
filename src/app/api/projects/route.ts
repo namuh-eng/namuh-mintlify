@@ -2,6 +2,7 @@ import { enqueueDeployment } from "@/lib/async-execution";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
+  auditLogs,
   deployments,
   orgMemberships,
   organizations,
@@ -211,6 +212,20 @@ export async function POST(request: Request) {
   const enqueueResult = deployment
     ? await enqueueDeployment(deployment.id, project.id)
     : null;
+
+  if (deployment && enqueueResult?.handoff === "manual_followup_required") {
+    await db.insert(auditLogs).values({
+      orgId,
+      userId: session.user.id,
+      action: "project_initial_deployment_manual_handoff_required",
+      details: {
+        requestId,
+        deploymentId: deployment.id,
+        projectId: project.id,
+        executionMode: enqueueResult.mode,
+      },
+    });
+  }
 
   logger.info("projects_create_completed", {
     requestId,
