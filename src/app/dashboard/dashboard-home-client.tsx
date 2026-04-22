@@ -58,7 +58,13 @@ interface ManualHandoffRow {
   id: string;
   action: string;
   createdAt: string;
-  details: Record<string, unknown>;
+  details: Record<string, unknown> & {
+    resolution?: {
+      resolvedByUserId?: string;
+      resolvedByName?: string | null;
+      resolvedAt?: string;
+    };
+  };
 }
 
 const HANDOFF_FILTERS = [
@@ -551,6 +557,14 @@ export function DashboardHomeClient({
                       <p className="text-xs text-gray-500 truncate">
                         {String(handoff.details.projectId ?? handoff.details.deploymentId ?? handoff.details.jobId ?? "manual follow-up required")}
                       </p>
+                      {handoffView === "resolved" && handoff.details.resolution ? (
+                        <p className="text-xs text-gray-500 truncate mt-1">
+                          Resolved by {handoff.details.resolution.resolvedByName ?? handoff.details.resolution.resolvedByUserId ?? "unknown"}
+                          {handoff.details.resolution.resolvedAt
+                            ? ` • ${timeAgo(handoff.details.resolution.resolvedAt)}`
+                            : ""}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-xs text-gray-400">
