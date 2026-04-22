@@ -66,6 +66,14 @@ export default async function DashboardPage() {
     createdAt: string;
     details: Record<string, unknown>;
   }> = [];
+  let manualHandoffStats: {
+    oldestUnresolvedMs?: number | null;
+    averageResolutionMs?: number | null;
+  } = {};
+  let resolvedManualHandoffStats: {
+    oldestUnresolvedMs?: number | null;
+    averageResolutionMs?: number | null;
+  } = {};
 
   if (project) {
     projectDeployments = await db
@@ -143,8 +151,13 @@ export default async function DashboardPage() {
           createdAt: string;
           details?: Record<string, unknown> | null;
         }>;
+        stats?: {
+          oldestUnresolvedMs?: number | null;
+          averageResolutionMs?: number | null;
+        };
       };
 
+      manualHandoffStats = data.stats ?? {};
       manualHandoffs = (data.handoffs ?? []).map((row) => ({
         ...row,
         details: row.details ?? {},
@@ -159,8 +172,13 @@ export default async function DashboardPage() {
           createdAt: string;
           details?: Record<string, unknown> | null;
         }>;
+        stats?: {
+          oldestUnresolvedMs?: number | null;
+          averageResolutionMs?: number | null;
+        };
       };
 
+      resolvedManualHandoffStats = data.stats ?? {};
       resolvedManualHandoffs = (data.handoffs ?? []).map((row) => ({
         ...row,
         details: row.details ?? {},
@@ -197,6 +215,8 @@ export default async function DashboardPage() {
       }))}
       manualHandoffs={manualHandoffs}
       resolvedManualHandoffs={resolvedManualHandoffs}
+      manualHandoffStats={manualHandoffStats}
+      resolvedManualHandoffStats={resolvedManualHandoffStats}
     />
   );
 }

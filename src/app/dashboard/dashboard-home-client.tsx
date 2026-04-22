@@ -109,6 +109,14 @@ interface Props {
   previews: DeploymentRow[];
   manualHandoffs: ManualHandoffRow[];
   resolvedManualHandoffs: ManualHandoffRow[];
+  manualHandoffStats: {
+    oldestUnresolvedMs?: number | null;
+    averageResolutionMs?: number | null;
+  };
+  resolvedManualHandoffStats: {
+    oldestUnresolvedMs?: number | null;
+    averageResolutionMs?: number | null;
+  };
 }
 
 const ICON_MAP = {
@@ -241,6 +249,8 @@ export function DashboardHomeClient({
   previews,
   manualHandoffs,
   resolvedManualHandoffs,
+  manualHandoffStats,
+  resolvedManualHandoffStats,
 }: Props) {
   const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -317,33 +327,19 @@ export function DashboardHomeClient({
     ? sortedManualHandoffs
     : sortedManualHandoffs.slice(0, 5);
   const oldestUnresolvedAge =
-    visibleManualHandoffs.length > 0
-      ? formatDuration(
-          visibleManualHandoffs.reduce(
-            (oldest, handoff) =>
-              new Date(handoff.createdAt).getTime() < new Date(oldest).getTime()
-                ? handoff.createdAt
-                : oldest,
-            visibleManualHandoffs[0].createdAt,
-          ),
-          new Date().toISOString(),
-        )
-      : null;
-  const resolvedDurations = resolvedManualHandoffs
-    .map((handoff) => {
-      const resolvedAt = handoff.details.resolution?.resolvedAt;
-      if (!resolvedAt) return null;
-      return new Date(resolvedAt).getTime() - new Date(handoff.createdAt).getTime();
-    })
-    .filter((value): value is number => value !== null && Number.isFinite(value) && value > 0);
-  const averageResolvedDuration =
-    resolvedDurations.length > 0
+    typeof manualHandoffStats.oldestUnresolvedMs === "number" &&
+    manualHandoffStats.oldestUnresolvedMs > 0
       ? formatDuration(
           new Date(0).toISOString(),
-          new Date(
-            resolvedDurations.reduce((sum, value) => sum + value, 0) /
-              resolvedDurations.length,
-          ).toISOString(),
+          new Date(manualHandoffStats.oldestUnresolvedMs).toISOString(),
+        )
+      : null;
+  const averageResolvedDuration =
+    typeof resolvedManualHandoffStats.averageResolutionMs === "number" &&
+    resolvedManualHandoffStats.averageResolutionMs > 0
+      ? formatDuration(
+          new Date(0).toISOString(),
+          new Date(resolvedManualHandoffStats.averageResolutionMs).toISOString(),
           "avg",
         )
       : null;
