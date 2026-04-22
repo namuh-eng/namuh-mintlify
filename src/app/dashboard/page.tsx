@@ -60,6 +60,12 @@ export default async function DashboardPage() {
     createdAt: string;
     details: Record<string, unknown>;
   }> = [];
+  let resolvedManualHandoffs: Array<{
+    id: string;
+    action: string;
+    createdAt: string;
+    details: Record<string, unknown>;
+  }> = [];
 
   if (project) {
     projectDeployments = await db
@@ -106,15 +112,28 @@ export default async function DashboardPage() {
       .orderBy(desc(deployments.createdAt))
       .limit(20);
 
-    const manualHandoffResponse = await fetch(
-      `${process.env.BETTER_AUTH_URL ?? "http://localhost:3000"}/api/analytics/manual-handoffs?limit=20`,
-      {
-        headers: {
-          Cookie: (await cookies()).toString(),
-        },
-        cache: "no-store",
-      },
-    );
+    const cookieHeader = (await cookies()).toString();
+    const [manualHandoffResponse, resolvedManualHandoffResponse] =
+      await Promise.all([
+        fetch(
+          `${process.env.BETTER_AUTH_URL ?? "http://localhost:3000"}/api/analytics/manual-handoffs?limit=20`,
+          {
+            headers: {
+              Cookie: cookieHeader,
+            },
+            cache: "no-store",
+          },
+        ),
+        fetch(
+          `${process.env.BETTER_AUTH_URL ?? "http://localhost:3000"}/api/analytics/manual-handoffs?limit=20&includeResolved=true`,
+          {
+            headers: {
+              Cookie: cookieHeader,
+            },
+            cache: "no-store",
+          },
+        ),
+      ]);
 
     if (manualHandoffResponse.ok) {
       const data = (await manualHandoffResponse.json()) as {
@@ -127,6 +146,22 @@ export default async function DashboardPage() {
       };
 
       manualHandoffs = (data.handoffs ?? []).map((row) => ({
+        ...row,
+        details: row.details ?? {},
+      }));
+    }
+
+    if (resolvedManualHandoffResponse.ok) {
+      const data = (await resolvedManualHandoffResponse.json()) as {
+        handoffs?: Array<{
+          id: string;
+          action: string;
+          createdAt: string;
+          details?: Record<string, unknown> | null;
+        }>;
+      };
+
+      resolvedManualHandoffs = (data.handoffs ?? []).map((row) => ({
         ...row,
         details: row.details ?? {},
       }));
@@ -161,6 +196,7 @@ export default async function DashboardPage() {
         createdAt: d.createdAt.toISOString(),
       }))}
       manualHandoffs={manualHandoffs}
+      resolvedManualHandoffs={resolvedManualHandoffs}
     />
   );
 }

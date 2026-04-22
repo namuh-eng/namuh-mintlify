@@ -80,6 +80,7 @@ interface Props {
   deployments: DeploymentRow[];
   previews: DeploymentRow[];
   manualHandoffs: ManualHandoffRow[];
+  resolvedManualHandoffs: ManualHandoffRow[];
 }
 
 const ICON_MAP = {
@@ -211,6 +212,7 @@ export function DashboardHomeClient({
   deployments,
   previews,
   manualHandoffs,
+  resolvedManualHandoffs,
 }: Props) {
   const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -227,6 +229,9 @@ export function DashboardHomeClient({
   );
   const [dismissedHandoffIds, setDismissedHandoffIds] = useState<string[]>([]);
   const [handoffNotice, setHandoffNotice] = useState<string | null>(null);
+  const [handoffView, setHandoffView] = useState<"active" | "resolved">(
+    "active",
+  );
 
   const latestDeployment = deployments[0] ?? null;
   const lastDeployedLabel = latestDeployment
@@ -244,7 +249,9 @@ export function DashboardHomeClient({
     [dismissedHandoffIds, manualHandoffs],
   );
 
-  const filteredManualHandoffs = visibleManualHandoffs.filter((handoff) => {
+  const handoffRows = handoffView === "active" ? visibleManualHandoffs : resolvedManualHandoffs;
+
+  const filteredManualHandoffs = handoffRows.filter((handoff) => {
     if (handoffFilter === "all") return true;
     return classifyHandoffAction(handoff.action) === handoffFilter;
   });
@@ -479,22 +486,51 @@ export function DashboardHomeClient({
               </div>
             ) : null}
 
-            <div className="flex items-center gap-2 mb-3">
-              {HANDOFF_FILTERS.map((filter) => (
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
                 <button
-                  key={filter.key}
                   type="button"
-                  onClick={() => setHandoffFilter(filter.key)}
+                  onClick={() => setHandoffView("active")}
                   className={clsx(
                     "px-2.5 py-1 rounded-md text-xs transition-colors",
-                    handoffFilter === filter.key
+                    handoffView === "active"
                       ? "bg-white/[0.12] text-white"
                       : "text-gray-400 hover:text-white hover:bg-white/[0.06]",
                   )}
                 >
-                  {filter.label}
+                  Active
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setHandoffView("resolved")}
+                  className={clsx(
+                    "px-2.5 py-1 rounded-md text-xs transition-colors",
+                    handoffView === "resolved"
+                      ? "bg-white/[0.12] text-white"
+                      : "text-gray-400 hover:text-white hover:bg-white/[0.06]",
+                  )}
+                >
+                  Resolved
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {HANDOFF_FILTERS.map((filter) => (
+                  <button
+                    key={filter.key}
+                    type="button"
+                    onClick={() => setHandoffFilter(filter.key)}
+                    className={clsx(
+                      "px-2.5 py-1 rounded-md text-xs transition-colors",
+                      handoffFilter === filter.key
+                        ? "bg-white/[0.12] text-white"
+                        : "text-gray-400 hover:text-white hover:bg-white/[0.06]",
+                    )}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {filteredManualHandoffs.length === 0 ? (
@@ -520,14 +556,16 @@ export function DashboardHomeClient({
                       <span className="text-xs text-gray-400">
                         {timeAgo(handoff.createdAt)}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => resolveHandoff(handoff.id)}
-                        disabled={resolvingHandoffId === handoff.id}
-                        className="px-2 py-1 rounded-md text-xs bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-50 transition-colors"
-                      >
-                        {resolvingHandoffId === handoff.id ? "Resolving..." : "Resolve"}
-                      </button>
+                      {handoffView === "active" ? (
+                        <button
+                          type="button"
+                          onClick={() => resolveHandoff(handoff.id)}
+                          disabled={resolvingHandoffId === handoff.id}
+                          className="px-2 py-1 rounded-md text-xs bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-50 transition-colors"
+                        >
+                          {resolvingHandoffId === handoff.id ? "Resolving..." : "Resolve"}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 ))}
