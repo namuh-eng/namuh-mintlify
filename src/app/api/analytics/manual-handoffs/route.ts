@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const limitParam = Number.parseInt(searchParams.get("limit") ?? "20", 10);
+  const action = searchParams.get("action");
+  const projectId = searchParams.get("projectId");
   const limit = Number.isFinite(limitParam)
     ? Math.min(Math.max(limitParam, 1), 100)
     : 20;
@@ -41,6 +43,26 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ handoffs: [] });
   }
 
+  const actionFilter =
+    action && MANUAL_HANDOFF_ACTIONS.includes(action as (typeof MANUAL_HANDOFF_ACTIONS)[number])
+      ? action
+      : null;
+
+  const handoffConditions = [
+    eq(auditLogs.orgId, membership.orgId),
+    inArray(auditLogs.action, [...MANUAL_HANDOFF_ACTIONS]),
+  ];
+
+  if (actionFilter) {
+    handoffConditions.push(eq(auditLogs.action, actionFilter));
+  }
+
+  if (projectId) {
+    handoffConditions.push(
+      sql<boolean>`${auditLogs.details} ->> 'projectId' = ${projectId}`,
+    );
+  }
+
   const handoffs = await db
     .select({
       id: auditLogs.id,
@@ -50,24 +72,14 @@ export async function GET(request: NextRequest) {
       createdAt: auditLogs.createdAt,
     })
     .from(auditLogs)
-    .where(
-      and(
-        eq(auditLogs.orgId, membership.orgId),
-        inArray(auditLogs.action, [...MANUAL_HANDOFF_ACTIONS]),
-      ),
-    )
+    .where(and(...handoffConditions))
     .orderBy(desc(auditLogs.createdAt))
     .limit(limit);
 
   const total = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(auditLogs)
-    .where(
-      and(
-        eq(auditLogs.orgId, membership.orgId),
-        inArray(auditLogs.action, [...MANUAL_HANDOFF_ACTIONS]),
-      ),
-    );
+    .where(and(...handoffConditions));
 
   return NextResponse.json({
     handoffs: handoffs.map((row) => ({
@@ -75,5 +87,10 @@ export async function GET(request: NextRequest) {
       createdAt: row.createdAt.toISOString(),
     })),
     total: total[0]?.count ?? 0,
+    filters: {
+      action: actionFilter,
+      projectId,
+      limit,
+    },
   });
 }
