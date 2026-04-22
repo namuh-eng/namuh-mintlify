@@ -1,14 +1,8 @@
 import { ACTIVE_PROJECT_COOKIE, findActiveProject } from "@/lib/active-project";
 import { db } from "@/lib/db";
-import {
-  auditLogs,
-  deployments,
-  orgMemberships,
-  organizations,
-  projects,
-} from "@/lib/db/schema";
+import { deployments, orgMemberships, organizations, projects } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardHomeClient } from "./dashboard-home-client";
@@ -63,7 +57,7 @@ export default async function DashboardPage() {
   let manualHandoffs: Array<{
     id: string;
     action: string;
-    createdAt: Date;
+    createdAt: string;
     details: Record<string, unknown>;
   }> = [];
 
@@ -112,34 +106,31 @@ export default async function DashboardPage() {
       .orderBy(desc(deployments.createdAt))
       .limit(20);
 
-    const rawManualHandoffs = await db
-      .select({
-        id: auditLogs.id,
-        action: auditLogs.action,
-        createdAt: auditLogs.createdAt,
-        details: auditLogs.details,
-      })
-      .from(auditLogs)
-      .where(
-        and(
-          eq(auditLogs.orgId, orgId),
-          inArray(auditLogs.action, [
-            "agent_job_manual_handoff_required",
-            "deployment_manual_handoff_required",
-            "project_initial_deployment_manual_handoff_required",
-            "preview_deployment_manual_handoff_required",
-            "api_v1_agent_job_manual_handoff_required",
-            "api_v1_deployment_manual_handoff_required",
-          ]),
-        ),
-      )
-      .orderBy(desc(auditLogs.createdAt))
-      .limit(5);
+    const manualHandoffResponse = await fetch(
+      `${process.env.BETTER_AUTH_URL ?? "http://localhost:3000"}/api/analytics/manual-handoffs?limit=5`,
+      {
+        headers: {
+          Cookie: (await cookies()).toString(),
+        },
+        cache: "no-store",
+      },
+    );
 
-    manualHandoffs = rawManualHandoffs.map((row) => ({
-      ...row,
-      details: row.details ?? {},
-    }));
+    if (manualHandoffResponse.ok) {
+      const data = (await manualHandoffResponse.json()) as {
+        handoffs?: Array<{
+          id: string;
+          action: string;
+          createdAt: string;
+          details?: Record<string, unknown> | null;
+        }>;
+      };
+
+      manualHandoffs = (data.handoffs ?? []).map((row) => ({
+        ...row,
+        details: row.details ?? {},
+      }));
+    }
   }
 
   return (
@@ -169,11 +160,7 @@ export default async function DashboardPage() {
         endedAt: d.endedAt?.toISOString() ?? null,
         createdAt: d.createdAt.toISOString(),
       }))}
-      manualHandoffs={manualHandoffs.map((row) => ({
-        ...row,
-        details: row.details ?? {},
-        createdAt: row.createdAt.toISOString(),
-      }))}
+      manualHandoffs={manualHandoffs}
     />
   );
 }
