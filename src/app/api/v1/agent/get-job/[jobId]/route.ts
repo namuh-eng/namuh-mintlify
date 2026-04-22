@@ -7,6 +7,7 @@
 
 import { authenticateApiKey } from "@/lib/api-key-auth";
 import { formatAgentJobResponse, validateUuid } from "@/lib/api-v1-agents";
+import { isAsyncSimulationEnabled } from "@/lib/async-execution";
 import { db } from "@/lib/db";
 import { agentJobs, projects } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
@@ -68,5 +69,9 @@ export async function GET(
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
 
-  return NextResponse.json(formatAgentJobResponse(job));
+  return NextResponse.json(
+    formatAgentJobResponse(job, {
+      simulated: isAsyncSimulationEnabled(),
+    }),
+  );
 }

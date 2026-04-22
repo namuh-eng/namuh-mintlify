@@ -7,6 +7,7 @@
 
 import { authenticateApiKey } from "@/lib/api-key-auth";
 import { formatDeploymentStatusResponse } from "@/lib/api-v1-deployments";
+import { isAsyncSimulationEnabled } from "@/lib/async-execution";
 import { db } from "@/lib/db";
 import { deployments, projects } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
@@ -70,5 +71,9 @@ export async function GET(
     );
   }
 
-  return NextResponse.json(formatDeploymentStatusResponse(deployment));
+  return NextResponse.json(
+    formatDeploymentStatusResponse(deployment, {
+      simulated: isAsyncSimulationEnabled(),
+    }),
+  );
 }

@@ -10,7 +10,7 @@ import {
   formatDeploymentTriggerResponse,
   validateProjectId,
 } from "@/lib/api-v1-deployments";
-import { enqueueDeployment } from "@/lib/async-execution";
+import { enqueueDeployment, isAsyncSimulationEnabled } from "@/lib/async-execution";
 import { db } from "@/lib/db";
 import { deployments, projects } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
@@ -71,7 +71,12 @@ export async function POST(
 
   await enqueueDeployment(deployment.id, projectId);
 
-  return NextResponse.json(formatDeploymentTriggerResponse(deployment), {
-    status: 201,
-  });
+  return NextResponse.json(
+    formatDeploymentTriggerResponse(deployment, {
+      simulated: isAsyncSimulationEnabled(),
+    }),
+    {
+      status: 201,
+    },
+  );
 }

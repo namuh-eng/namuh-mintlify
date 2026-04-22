@@ -37,19 +37,25 @@ interface DeploymentRow {
 }
 
 /** Format the trigger-deployment response (just statusId + status). */
-export function formatDeploymentTriggerResponse(deployment: DeploymentRow): {
+export function formatDeploymentTriggerResponse(
+  deployment: DeploymentRow,
+  options?: { simulated?: boolean },
+): {
   statusId: string;
   status: string;
+  executionMode?: "simulation" | "manual";
 } {
   return {
     statusId: deployment.id,
     status: deployment.status,
+    executionMode: options?.simulated ? "simulation" : "manual",
   };
 }
 
 /** Format the deployment status response. Returns null if deployment is null. */
 export function formatDeploymentStatusResponse(
   deployment: DeploymentRow | null,
+  options?: { simulated?: boolean },
 ): {
   statusId: string;
   status: string;
@@ -58,6 +64,7 @@ export function formatDeploymentStatusResponse(
   startedAt: string | null;
   endedAt: string | null;
   createdAt: string;
+  executionMode?: "simulation" | "manual";
 } | null {
   if (!deployment) return null;
 
@@ -69,5 +76,6 @@ export function formatDeploymentStatusResponse(
     startedAt: deployment.startedAt?.toISOString() ?? null,
     endedAt: deployment.endedAt?.toISOString() ?? null,
     createdAt: deployment.createdAt.toISOString(),
+    executionMode: options?.simulated ? "simulation" : "manual",
   };
 }

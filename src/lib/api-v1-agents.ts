@@ -29,6 +29,7 @@ export interface AgentJobResponse {
   messages: { role: "user" | "agent"; content: string; timestamp: string }[];
   createdAt: string;
   updatedAt: string;
+  executionMode?: "simulation" | "manual";
 }
 
 const UUID_RE =
@@ -90,7 +91,10 @@ export function validateSendMessageInput(
   return { valid: true, data: { content: content.trim() } };
 }
 
-export function formatAgentJobResponse(job: AgentJob): AgentJobResponse {
+export function formatAgentJobResponse(
+  job: AgentJob,
+  options?: { simulated?: boolean },
+): AgentJobResponse {
   return {
     id: job.id,
     projectId: job.projectId,
@@ -100,5 +104,6 @@ export function formatAgentJobResponse(job: AgentJob): AgentJobResponse {
     messages: job.messages,
     createdAt: job.createdAt.toISOString(),
     updatedAt: job.updatedAt.toISOString(),
+    executionMode: options?.simulated ? "simulation" : "manual",
   };
 }

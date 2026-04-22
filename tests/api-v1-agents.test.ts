@@ -196,6 +196,7 @@ describe("formatAgentJobResponse", () => {
       messages: [],
       createdAt: "2026-04-09T12:00:00.000Z",
       updatedAt: "2026-04-09T12:00:00.000Z",
+      executionMode: "manual",
     });
   });
 

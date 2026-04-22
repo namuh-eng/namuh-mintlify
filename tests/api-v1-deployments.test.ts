@@ -72,6 +72,7 @@ describe("formatDeploymentTriggerResponse", () => {
     expect(result).toEqual({
       statusId: "deploy-123",
       status: "queued",
+      executionMode: "manual",
     });
   });
 });
