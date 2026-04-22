@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { deployments, orgMemberships, projects } from "@/lib/db/schema";
 import { isValidStatus } from "@/lib/deployments";
+import { createRequestId, logger } from "@/lib/logger";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
@@ -11,8 +12,14 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("deployment_complete_unauthorized", {
+      requestId,
+      route: "/api/deployments/[id]/complete",
+      method: "POST",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -26,6 +33,12 @@ export async function POST(
     .limit(1);
 
   if (rows.length === 0) {
+    logger.warn("deployment_complete_missing", {
+      requestId,
+      route: "/api/deployments/[id]/complete",
+      method: "POST",
+      deploymentId: id,
+    });
     return NextResponse.json(
       { error: "Deployment not found" },
       { status: 404 },
@@ -42,6 +55,12 @@ export async function POST(
     .limit(1);
 
   if (projectRows.length === 0) {
+    logger.warn("deployment_complete_missing_project", {
+      requestId,
+      route: "/api/deployments/[id]/complete",
+      method: "POST",
+      deploymentId: id,
+    });
     return NextResponse.json(
       { error: "Deployment not found" },
       { status: 404 },
@@ -60,6 +79,13 @@ export async function POST(
     .limit(1);
 
   if (memberRows.length === 0) {
+    logger.warn("deployment_complete_forbidden", {
+      requestId,
+      route: "/api/deployments/[id]/complete",
+      method: "POST",
+      deploymentId: id,
+      userId: session.user.id,
+    });
     return NextResponse.json(
       { error: "Deployment not found" },
       { status: 404 },
@@ -70,6 +96,13 @@ export async function POST(
   const newStatus = body.status;
 
   if (!newStatus || !isValidStatus(newStatus)) {
+    logger.warn("deployment_complete_invalid_status", {
+      requestId,
+      route: "/api/deployments/[id]/complete",
+      method: "POST",
+      deploymentId: id,
+      providedStatus: typeof newStatus === "string" ? newStatus : "unknown",
+    });
     return NextResponse.json(
       {
         error:
@@ -101,5 +134,14 @@ export async function POST(
     .where(eq(deployments.id, id))
     .returning();
 
-  return NextResponse.json({ deployment: updated });
+  logger.info("deployment_complete_completed", {
+    requestId,
+    route: "/api/deployments/[id]/complete",
+    method: "POST",
+    deploymentId: id,
+    projectId: deployment.projectId,
+    newStatus,
+  });
+
+  return NextResponse.json({ deployment: updated, requestId });
 }

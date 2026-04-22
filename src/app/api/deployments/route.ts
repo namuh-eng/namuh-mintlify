@@ -7,6 +7,7 @@ import {
   projects,
 } from "@/lib/db/schema";
 import { validateTriggerDeploymentRequest } from "@/lib/deployments";
+import { createRequestId, logger } from "@/lib/logger";
 import { and, desc, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -50,14 +51,26 @@ async function resolveUserProject(userId: string) {
 
 /** GET /api/deployments — list deployments for the user's active project */
 export async function GET() {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("deployments_list_unauthorized", {
+      requestId,
+      route: "/api/deployments",
+      method: "GET",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const ctx = await resolveUserProject(session.user.id);
   if (!ctx) {
-    return NextResponse.json({ deployments: [] });
+    logger.info("deployments_list_no_project", {
+      requestId,
+      route: "/api/deployments",
+      method: "GET",
+      userId: session.user.id,
+    });
+    return NextResponse.json({ deployments: [], requestId });
   }
 
   const rows = await db
@@ -76,22 +89,50 @@ export async function GET() {
     .orderBy(desc(deployments.createdAt))
     .limit(50);
 
-  return NextResponse.json({ deployments: rows });
+  logger.info("deployments_list_completed", {
+    requestId,
+    route: "/api/deployments",
+    method: "GET",
+    projectId: ctx.project.id,
+    deploymentCount: rows.length,
+  });
+
+  return NextResponse.json({ deployments: rows, requestId });
 }
 
 /** POST /api/deployments — trigger a new deployment */
 export async function POST(request: Request) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("deployments_trigger_unauthorized", {
+      requestId,
+      route: "/api/deployments",
+      method: "POST",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const ctx = await resolveUserProject(session.user.id);
   if (!ctx) {
+    logger.warn("deployments_trigger_no_project", {
+      requestId,
+      route: "/api/deployments",
+      method: "POST",
+      userId: session.user.id,
+    });
     return NextResponse.json({ error: "No project found" }, { status: 403 });
   }
 
   if (ctx.role !== "admin" && ctx.role !== "editor") {
+    logger.warn("deployments_trigger_forbidden", {
+      requestId,
+      route: "/api/deployments",
+      method: "POST",
+      userId: session.user.id,
+      role: ctx.role,
+      projectId: ctx.project.id,
+    });
     return NextResponse.json(
       { error: "Only admins and editors can trigger deployments" },
       { status: 403 },
@@ -107,6 +148,13 @@ export async function POST(request: Request) {
 
   const validation = validateTriggerDeploymentRequest(body);
   if (!validation.valid) {
+    logger.warn("deployments_trigger_invalid_request", {
+      requestId,
+      route: "/api/deployments",
+      method: "POST",
+      projectId: ctx.project.id,
+      error: validation.error,
+    });
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
@@ -146,8 +194,17 @@ export async function POST(request: Request) {
   // Simulate build completion after a short delay (fire-and-forget)
   simulateBuildCompletion(deployment.id, ctx.project.id);
 
+  logger.info("deployments_trigger_completed", {
+    requestId,
+    route: "/api/deployments",
+    method: "POST",
+    projectId: ctx.project.id,
+    deploymentId: deployment.id,
+    queuedStatus: "queued",
+  });
+
   return NextResponse.json(
-    { deployment: { ...deployment, status: "queued" } },
+    { deployment: { ...deployment, status: "queued" }, requestId },
     { status: 201 },
   );
 }

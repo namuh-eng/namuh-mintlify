@@ -10,6 +10,7 @@ import {
   generatePreviewUrl,
   validateCreatePreviewRequest,
 } from "@/lib/deployments";
+import { createRequestId, logger } from "@/lib/logger";
 import { and, desc, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -53,14 +54,26 @@ async function resolveUserProject(userId: string) {
 
 /** GET /api/deployments/previews — list preview deployments for the user's active project */
 export async function GET() {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("previews_list_unauthorized", {
+      requestId,
+      route: "/api/deployments/previews",
+      method: "GET",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const ctx = await resolveUserProject(session.user.id);
   if (!ctx) {
-    return NextResponse.json({ previews: [] });
+    logger.info("previews_list_no_project", {
+      requestId,
+      route: "/api/deployments/previews",
+      method: "GET",
+      userId: session.user.id,
+    });
+    return NextResponse.json({ previews: [], requestId });
   }
 
   const rows = await db
@@ -87,22 +100,50 @@ export async function GET() {
     .orderBy(desc(deployments.createdAt))
     .limit(50);
 
-  return NextResponse.json({ previews: rows });
+  logger.info("previews_list_completed", {
+    requestId,
+    route: "/api/deployments/previews",
+    method: "GET",
+    projectId: ctx.project.id,
+    previewCount: rows.length,
+  });
+
+  return NextResponse.json({ previews: rows, requestId });
 }
 
 /** POST /api/deployments/previews — create a preview deployment */
 export async function POST(request: Request) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("previews_create_unauthorized", {
+      requestId,
+      route: "/api/deployments/previews",
+      method: "POST",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const ctx = await resolveUserProject(session.user.id);
   if (!ctx) {
+    logger.warn("previews_create_no_project", {
+      requestId,
+      route: "/api/deployments/previews",
+      method: "POST",
+      userId: session.user.id,
+    });
     return NextResponse.json({ error: "No project found" }, { status: 403 });
   }
 
   if (ctx.role !== "admin" && ctx.role !== "editor") {
+    logger.warn("previews_create_forbidden", {
+      requestId,
+      route: "/api/deployments/previews",
+      method: "POST",
+      userId: session.user.id,
+      role: ctx.role,
+      projectId: ctx.project.id,
+    });
     return NextResponse.json(
       { error: "Only admins and editors can create preview deployments" },
       { status: 403 },
@@ -112,12 +153,25 @@ export async function POST(request: Request) {
   let body: unknown;
   try {
     body = await request.json();
-  } catch {
+  } catch (error) {
+    logger.warn("previews_create_invalid_json", {
+      requestId,
+      route: "/api/deployments/previews",
+      method: "POST",
+      error: error instanceof Error ? error.message : "unknown",
+    });
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const validation = validateCreatePreviewRequest(body);
   if (!validation.valid) {
+    logger.warn("previews_create_invalid_request", {
+      requestId,
+      route: "/api/deployments/previews",
+      method: "POST",
+      projectId: ctx.project.id,
+      error: validation.error,
+    });
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
@@ -152,8 +206,17 @@ export async function POST(request: Request) {
   // Simulate build completion after ~3 seconds (fire-and-forget)
   simulatePreviewBuildCompletion(deployment.id);
 
+  logger.info("previews_create_completed", {
+    requestId,
+    route: "/api/deployments/previews",
+    method: "POST",
+    projectId: ctx.project.id,
+    deploymentId: deployment.id,
+    branch: validation.branch,
+  });
+
   return NextResponse.json(
-    { preview: { ...deployment, status: "queued", previewUrl } },
+    { preview: { ...deployment, status: "queued", previewUrl }, requestId },
     { status: 201 },
   );
 }

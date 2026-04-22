@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { deployments, orgMemberships, projects } from "@/lib/db/schema";
+import { createRequestId, logger } from "@/lib/logger";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
@@ -10,8 +11,14 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("deployment_get_unauthorized", {
+      requestId,
+      route: "/api/deployments/[id]",
+      method: "GET",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -25,6 +32,12 @@ export async function GET(
     .limit(1);
 
   if (rows.length === 0) {
+    logger.warn("deployment_get_missing", {
+      requestId,
+      route: "/api/deployments/[id]",
+      method: "GET",
+      deploymentId: id,
+    });
     return NextResponse.json(
       { error: "Deployment not found" },
       { status: 404 },
@@ -41,6 +54,12 @@ export async function GET(
     .limit(1);
 
   if (projectRows.length === 0) {
+    logger.warn("deployment_get_missing_project", {
+      requestId,
+      route: "/api/deployments/[id]",
+      method: "GET",
+      deploymentId: id,
+    });
     return NextResponse.json(
       { error: "Deployment not found" },
       { status: 404 },
@@ -59,11 +78,26 @@ export async function GET(
     .limit(1);
 
   if (memberRows.length === 0) {
+    logger.warn("deployment_get_forbidden", {
+      requestId,
+      route: "/api/deployments/[id]",
+      method: "GET",
+      deploymentId: id,
+      userId: session.user.id,
+    });
     return NextResponse.json(
       { error: "Deployment not found" },
       { status: 404 },
     );
   }
 
-  return NextResponse.json({ deployment });
+  logger.info("deployment_get_completed", {
+    requestId,
+    route: "/api/deployments/[id]",
+    method: "GET",
+    deploymentId: id,
+    projectId: deployment.projectId,
+  });
+
+  return NextResponse.json({ deployment, requestId });
 }
