@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { orgMemberships, pages, projects } from "@/lib/db/schema";
+import { createRequestId, logger } from "@/lib/logger";
 import { validateUpdatePageRequest } from "@/lib/pages";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -70,8 +71,14 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string; pageId: string }> },
 ) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("project_page_get_unauthorized", {
+      requestId,
+      route: "/api/projects/[id]/pages/[pageId]",
+      method: "GET",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -89,7 +96,16 @@ export async function GET(
     .where(eq(pages.id, pageId))
     .limit(1);
 
-  return NextResponse.json({ page });
+  logger.info("project_page_get_completed", {
+    requestId,
+    route: "/api/projects/[id]/pages/[pageId]",
+    method: "GET",
+    userId: session.user.id,
+    projectId,
+    pageId,
+  });
+
+  return NextResponse.json({ page, requestId });
 }
 
 /** PUT /api/projects/[id]/pages/[pageId] — update a page */
@@ -97,8 +113,14 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string; pageId: string }> },
 ) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("project_page_update_unauthorized", {
+      requestId,
+      route: "/api/projects/[id]/pages/[pageId]",
+      method: "PUT",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -111,6 +133,15 @@ export async function PUT(
   if (!resolved.ok) return resolved.response;
 
   if (resolved.role !== "admin" && resolved.role !== "editor") {
+    logger.warn("project_page_update_forbidden", {
+      requestId,
+      route: "/api/projects/[id]/pages/[pageId]",
+      method: "PUT",
+      userId: session.user.id,
+      projectId,
+      pageId,
+      role: resolved.role,
+    });
     return NextResponse.json(
       { error: "Only admins and editors can manage pages" },
       { status: 403 },
@@ -121,6 +152,15 @@ export async function PUT(
   const validation = validateUpdatePageRequest(body);
 
   if (!validation.valid) {
+    logger.warn("project_page_update_invalid_request", {
+      requestId,
+      route: "/api/projects/[id]/pages/[pageId]",
+      method: "PUT",
+      userId: session.user.id,
+      projectId,
+      pageId,
+      error: validation.error,
+    });
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
@@ -138,6 +178,15 @@ export async function PUT(
       .limit(1);
 
     if (existing.length > 0 && existing[0].id !== pageId) {
+      logger.warn("project_page_update_conflict", {
+        requestId,
+        route: "/api/projects/[id]/pages/[pageId]",
+        method: "PUT",
+        userId: session.user.id,
+        projectId,
+        pageId,
+        path: validation.fields.path as string,
+      });
       return NextResponse.json(
         { error: "A page with this path already exists" },
         { status: 409 },
@@ -151,7 +200,16 @@ export async function PUT(
     .where(eq(pages.id, pageId))
     .returning();
 
-  return NextResponse.json({ page: updated });
+  logger.info("project_page_update_completed", {
+    requestId,
+    route: "/api/projects/[id]/pages/[pageId]",
+    method: "PUT",
+    userId: session.user.id,
+    projectId,
+    pageId,
+  });
+
+  return NextResponse.json({ page: updated, requestId });
 }
 
 /** DELETE /api/projects/[id]/pages/[pageId] — delete a page */
@@ -159,8 +217,14 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string; pageId: string }> },
 ) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("project_page_delete_unauthorized", {
+      requestId,
+      route: "/api/projects/[id]/pages/[pageId]",
+      method: "DELETE",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -173,6 +237,15 @@ export async function DELETE(
   if (!resolved.ok) return resolved.response;
 
   if (resolved.role !== "admin" && resolved.role !== "editor") {
+    logger.warn("project_page_delete_forbidden", {
+      requestId,
+      route: "/api/projects/[id]/pages/[pageId]",
+      method: "DELETE",
+      userId: session.user.id,
+      projectId,
+      pageId,
+      role: resolved.role,
+    });
     return NextResponse.json(
       { error: "Only admins and editors can manage pages" },
       { status: 403 },
@@ -181,5 +254,14 @@ export async function DELETE(
 
   await db.delete(pages).where(eq(pages.id, pageId));
 
-  return NextResponse.json({ success: true });
+  logger.info("project_page_delete_completed", {
+    requestId,
+    route: "/api/projects/[id]/pages/[pageId]",
+    method: "DELETE",
+    userId: session.user.id,
+    projectId,
+    pageId,
+  });
+
+  return NextResponse.json({ success: true, requestId });
 }

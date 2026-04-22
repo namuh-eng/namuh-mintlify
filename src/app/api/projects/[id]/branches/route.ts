@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { validateBranchName } from "@/lib/collaboration";
 import { db } from "@/lib/db";
 import { branches, orgMemberships, projects } from "@/lib/db/schema";
+import { createRequestId, logger } from "@/lib/logger";
 import { and, asc, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -51,8 +52,14 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("project_branches_list_unauthorized", {
+      requestId,
+      route: "/api/projects/[id]/branches",
+      method: "GET",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -68,6 +75,13 @@ export async function GET(
 
   // If no branches exist, return a virtual "main" default
   if (rows.length === 0) {
+    logger.info("project_branches_list_default_returned", {
+      requestId,
+      route: "/api/projects/[id]/branches",
+      method: "GET",
+      userId: session.user.id,
+      projectId,
+    });
     return NextResponse.json({
       branches: [
         {
@@ -79,18 +93,34 @@ export async function GET(
           createdAt: new Date().toISOString(),
         },
       ],
+      requestId,
     });
   }
 
-  return NextResponse.json({ branches: rows });
+  logger.info("project_branches_list_completed", {
+    requestId,
+    route: "/api/projects/[id]/branches",
+    method: "GET",
+    userId: session.user.id,
+    projectId,
+    branchCount: rows.length,
+  });
+
+  return NextResponse.json({ branches: rows, requestId });
 }
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("project_branches_create_unauthorized", {
+      requestId,
+      route: "/api/projects/[id]/branches",
+      method: "POST",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -99,6 +129,14 @@ export async function POST(
   if (!access.ok) return access.response;
 
   if (access.role !== "admin" && access.role !== "editor") {
+    logger.warn("project_branches_create_forbidden", {
+      requestId,
+      route: "/api/projects/[id]/branches",
+      method: "POST",
+      userId: session.user.id,
+      projectId,
+      role: access.role,
+    });
     return NextResponse.json(
       { error: "Only editors and admins can create branches" },
       { status: 403 },
@@ -108,6 +146,14 @@ export async function POST(
   const body = await req.json();
   const error = validateBranchName(body.name);
   if (error) {
+    logger.warn("project_branches_create_invalid_request", {
+      requestId,
+      route: "/api/projects/[id]/branches",
+      method: "POST",
+      userId: session.user.id,
+      projectId,
+      error,
+    });
     return NextResponse.json({ error }, { status: 400 });
   }
 
@@ -137,5 +183,15 @@ export async function POST(
     })
     .returning();
 
-  return NextResponse.json({ branch: created }, { status: 201 });
+  logger.info("project_branches_create_completed", {
+    requestId,
+    route: "/api/projects/[id]/branches",
+    method: "POST",
+    userId: session.user.id,
+    projectId,
+    branchId: created.id,
+    branchName: created.name,
+  });
+
+  return NextResponse.json({ branch: created, requestId }, { status: 201 });
 }

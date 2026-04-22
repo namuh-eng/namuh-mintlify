@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { orgMemberships, pages, projects } from "@/lib/db/schema";
+import { createRequestId, logger } from "@/lib/logger";
 import { validateCreatePageRequest } from "@/lib/pages";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -56,8 +57,14 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("project_pages_list_unauthorized", {
+      requestId,
+      route: "/api/projects/[id]/pages",
+      method: "GET",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -79,7 +86,16 @@ export async function GET(
     .where(eq(pages.projectId, projectId))
     .orderBy(pages.path);
 
-  return NextResponse.json({ pages: projectPages });
+  logger.info("project_pages_list_completed", {
+    requestId,
+    route: "/api/projects/[id]/pages",
+    method: "GET",
+    userId: session.user.id,
+    projectId,
+    pageCount: projectPages.length,
+  });
+
+  return NextResponse.json({ pages: projectPages, requestId });
 }
 
 /** POST /api/projects/[id]/pages — create a new page */
@@ -87,8 +103,14 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const requestId = createRequestId();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
+    logger.warn("project_pages_create_unauthorized", {
+      requestId,
+      route: "/api/projects/[id]/pages",
+      method: "POST",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -97,6 +119,14 @@ export async function POST(
   if (!resolved.ok) return resolved.response;
 
   if (resolved.role !== "admin" && resolved.role !== "editor") {
+    logger.warn("project_pages_create_forbidden", {
+      requestId,
+      route: "/api/projects/[id]/pages",
+      method: "POST",
+      userId: session.user.id,
+      projectId,
+      role: resolved.role,
+    });
     return NextResponse.json(
       { error: "Only admins and editors can manage pages" },
       { status: 403 },
@@ -107,6 +137,14 @@ export async function POST(
   const validation = validateCreatePageRequest(body);
 
   if (!validation.valid) {
+    logger.warn("project_pages_create_invalid_request", {
+      requestId,
+      route: "/api/projects/[id]/pages",
+      method: "POST",
+      userId: session.user.id,
+      projectId,
+      error: validation.error,
+    });
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
@@ -118,6 +156,14 @@ export async function POST(
     .limit(1);
 
   if (existing.length > 0) {
+    logger.warn("project_pages_create_conflict", {
+      requestId,
+      route: "/api/projects/[id]/pages",
+      method: "POST",
+      userId: session.user.id,
+      projectId,
+      path: validation.path,
+    });
     return NextResponse.json(
       { error: "A page with this path already exists in this project" },
       { status: 409 },
@@ -135,5 +181,15 @@ export async function POST(
     })
     .returning();
 
-  return NextResponse.json({ page }, { status: 201 });
+  logger.info("project_pages_create_completed", {
+    requestId,
+    route: "/api/projects/[id]/pages",
+    method: "POST",
+    userId: session.user.id,
+    projectId,
+    pageId: page.id,
+    path: page.path,
+  });
+
+  return NextResponse.json({ page, requestId }, { status: 201 });
 }
