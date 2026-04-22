@@ -5,7 +5,7 @@
  * Session-authenticated (dashboard use), not API-key-based.
  */
 
-import { enqueueAgentJob, isAsyncSimulationEnabled } from "@/lib/async-execution";
+import { enqueueAgentJob } from "@/lib/async-execution";
 import { db } from "@/lib/db";
 import { agentJobs, orgMemberships, projects } from "@/lib/db/schema";
 import { createRequestId, logger } from "@/lib/logger";
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     })
     .returning();
 
-  await enqueueAgentJob(job.id);
+  const enqueueResult = await enqueueAgentJob(job.id);
 
   logger.info("agent_jobs_create_completed", {
     requestId,
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
     userId: session.user.id,
     projectId: project.id,
     jobId: job.id,
-    simulationEnabled: isAsyncSimulationEnabled(),
+    simulationEnabled: enqueueResult.mode === "simulation",
   });
 
   return NextResponse.json(
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
       messages: job.messages,
       createdAt: job.createdAt.toISOString(),
       updatedAt: job.updatedAt.toISOString(),
-      executionMode: isAsyncSimulationEnabled() ? "simulation" : "manual",
+      executionMode: enqueueResult.mode,
       requestId,
     },
     { status: 201 },

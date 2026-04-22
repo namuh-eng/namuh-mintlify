@@ -1,4 +1,4 @@
-import { enqueueDeployment, isAsyncSimulationEnabled } from "@/lib/async-execution";
+import { enqueueDeployment } from "@/lib/async-execution";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
@@ -179,7 +179,10 @@ export async function POST(request: Request) {
     })
     .returning();
 
-  await enqueueDeployment(deployment.id, ctx.project.id);
+  const enqueueResult = await enqueueDeployment(
+    deployment.id,
+    ctx.project.id,
+  );
 
   logger.info("deployments_trigger_completed", {
     requestId,
@@ -188,7 +191,7 @@ export async function POST(request: Request) {
     projectId: ctx.project.id,
     deploymentId: deployment.id,
     queuedStatus: "queued",
-    simulationEnabled: isAsyncSimulationEnabled(),
+    simulationEnabled: enqueueResult.mode === "simulation",
   });
 
   return NextResponse.json(
@@ -196,7 +199,7 @@ export async function POST(request: Request) {
       deployment: {
         ...deployment,
         status: "queued",
-        executionMode: isAsyncSimulationEnabled() ? "simulation" : "manual",
+        executionMode: enqueueResult.mode,
       },
       requestId,
     },

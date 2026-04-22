@@ -1,4 +1,4 @@
-import { enqueueDeployment, isAsyncSimulationEnabled } from "@/lib/async-execution";
+import { enqueueDeployment } from "@/lib/async-execution";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
@@ -208,9 +208,9 @@ export async function POST(request: Request) {
     };
   });
 
-  if (deployment) {
-    await enqueueDeployment(deployment.id, project.id);
-  }
+  const enqueueResult = deployment
+    ? await enqueueDeployment(deployment.id, project.id)
+    : null;
 
   logger.info("projects_create_completed", {
     requestId,
@@ -219,7 +219,7 @@ export async function POST(request: Request) {
     projectId: project.id,
     orgId,
     createdInitialDeployment: Boolean(deployment),
-    simulationEnabled: isAsyncSimulationEnabled(),
+    simulationEnabled: enqueueResult?.mode === "simulation",
   });
 
   return NextResponse.json(
@@ -228,7 +228,7 @@ export async function POST(request: Request) {
           project,
           deployment: {
             ...deployment,
-            executionMode: isAsyncSimulationEnabled() ? "simulation" : "manual",
+            executionMode: enqueueResult?.mode ?? "manual",
           },
           requestId,
         }

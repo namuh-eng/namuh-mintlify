@@ -1,8 +1,5 @@
 import { auth } from "@/lib/auth";
-import {
-  enqueuePreviewDeployment,
-  isAsyncSimulationEnabled,
-} from "@/lib/async-execution";
+import { enqueuePreviewDeployment } from "@/lib/async-execution";
 import { db } from "@/lib/db";
 import {
   deployments,
@@ -201,7 +198,10 @@ export async function POST(request: Request) {
     })
     .returning();
 
-  await enqueuePreviewDeployment(deployment.id, ctx.project.id);
+  const enqueueResult = await enqueuePreviewDeployment(
+    deployment.id,
+    ctx.project.id,
+  );
 
   logger.info("previews_create_completed", {
     requestId,
@@ -210,7 +210,7 @@ export async function POST(request: Request) {
     projectId: ctx.project.id,
     deploymentId: deployment.id,
     branch: validation.branch,
-    simulationEnabled: isAsyncSimulationEnabled(),
+    simulationEnabled: enqueueResult.mode === "simulation",
   });
 
   return NextResponse.json(
@@ -219,7 +219,7 @@ export async function POST(request: Request) {
         ...deployment,
         status: "queued",
         previewUrl,
-        executionMode: isAsyncSimulationEnabled() ? "simulation" : "manual",
+        executionMode: enqueueResult.mode,
       },
       requestId,
     },
