@@ -258,6 +258,9 @@ export function DashboardHomeClient({
   const [handoffResolutionNotes, setHandoffResolutionNotes] = useState<
     Record<string, string>
   >({});
+  const [expandedNoteHandoffId, setExpandedNoteHandoffId] = useState<string | null>(
+    null,
+  );
   const [handoffView, setHandoffView] = useState<"active" | "resolved">(
     "active",
   );
@@ -351,6 +354,9 @@ export function DashboardHomeClient({
         delete next[handoffId];
         return next;
       });
+      setExpandedNoteHandoffId((current) =>
+        current === handoffId ? null : current,
+      );
       setHandoffNotice("Manual follow-up resolved.");
       router.refresh();
     } catch {
@@ -617,18 +623,31 @@ export function DashboardHomeClient({
                       </span>
                       {handoffView === "active" ? (
                         <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={handoffResolutionNotes[handoff.id] ?? ""}
-                            onChange={(event) =>
-                              setHandoffResolutionNotes((current) => ({
-                                ...current,
-                                [handoff.id]: event.target.value,
-                              }))
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedNoteHandoffId((current) =>
+                                current === handoff.id ? null : handoff.id,
+                              )
                             }
-                            placeholder="Add note"
-                            className="w-36 rounded-md border border-white/[0.08] bg-black/20 px-2 py-1 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-400/40"
-                          />
+                            className="px-2 py-1 rounded-md text-xs text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+                          >
+                            {expandedNoteHandoffId === handoff.id ? "Hide note" : "Add note"}
+                          </button>
+                          {expandedNoteHandoffId === handoff.id ? (
+                            <input
+                              type="text"
+                              value={handoffResolutionNotes[handoff.id] ?? ""}
+                              onChange={(event) =>
+                                setHandoffResolutionNotes((current) => ({
+                                  ...current,
+                                  [handoff.id]: event.target.value,
+                                }))
+                              }
+                              placeholder="Add note"
+                              className="w-36 rounded-md border border-white/[0.08] bg-black/20 px-2 py-1 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-400/40"
+                            />
+                          ) : null}
                           <button
                             type="button"
                             onClick={() => resolveHandoff(handoff.id)}
