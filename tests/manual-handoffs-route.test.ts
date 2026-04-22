@@ -108,6 +108,9 @@ describe("GET /api/analytics/manual-handoffs", () => {
         },
       ],
       total: 1,
+      stats: {
+        oldestUnresolvedMs: expect.any(Number),
+      },
       filters: {
         action: null,
         projectId: null,
@@ -155,6 +158,9 @@ describe("GET /api/analytics/manual-handoffs", () => {
     await expect(response.json()).resolves.toEqual({
       handoffs: [],
       total: 0,
+      stats: {
+        oldestUnresolvedMs: null,
+      },
       filters: {
         action: "deployment_manual_handoff_required",
         projectId: "proj-1",
@@ -200,6 +206,9 @@ describe("GET /api/analytics/manual-handoffs", () => {
     await expect(response.json()).resolves.toEqual({
       handoffs: [],
       total: 0,
+      stats: {
+        oldestUnresolvedMs: null,
+      },
       filters: {
         action: null,
         projectId: null,
@@ -287,6 +296,9 @@ describe("GET /api/analytics/manual-handoffs", () => {
         },
       ],
       total: 1,
+      stats: {
+        averageResolutionMs: expect.any(Number),
+      },
       filters: {
         action: null,
         projectId: null,
