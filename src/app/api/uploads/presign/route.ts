@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { orgMemberships, projects } from "@/lib/db/schema";
 import { createRequestId, logger } from "@/lib/logger";
+import { applyRateLimit, buildRateLimitHeaders } from "@/lib/rate-limit";
 import {
   MAX_UPLOAD_SIZE,
   getDownloadPresignedUrl,
@@ -65,6 +66,24 @@ export async function POST(request: NextRequest) {
         method: "POST",
       });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimit = applyRateLimit({
+      key: `uploads-presign:create:${session.user.id}`,
+      limit: 30,
+      windowMs: 60_000,
+    });
+    if (!rateLimit.allowed) {
+      logger.warn("uploads_presign_create_rate_limited", {
+        requestId,
+        route: "/api/uploads/presign",
+        method: "POST",
+        userId: session.user.id,
+      });
+      return NextResponse.json(
+        { error: "Too many upload presign requests" },
+        { status: 429, headers: buildRateLimitHeaders(rateLimit) },
+      );
     }
 
     const body = (await request.json()) as {
@@ -155,12 +174,15 @@ export async function POST(request: NextRequest) {
       key,
     });
 
-    return NextResponse.json({
-      url,
-      key,
-      maxSize: MAX_UPLOAD_SIZE,
-      requestId,
-    });
+    return NextResponse.json(
+      {
+        url,
+        key,
+        maxSize: MAX_UPLOAD_SIZE,
+        requestId,
+      },
+      { headers: buildRateLimitHeaders(rateLimit) },
+    );
   } catch (error) {
     logger.error("uploads_presign_create_failed", {
       requestId,
@@ -190,6 +212,24 @@ export async function GET(request: NextRequest) {
         method: "GET",
       });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimit = applyRateLimit({
+      key: `uploads-presign:get:${session.user.id}`,
+      limit: 60,
+      windowMs: 60_000,
+    });
+    if (!rateLimit.allowed) {
+      logger.warn("uploads_presign_get_rate_limited", {
+        requestId,
+        route: "/api/uploads/presign",
+        method: "GET",
+        userId: session.user.id,
+      });
+      return NextResponse.json(
+        { error: "Too many download presign requests" },
+        { status: 429, headers: buildRateLimitHeaders(rateLimit) },
+      );
     }
 
     const key = request.nextUrl.searchParams.get("key");
@@ -238,7 +278,10 @@ export async function GET(request: NextRequest) {
       key,
       projectId: parsedKey.projectId,
     });
-    return NextResponse.json({ url, requestId });
+    return NextResponse.json(
+      { url, requestId },
+      { headers: buildRateLimitHeaders(rateLimit) },
+    );
   } catch (error) {
     logger.error("uploads_presign_get_failed", {
       requestId,

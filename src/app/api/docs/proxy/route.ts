@@ -1,4 +1,5 @@
 import { createRequestId, logger } from "@/lib/logger";
+import { applyRateLimit, buildRateLimitHeaders } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 
 /**
@@ -7,6 +8,24 @@ import { NextResponse } from "next/server";
  */
 export async function POST(req: Request): Promise<NextResponse> {
   const requestId = createRequestId();
+  const forwardedFor = req.headers.get("x-forwarded-for") ?? "unknown";
+  const rateLimit = applyRateLimit({
+    key: `docs-proxy:${forwardedFor}`,
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) {
+    logger.warn("docs_proxy_rate_limited", {
+      requestId,
+      route: "/api/docs/proxy",
+      method: "POST",
+      forwardedFor,
+    });
+    return NextResponse.json(
+      { error: "Too many proxy requests" },
+      { status: 429, headers: buildRateLimitHeaders(rateLimit) },
+    );
+  }
   try {
     const payload = await req.json();
     const { method, url, headers, body } = payload as {
@@ -106,12 +125,15 @@ export async function POST(req: Request): Promise<NextResponse> {
       responseStatus: response.status,
     });
 
-    return NextResponse.json({
-      status: response.status,
-      body: responseBody,
-      headers: responseHeaders,
-      requestId,
-    });
+    return NextResponse.json(
+      {
+        status: response.status,
+        body: responseBody,
+        headers: responseHeaders,
+        requestId,
+      },
+      { headers: buildRateLimitHeaders(rateLimit) },
+    );
   } catch (err) {
     logger.error("docs_proxy_failed", {
       requestId,

@@ -8,6 +8,7 @@ import {
   verifyWebhookSignature,
 } from "@/lib/github-webhook";
 import { createRequestId, logger } from "@/lib/logger";
+import { applyRateLimit, buildRateLimitHeaders } from "@/lib/rate-limit";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -16,6 +17,26 @@ export async function POST(request: Request) {
   const requestId = createRequestId();
   const eventType = request.headers.get("x-github-event");
   const signature = request.headers.get("x-hub-signature-256");
+  const forwardedFor = request.headers.get("x-forwarded-for") ?? "unknown";
+  const rateLimit = applyRateLimit({
+    key: `github-webhook:${forwardedFor}`,
+    limit: 120,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) {
+    logger.warn("github_webhook_rate_limited", {
+      requestId,
+      route: "/api/webhooks/github",
+      method: "POST",
+      forwardedFor,
+      eventType: eventType ?? "unknown",
+    });
+    return NextResponse.json(
+      { error: "Too many webhook requests" },
+      { status: 429, headers: buildRateLimitHeaders(rateLimit) },
+    );
+  }
+
   const rawBody = await request.text();
 
   logger.info("github_webhook_received", {
@@ -170,9 +191,12 @@ export async function POST(request: Request) {
     deploymentsTriggered,
   });
 
-  return NextResponse.json({
-    message: `Processed push event for ${repoFullName}@${branch}`,
-    deploymentsTriggered,
-    requestId,
-  });
+  return NextResponse.json(
+    {
+      message: `Processed push event for ${repoFullName}@${branch}`,
+      deploymentsTriggered,
+      requestId,
+    },
+    { headers: buildRateLimitHeaders(rateLimit) },
+  );
 }
