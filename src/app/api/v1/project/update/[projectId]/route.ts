@@ -12,7 +12,7 @@ import {
 } from "@/lib/api-v1-deployments";
 import { enqueueDeployment } from "@/lib/async-execution";
 import { db } from "@/lib/db";
-import { deployments, projects } from "@/lib/db/schema";
+import { auditLogs, deployments, projects } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -70,6 +70,19 @@ export async function POST(
     .returning();
 
   const enqueueResult = await enqueueDeployment(deployment.id, projectId);
+
+  if (enqueueResult.handoff === "manual_followup_required") {
+    await db.insert(auditLogs).values({
+      orgId: keyAuth.orgId,
+      userId: null,
+      action: "api_v1_deployment_manual_handoff_required",
+      details: {
+        deploymentId: deployment.id,
+        projectId,
+        executionMode: enqueueResult.mode,
+      },
+    });
+  }
 
   return NextResponse.json(
     formatDeploymentTriggerResponse(deployment, {

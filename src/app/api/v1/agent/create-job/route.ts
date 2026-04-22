@@ -13,7 +13,7 @@ import {
 } from "@/lib/api-v1-agents";
 import { enqueueAgentJob } from "@/lib/async-execution";
 import { db } from "@/lib/db";
-import { agentJobs, projects } from "@/lib/db/schema";
+import { agentJobs, auditLogs, projects } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -81,6 +81,19 @@ export async function POST(request: NextRequest) {
     .returning();
 
   const enqueueResult = await enqueueAgentJob(job.id);
+
+  if (enqueueResult.handoff === "manual_followup_required") {
+    await db.insert(auditLogs).values({
+      orgId: keyAuth.orgId,
+      userId: null,
+      action: "api_v1_agent_job_manual_handoff_required",
+      details: {
+        jobId: job.id,
+        projectId,
+        executionMode: enqueueResult.mode,
+      },
+    });
+  }
 
   return NextResponse.json(
     formatAgentJobResponse(job, {
