@@ -573,10 +573,13 @@ export function DashboardHomeClient({
                       {handoffView === "resolved" && handoff.details.resolution ? (
                         <>
                           <p className="text-xs text-gray-500 truncate mt-1">
-                            Resolved by {handoff.details.resolution.resolvedByName ?? handoff.details.resolution.resolvedByUserId ?? "unknown"}
+                            Created {timeAgo(handoff.createdAt)}
                             {handoff.details.resolution.resolvedAt
-                              ? ` • ${timeAgo(handoff.details.resolution.resolvedAt)}`
+                              ? ` • Resolved ${timeAgo(handoff.details.resolution.resolvedAt)}`
                               : ""}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate mt-1">
+                            Resolved by {handoff.details.resolution.resolvedByName ?? handoff.details.resolution.resolvedByUserId ?? "unknown"}
                           </p>
                           {handoff.details.resolution.resolutionNote ? (
                             <p className="text-xs text-gray-400 mt-1 line-clamp-2">
