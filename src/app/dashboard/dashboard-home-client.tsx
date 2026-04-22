@@ -266,6 +266,7 @@ export function DashboardHomeClient({
   const [handoffSort, setHandoffSort] = useState<"newest" | "oldest" | "longest-open">(
     "newest",
   );
+  const [showAllHandoffs, setShowAllHandoffs] = useState(false);
   const [handoffView, setHandoffView] = useState<"active" | "resolved">(
     "active",
   );
@@ -312,6 +313,9 @@ export function DashboardHomeClient({
 
   const unresolvedCount = visibleManualHandoffs.length;
   const resolvedCount = resolvedManualHandoffs.length;
+  const displayedManualHandoffs = showAllHandoffs
+    ? sortedManualHandoffs
+    : sortedManualHandoffs.slice(0, 5);
   const oldestUnresolvedAge =
     visibleManualHandoffs.length > 0
       ? formatDuration(
@@ -575,9 +579,20 @@ export function DashboardHomeClient({
                   Recent async work that was recorded without a live executor.
                 </p>
               </div>
-              <span className="text-xs text-amber-300">
-                {filteredManualHandoffs.length} shown
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-amber-300">
+                  {displayedManualHandoffs.length} shown
+                </span>
+                {sortedManualHandoffs.length > 5 ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllHandoffs((current) => !current)}
+                    className="text-xs text-gray-400 hover:text-white transition-colors"
+                  >
+                    {showAllHandoffs ? "Show less" : "View all"}
+                  </button>
+                ) : null}
+              </div>
             </div>
 
             {handoffNotice ? (
@@ -671,7 +686,7 @@ export function DashboardHomeClient({
               </p>
             ) : (
               <div className="space-y-2">
-                {sortedManualHandoffs.slice(0, 5).map((handoff) => (
+                {displayedManualHandoffs.map((handoff) => (
                   <div
                     key={handoff.id}
                     className="flex items-center justify-between gap-3 rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2"
