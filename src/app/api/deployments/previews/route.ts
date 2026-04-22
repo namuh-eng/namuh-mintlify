@@ -1,4 +1,8 @@
 import { auth } from "@/lib/auth";
+import {
+  enqueuePreviewDeployment,
+  isAsyncSimulationEnabled,
+} from "@/lib/async-execution";
 import { db } from "@/lib/db";
 import {
   deployments,
@@ -197,14 +201,7 @@ export async function POST(request: Request) {
     })
     .returning();
 
-  // Simulate async build
-  await db
-    .update(deployments)
-    .set({ status: "in_progress", startedAt: new Date() })
-    .where(eq(deployments.id, deployment.id));
-
-  // Simulate build completion after ~3 seconds (fire-and-forget)
-  simulatePreviewBuildCompletion(deployment.id);
+  await enqueuePreviewDeployment(deployment.id, ctx.project.id);
 
   logger.info("previews_create_completed", {
     requestId,
@@ -213,28 +210,19 @@ export async function POST(request: Request) {
     projectId: ctx.project.id,
     deploymentId: deployment.id,
     branch: validation.branch,
+    simulationEnabled: isAsyncSimulationEnabled(),
   });
 
   return NextResponse.json(
-    { preview: { ...deployment, status: "queued", previewUrl }, requestId },
+    {
+      preview: {
+        ...deployment,
+        status: "queued",
+        previewUrl,
+        executionMode: isAsyncSimulationEnabled() ? "simulation" : "manual",
+      },
+      requestId,
+    },
     { status: 201 },
   );
-}
-
-function simulatePreviewBuildCompletion(deploymentId: string) {
-  setTimeout(async () => {
-    try {
-      await db
-        .update(deployments)
-        .set({ status: "succeeded", endedAt: new Date() })
-        .where(
-          and(
-            eq(deployments.id, deploymentId),
-            eq(deployments.status, "in_progress"),
-          ),
-        );
-    } catch {
-      // Silently handle — this is a simulation
-    }
-  }, 3000);
 }
