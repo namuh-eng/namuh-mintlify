@@ -222,6 +222,9 @@ export function DashboardHomeClient({
   const [handoffFilter, setHandoffFilter] = useState<
     (typeof HANDOFF_FILTERS)[number]["key"]
   >("all");
+  const [resolvingHandoffId, setResolvingHandoffId] = useState<string | null>(
+    null,
+  );
 
   const latestDeployment = deployments[0] ?? null;
   const lastDeployedLabel = latestDeployment
@@ -275,6 +278,18 @@ export function DashboardHomeClient({
       router.refresh();
     } finally {
       setCreatingPreview(false);
+    }
+  }
+
+  async function resolveHandoff(handoffId: string) {
+    setResolvingHandoffId(handoffId);
+    try {
+      await fetch(`/api/analytics/manual-handoffs/${handoffId}/resolve`, {
+        method: "POST",
+      });
+      router.refresh();
+    } finally {
+      setResolvingHandoffId(null);
     }
   }
 
@@ -473,9 +488,19 @@ export function DashboardHomeClient({
                         {String(handoff.details.projectId ?? handoff.details.deploymentId ?? handoff.details.jobId ?? "manual follow-up required")}
                       </p>
                     </div>
-                    <span className="text-xs text-gray-400 shrink-0">
-                      {timeAgo(handoff.createdAt)}
-                    </span>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-xs text-gray-400">
+                        {timeAgo(handoff.createdAt)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => resolveHandoff(handoff.id)}
+                        disabled={resolvingHandoffId === handoff.id}
+                        className="px-2 py-1 rounded-md text-xs bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-50 transition-colors"
+                      >
+                        {resolvingHandoffId === handoff.id ? "Resolving..." : "Resolve"}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
