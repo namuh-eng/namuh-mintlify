@@ -6,6 +6,8 @@
  * POST /api/v1/agent/send-message/{jobId} — send follow-up message
  */
 
+import type { ExecutionMetadataOptions } from "@/lib/async-metadata";
+import { resolveExecutionMetadata } from "@/lib/async-metadata";
 import type { agentJobs } from "@/lib/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
 
@@ -20,10 +22,7 @@ export interface SendMessageInput {
   content: string;
 }
 
-export interface AgentExecutionOptions {
-  simulated?: boolean;
-  handoff?: "simulated" | "manual_followup_required";
-}
+export interface AgentExecutionOptions extends ExecutionMetadataOptions {}
 
 export interface AgentJobResponse {
   id: string;
@@ -110,9 +109,6 @@ export function formatAgentJobResponse(
     messages: job.messages,
     createdAt: job.createdAt.toISOString(),
     updatedAt: job.updatedAt.toISOString(),
-    executionMode: options?.simulated ? "simulation" : "manual",
-    executionHandoff:
-      options?.handoff ??
-      (options?.simulated ? "simulated" : "manual_followup_required"),
+    ...resolveExecutionMetadata(options),
   };
 }

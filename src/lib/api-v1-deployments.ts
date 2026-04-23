@@ -7,6 +7,11 @@
  * Auth: Bearer token with an admin API key (mint_ prefix).
  */
 
+import {
+  resolveExecutionMetadata,
+  type ExecutionMetadataOptions,
+} from "@/lib/async-metadata";
+
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -25,10 +30,7 @@ export function validateProjectId(id: string): boolean {
   return UUID_RE.test(id);
 }
 
-export interface DeploymentExecutionOptions {
-  simulated?: boolean;
-  handoff?: "simulated" | "manual_followup_required";
-}
+export interface DeploymentExecutionOptions extends ExecutionMetadataOptions {}
 
 interface DeploymentRow {
   id: string;
@@ -54,10 +56,7 @@ export function formatDeploymentTriggerResponse(
   return {
     statusId: deployment.id,
     status: deployment.status,
-    executionMode: options?.simulated ? "simulation" : "manual",
-    executionHandoff:
-      options?.handoff ??
-      (options?.simulated ? "simulated" : "manual_followup_required"),
+    ...resolveExecutionMetadata(options),
   };
 }
 
@@ -86,9 +85,6 @@ export function formatDeploymentStatusResponse(
     startedAt: deployment.startedAt?.toISOString() ?? null,
     endedAt: deployment.endedAt?.toISOString() ?? null,
     createdAt: deployment.createdAt.toISOString(),
-    executionMode: options?.simulated ? "simulation" : "manual",
-    executionHandoff:
-      options?.handoff ??
-      (options?.simulated ? "simulated" : "manual_followup_required"),
+    ...resolveExecutionMetadata(options),
   };
 }
