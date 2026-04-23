@@ -17,6 +17,11 @@ export interface AsyncEnqueueResult {
   handoff: "simulated" | "manual_followup_required";
 }
 
+interface SimulationPhase {
+  delayMs: number;
+  task: () => Promise<void>;
+}
+
 export function getDeploymentExecutionStrategy(): AsyncEnqueueResult {
   const mode = getAsyncExecutionMode();
   return {
@@ -77,19 +82,17 @@ function scheduleSimulation(delayMs: number, task: () => Promise<void>) {
   }, delayMs);
 }
 
-function scheduleSimulationPhases(
-  phases: Array<{ delayMs: number; task: () => Promise<void> }>,
-) {
+function scheduleSimulationPhases(phases: SimulationPhase[]) {
   for (const phase of phases) {
     scheduleSimulation(phase.delayMs, phase.task);
   }
 }
 
-async function enqueueSimulatedDeployment(
+function buildDeploymentSimulationPlan(
   deploymentId: string,
   projectId: string,
-) {
-  scheduleSimulationPhases([
+): SimulationPhase[] {
+  return [
     {
       delayMs: ASYNC_SIMULATION_TIMINGS_MS.deploymentStart,
       task: async () => {
@@ -126,11 +129,11 @@ async function enqueueSimulatedDeployment(
           .where(eq(projects.id, projectId));
       },
     },
-  ]);
+  ];
 }
 
-async function enqueueSimulatedAgentJob(jobId: string) {
-  scheduleSimulationPhases([
+function buildAgentJobSimulationPlan(jobId: string): SimulationPhase[] {
+  return [
     {
       delayMs: ASYNC_SIMULATION_TIMINGS_MS.agentJobStart,
       task: async () => {
@@ -153,7 +156,20 @@ async function enqueueSimulatedAgentJob(jobId: string) {
           .where(and(eq(agentJobs.id, jobId), eq(agentJobs.status, "running")));
       },
     },
-  ]);
+  ];
+}
+
+async function enqueueSimulatedDeployment(
+  deploymentId: string,
+  projectId: string,
+) {
+  scheduleSimulationPhases(
+    buildDeploymentSimulationPlan(deploymentId, projectId),
+  );
+}
+
+async function enqueueSimulatedAgentJob(jobId: string) {
+  scheduleSimulationPhases(buildAgentJobSimulationPlan(jobId));
 }
 
 export async function enqueueAgentJob(
