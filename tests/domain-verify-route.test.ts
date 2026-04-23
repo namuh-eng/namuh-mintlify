@@ -45,6 +45,18 @@ describe("POST /api/projects/[id]/domain/verify", () => {
     headersMock.mockResolvedValue(new Headers());
   });
 
+  it("returns 401 when unauthenticated", async () => {
+    getSessionMock.mockResolvedValue(null);
+
+    const { POST } = await import("@/app/api/projects/[id]/domain/verify/route");
+    const response = await POST(makeRequest(), {
+      params: Promise.resolve({ id: "project-1" }),
+    });
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+  });
+
   it("returns 403 when the user has no organization", async () => {
     getSessionMock.mockResolvedValue({ user: { id: "user-1" } });
 
@@ -61,6 +73,30 @@ describe("POST /api/projects/[id]/domain/verify", () => {
 
     expect(response.status).toBe(403);
     await expect(response.json()).resolves.toEqual({ error: "No organization" });
+  });
+
+  it("returns 404 when the project is outside the user's organization", async () => {
+    getSessionMock.mockResolvedValue({ user: { id: "user-1" } });
+
+    selectMock
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([{ orgId: "org-1" }]),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([]),
+      });
+
+    const { POST } = await import("@/app/api/projects/[id]/domain/verify/route");
+    const response = await POST(makeRequest(), {
+      params: Promise.resolve({ id: "project-1" }),
+    });
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "Project not found" });
   });
 
   it("returns 400 when no custom domain is configured", async () => {
@@ -145,6 +181,47 @@ describe("POST /api/projects/[id]/domain/verify", () => {
       status: "verified",
       domain: "docs.example.com",
       cnameTarget: "docs.mintlify-hosting.app",
+    });
+  });
+
+  it("returns pending when DNS lookup fails", async () => {
+    getSessionMock.mockResolvedValue({ user: { id: "user-1" } });
+    resolveCnameMock.mockRejectedValue(new Error("ENOTFOUND"));
+
+    selectMock
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([{ orgId: "org-1" }]),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([
+          {
+            id: "project-1",
+            orgId: "org-1",
+            slug: "docs",
+            subdomain: "docs",
+            customDomain: "docs.example.com",
+            settings: {},
+          },
+        ]),
+      });
+
+    const { POST } = await import("@/app/api/projects/[id]/domain/verify/route");
+    const response = await POST(makeRequest(), {
+      params: Promise.resolve({ id: "project-1" }),
+    });
+
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      status: "pending",
+      domain: "docs.example.com",
+      cnameTarget: "docs.mintlify-hosting.app",
+      message:
+        "CNAME record for docs.example.com does not point to docs.mintlify-hosting.app",
     });
   });
 
