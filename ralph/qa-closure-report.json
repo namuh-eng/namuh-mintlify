@@ -102,9 +102,9 @@
     "flowId": "admin-audit-trail",
     "area": "Compliance",
     "criticalFlow": "admin audit trail",
-    "status": "unverified",
-    "evidence": ["no explicit audit-log feature surfaced in audit pass"],
-    "risks": ["major admin/compliance gap", "operator auditability not productized"],
+    "status": "covered",
+    "evidence": ["src/app/api/admin/audit-logs/route.ts", "tests/admin-audit-logs-route.test.ts", "auditLogs table exists"],
+    "risks": ["major admin/compliance gap partially closed with basic list route"],
     "requiredVerifier": "feature-review"
   }
 ]
