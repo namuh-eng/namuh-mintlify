@@ -1,0 +1,110 @@
+[
+  {
+    "flowId": "org-create",
+    "area": "Org management",
+    "criticalFlow": "create org",
+    "status": "partially_covered",
+    "evidence": ["tests/orgs.test.ts", "route exists"],
+    "risks": ["mutation edge cases unclear", "auditability not explicitly verified"],
+    "requiredVerifier": "unit-and-e2e"
+  },
+  {
+    "flowId": "org-delete",
+    "area": "Org management",
+    "criticalFlow": "delete org",
+    "status": "partially_covered",
+    "evidence": ["tests/danger-zone.test.ts", "route exists"],
+    "risks": ["serviceability unclear", "admin auditability unverified"],
+    "requiredVerifier": "feature-review"
+  },
+  {
+    "flowId": "deployment-completion-lifecycle",
+    "area": "Deployments",
+    "criticalFlow": "deployment completion lifecycle",
+    "status": "partially_covered",
+    "evidence": ["route/tests exist"],
+    "risks": ["simulated background completion", "not production-ready async architecture"],
+    "requiredVerifier": "architecture-review"
+  },
+  {
+    "flowId": "pages-crud-contract-security",
+    "area": "Pages",
+    "criticalFlow": "create/list/update/delete pages",
+    "status": "covered",
+    "evidence": ["tests/e2e/pages.spec.ts", "tests/pages-routes.test.ts", "route family exists"],
+    "risks": ["deployment-environment confidence still needed"],
+    "requiredVerifier": "unit-and-e2e"
+  },
+  {
+    "flowId": "github-connection-management",
+    "area": "GitHub connection mgmt",
+    "criticalFlow": "create/list/delete connection",
+    "status": "covered",
+    "evidence": ["tests/github-connections-route.test.ts", "route exists", "adjacent webhook coverage exists"],
+    "risks": ["deployment-environment confidence still needed"],
+    "requiredVerifier": "security-review"
+  },
+  {
+    "flowId": "agent-jobs-runtime",
+    "area": "Agent jobs",
+    "criticalFlow": "create/view/message job",
+    "status": "covered",
+    "evidence": ["tests/api-v1-agent-routes.test.ts", "tests/api-v1-agents.test.ts", "route family exists", "agent-api specs present"],
+    "risks": ["async architecture still simulated", "queue-backed behavior unverified"],
+    "requiredVerifier": "architecture-review"
+  },
+  {
+    "flowId": "openapi-fetch-store-contract",
+    "area": "OpenAPI spec",
+    "criticalFlow": "fetch/store spec",
+    "status": "covered",
+    "evidence": ["tests/openapi-spec-route.test.ts", "route exists", "openapi autodocs coverage exists"],
+    "risks": ["deployment-environment confidence still needed"],
+    "requiredVerifier": "unit-and-e2e"
+  },
+  {
+    "flowId": "docs-proxy-security",
+    "area": "Docs proxy / API playground",
+    "criticalFlow": "request forwarding",
+    "status": "covered",
+    "evidence": ["tests/docs-proxy-route.test.ts", "tests/api-playground.test.ts", "route exists"],
+    "risks": ["production abuse posture still needs runtime validation"],
+    "requiredVerifier": "security-review"
+  },
+  {
+    "flowId": "domain-verify-hardening",
+    "area": "Domain verify",
+    "criticalFlow": "custom domain verification",
+    "status": "covered",
+    "evidence": ["tests/domain-verify-route.test.ts", "tests/custom-domain.test.ts", "e2e spec"],
+    "risks": ["external dependency behavior in real environments still needs validation"],
+    "requiredVerifier": "security-review"
+  },
+  {
+    "flowId": "hosted-ops-alerting-canary-rollback",
+    "area": "Hosted operation",
+    "criticalFlow": "alerting / canary / rollback",
+    "status": "unverified",
+    "evidence": ["no explicit evidence found in audit pass"],
+    "risks": ["major after-service gap", "no rollout-safety validation path"],
+    "requiredVerifier": "canary-check"
+  },
+  {
+    "flowId": "performance-slos",
+    "area": "Performance",
+    "criticalFlow": "load / latency SLOs",
+    "status": "unverified",
+    "evidence": ["no k6/load-test evidence surfaced"],
+    "risks": ["capacity assumptions unverified", "no explicit latency/perf gate"],
+    "requiredVerifier": "perf-review"
+  },
+  {
+    "flowId": "admin-audit-trail",
+    "area": "Compliance",
+    "criticalFlow": "admin audit trail",
+    "status": "unverified",
+    "evidence": ["no explicit audit-log feature surfaced in audit pass"],
+    "risks": ["major admin/compliance gap", "operator auditability not productized"],
+    "requiredVerifier": "feature-review"
+  }
+]
