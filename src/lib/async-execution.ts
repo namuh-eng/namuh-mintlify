@@ -22,6 +22,18 @@ interface SimulationPhase {
   task: () => Promise<void>;
 }
 
+interface AsyncExecutor {
+  execute(phases: SimulationPhase[]): Promise<void>;
+}
+
+class SimulationPhaseExecutor implements AsyncExecutor {
+  async execute(phases: SimulationPhase[]): Promise<void> {
+    scheduleSimulationPhases(phases);
+  }
+}
+
+const simulationPhaseExecutor = new SimulationPhaseExecutor();
+
 export function getDeploymentExecutionStrategy(): AsyncEnqueueResult {
   const mode = getAsyncExecutionMode();
   return {
@@ -163,7 +175,7 @@ async function enqueueSimulatedDeployment(
   deploymentId: string,
   projectId: string,
 ) {
-  scheduleSimulationPhases(
+  await simulationPhaseExecutor.execute(
     buildDeploymentSimulationPlan(deploymentId, projectId),
   );
 }
