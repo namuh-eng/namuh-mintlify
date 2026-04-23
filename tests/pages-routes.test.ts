@@ -70,10 +70,10 @@ describe("page routes permissions and contracts", () => {
     });
     mockWhere.mockReturnValue({
       limit: mockLimit,
+      orderBy: mockOrderBy,
+      returning: mockReturning,
     });
-    mockOrderBy.mockReturnValue({
-      limit: mockLimit,
-    });
+    mockOrderBy.mockResolvedValue([]);
 
     mockInsert.mockReturnValue({
       values: mockValues,
@@ -93,6 +93,86 @@ describe("page routes permissions and contracts", () => {
     mockDelete.mockReturnValue({
       where: mockDeleteWhere,
     });
+  });
+
+  it("returns 401 for page list when unauthenticated", async () => {
+    mockGetSession.mockResolvedValue(null);
+
+    const { GET } = await import("@/app/api/projects/[id]/pages/route");
+    const response = await GET(
+      new Request("http://localhost:3015/api/projects/project-1/pages"),
+      { params: Promise.resolve({ id: "project-1" }) },
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+  });
+
+  it("lists pages for authorized project members", async () => {
+    mockOrderBy.mockResolvedValueOnce([
+      {
+        id: "page-1",
+        path: "guide",
+        title: "Guide",
+        description: "Getting started",
+        isPublished: true,
+        createdAt: new Date("2026-04-23T00:00:00.000Z"),
+        updatedAt: new Date("2026-04-23T00:05:00.000Z"),
+      },
+    ]);
+    mockLimit
+      .mockResolvedValueOnce([{ orgId: "org-1", role: "viewer" }])
+      .mockResolvedValueOnce([{ id: "project-1" }]);
+
+    const { GET } = await import("@/app/api/projects/[id]/pages/route");
+    const response = await GET(
+      new Request("http://localhost:3015/api/projects/project-1/pages"),
+      { params: Promise.resolve({ id: "project-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      pages: [
+        {
+          id: "page-1",
+          path: "guide",
+          title: "Guide",
+          description: "Getting started",
+          isPublished: true,
+          createdAt: "2026-04-23T00:00:00.000Z",
+          updatedAt: "2026-04-23T00:05:00.000Z",
+        },
+      ],
+      requestId: expect.any(String),
+    });
+  });
+
+  it("returns 403 for page list when the user has no organization", async () => {
+    mockLimit.mockResolvedValueOnce([]);
+
+    const { GET } = await import("@/app/api/projects/[id]/pages/route");
+    const response = await GET(
+      new Request("http://localhost:3015/api/projects/project-1/pages"),
+      { params: Promise.resolve({ id: "project-1" }) },
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({ error: "No organization" });
+  });
+
+  it("returns 404 for page list when project is outside the org", async () => {
+    mockLimit
+      .mockResolvedValueOnce([{ orgId: "org-1", role: "viewer" }])
+      .mockResolvedValueOnce([]);
+
+    const { GET } = await import("@/app/api/projects/[id]/pages/route");
+    const response = await GET(
+      new Request("http://localhost:3015/api/projects/project-1/pages"),
+      { params: Promise.resolve({ id: "project-1" }) },
+    );
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "Project not found" });
   });
 
   it("rejects page creation for viewers", async () => {
@@ -116,6 +196,45 @@ describe("page routes permissions and contracts", () => {
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
+  it("creates a page for editors", async () => {
+    mockLimit
+      .mockResolvedValueOnce([{ orgId: "org-1", role: "editor" }])
+      .mockResolvedValueOnce([{ id: "project-1" }])
+      .mockResolvedValueOnce([]);
+    mockReturning.mockResolvedValueOnce([
+      {
+        id: "page-1",
+        projectId: "project-1",
+        path: "guide",
+        title: "Guide",
+        content: "",
+        description: null,
+      },
+    ]);
+
+    const { POST } = await import("@/app/api/projects/[id]/pages/route");
+    const response = await POST(
+      new Request("http://localhost:3015/api/projects/project-1/pages", {
+        method: "POST",
+        body: JSON.stringify({ path: "guide", title: "Guide" }),
+      }),
+      { params: Promise.resolve({ id: "project-1" }) },
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      page: {
+        id: "page-1",
+        projectId: "project-1",
+        path: "guide",
+        title: "Guide",
+        content: "",
+        description: null,
+      },
+      requestId: expect.any(String),
+    });
+  });
+
   it("returns 409 when creating a page with a duplicate path", async () => {
     mockLimit
       .mockResolvedValueOnce([{ orgId: "org-1", role: "editor" }])
@@ -136,6 +255,21 @@ describe("page routes permissions and contracts", () => {
       error: "A page with this path already exists in this project",
     });
     expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 when fetching a single page unauthenticated", async () => {
+    mockGetSession.mockResolvedValue(null);
+
+    const { GET } = await import(
+      "@/app/api/projects/[id]/pages/[pageId]/route"
+    );
+    const response = await GET(
+      new Request("http://localhost:3015/api/projects/project-1/pages/page-1"),
+      { params: Promise.resolve({ id: "project-1", pageId: "page-1" }) },
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
   });
 
   it("returns a single page for authorized readers", async () => {
@@ -196,6 +330,45 @@ describe("page routes permissions and contracts", () => {
       error: "Only admins and editors can manage pages",
     });
     expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("updates a page for editors", async () => {
+    mockLimit
+      .mockResolvedValueOnce([{ orgId: "org-1", role: "editor" }])
+      .mockResolvedValueOnce([{ id: "project-1" }])
+      .mockResolvedValueOnce([{ id: "page-1" }]);
+    mockReturning.mockResolvedValueOnce([
+      {
+        id: "page-1",
+        projectId: "project-1",
+        path: "guide",
+        title: "Updated Guide",
+        content: "updated",
+      },
+    ]);
+
+    const { PUT } = await import(
+      "@/app/api/projects/[id]/pages/[pageId]/route"
+    );
+    const response = await PUT(
+      new Request("http://localhost:3015/api/projects/project-1/pages/page-1", {
+        method: "PUT",
+        body: JSON.stringify({ title: "Updated Guide", content: "updated" }),
+      }),
+      { params: Promise.resolve({ id: "project-1", pageId: "page-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      page: {
+        id: "page-1",
+        projectId: "project-1",
+        path: "guide",
+        title: "Updated Guide",
+        content: "updated",
+      },
+      requestId: expect.any(String),
+    });
   });
 
   it("returns 409 when updating a page to a conflicting path", async () => {
