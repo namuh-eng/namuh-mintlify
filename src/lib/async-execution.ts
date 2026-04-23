@@ -33,7 +33,9 @@ export function getAgentJobExecutionStrategy(): AsyncEnqueueResult {
   };
 }
 
-export function getDeploymentExecutionMetadata(status: string): ExecutionMetadataOptions {
+export function getDeploymentExecutionMetadata(
+  status: string,
+): ExecutionMetadataOptions {
   const simulated = isAsyncSimulationEnabled();
   return {
     simulated,
@@ -44,7 +46,9 @@ export function getDeploymentExecutionMetadata(status: string): ExecutionMetadat
   };
 }
 
-export function getAgentJobExecutionMetadata(status: string): ExecutionMetadataOptions {
+export function getAgentJobExecutionMetadata(
+  status: string,
+): ExecutionMetadataOptions {
   const simulated = isAsyncSimulationEnabled();
   return {
     simulated,
@@ -73,38 +77,83 @@ function scheduleSimulation(delayMs: number, task: () => Promise<void>) {
   }, delayMs);
 }
 
+function scheduleSimulationPhases(
+  phases: Array<{ delayMs: number; task: () => Promise<void> }>,
+) {
+  for (const phase of phases) {
+    scheduleSimulation(phase.delayMs, phase.task);
+  }
+}
+
 async function enqueueSimulatedDeployment(
   deploymentId: string,
   projectId: string,
 ) {
-  scheduleSimulation(ASYNC_SIMULATION_TIMINGS_MS.deploymentStart, async () => {
-    await db
-      .update(deployments)
-      .set({ status: "in_progress", startedAt: new Date() })
-      .where(
-        and(eq(deployments.id, deploymentId), eq(deployments.status, "queued")),
-      );
-    await db
-      .update(projects)
-      .set({ status: "deploying" })
-      .where(eq(projects.id, projectId));
-  });
+  scheduleSimulationPhases([
+    {
+      delayMs: ASYNC_SIMULATION_TIMINGS_MS.deploymentStart,
+      task: async () => {
+        await db
+          .update(deployments)
+          .set({ status: "in_progress", startedAt: new Date() })
+          .where(
+            and(
+              eq(deployments.id, deploymentId),
+              eq(deployments.status, "queued"),
+            ),
+          );
+        await db
+          .update(projects)
+          .set({ status: "deploying" })
+          .where(eq(projects.id, projectId));
+      },
+    },
+    {
+      delayMs: ASYNC_SIMULATION_TIMINGS_MS.deploymentFinish,
+      task: async () => {
+        await db
+          .update(deployments)
+          .set({ status: "succeeded", endedAt: new Date() })
+          .where(
+            and(
+              eq(deployments.id, deploymentId),
+              eq(deployments.status, "in_progress"),
+            ),
+          );
+        await db
+          .update(projects)
+          .set({ status: "active" })
+          .where(eq(projects.id, projectId));
+      },
+    },
+  ]);
+}
 
-  scheduleSimulation(ASYNC_SIMULATION_TIMINGS_MS.deploymentFinish, async () => {
-    await db
-      .update(deployments)
-      .set({ status: "succeeded", endedAt: new Date() })
-      .where(
-        and(
-          eq(deployments.id, deploymentId),
-          eq(deployments.status, "in_progress"),
-        ),
-      );
-    await db
-      .update(projects)
-      .set({ status: "active" })
-      .where(eq(projects.id, projectId));
-  });
+async function enqueueSimulatedAgentJob(jobId: string) {
+  scheduleSimulationPhases([
+    {
+      delayMs: ASYNC_SIMULATION_TIMINGS_MS.agentJobStart,
+      task: async () => {
+        await db
+          .update(agentJobs)
+          .set({ status: "running", updatedAt: new Date() })
+          .where(and(eq(agentJobs.id, jobId), eq(agentJobs.status, "pending")));
+      },
+    },
+    {
+      delayMs: ASYNC_SIMULATION_TIMINGS_MS.agentJobFinish,
+      task: async () => {
+        await db
+          .update(agentJobs)
+          .set({
+            status: "succeeded",
+            prUrl: `https://github.com/org/repo/pull/${Math.floor(Math.random() * 1000)}`,
+            updatedAt: new Date(),
+          })
+          .where(and(eq(agentJobs.id, jobId), eq(agentJobs.status, "running")));
+      },
+    },
+  ]);
 }
 
 export async function enqueueAgentJob(
@@ -116,24 +165,7 @@ export async function enqueueAgentJob(
     return strategy;
   }
 
-  scheduleSimulation(ASYNC_SIMULATION_TIMINGS_MS.agentJobStart, async () => {
-    await db
-      .update(agentJobs)
-      .set({ status: "running", updatedAt: new Date() })
-      .where(and(eq(agentJobs.id, jobId), eq(agentJobs.status, "pending")));
-  });
-
-  scheduleSimulation(ASYNC_SIMULATION_TIMINGS_MS.agentJobFinish, async () => {
-    await db
-      .update(agentJobs)
-      .set({
-        status: "succeeded",
-        prUrl: `https://github.com/org/repo/pull/${Math.floor(Math.random() * 1000)}`,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(agentJobs.id, jobId), eq(agentJobs.status, "running")));
-  });
-
+  await enqueueSimulatedAgentJob(jobId);
   return strategy;
 }
 
