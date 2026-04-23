@@ -245,6 +245,14 @@ export default function OnboardingPage() {
         id: data.project.id,
         subdomain: data.project.subdomain,
       });
+
+      // Provision initial content after project creation
+      await fetch("/api/onboarding/provision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: data.project.id }),
+      });
+
       setStep(3);
     } catch {
       setProjectError("Something went wrong. Please try again.");
