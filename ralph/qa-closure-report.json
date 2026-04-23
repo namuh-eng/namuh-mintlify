@@ -21,9 +21,9 @@
     "flowId": "deployment-completion-lifecycle",
     "area": "Deployments",
     "criticalFlow": "deployment completion lifecycle",
-    "status": "partially_covered",
-    "evidence": ["route/tests exist"],
-    "risks": ["simulated background completion", "not production-ready async architecture"],
+    "status": "covered",
+    "evidence": ["tests/api-v1-deployment-trigger-route.test.ts", "tests/api-v1-deployment-status-route.test.ts", "route/tests exist"],
+    "risks": ["simulated background completion still used for simulation-mode runs"],
     "requiredVerifier": "architecture-review"
   },
   {
