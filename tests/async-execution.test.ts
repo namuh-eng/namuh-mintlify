@@ -73,12 +73,33 @@ describe("async execution", () => {
         () => 0 as unknown as ReturnType<typeof setTimeout>,
       );
 
-    const { enqueueAgentJob } = await import("@/lib/async-execution");
+    const { getAgentJobExecutionStrategy, enqueueAgentJob } = await import(
+      "@/lib/async-execution"
+    );
 
+    expect(getAgentJobExecutionStrategy()).toEqual({
+      mode: "simulation",
+      handoff: "simulated",
+    });
     await expect(enqueueAgentJob("job-1")).resolves.toEqual({
       mode: "simulation",
       handoff: "simulated",
     });
     expect(setTimeoutSpy.mock.calls.map((call) => call[1])).toEqual([500, 5000]);
+  });
+
+  it("uses manual follow-up strategy for agent jobs by default", async () => {
+    const { getAgentJobExecutionStrategy, enqueueAgentJob } = await import(
+      "@/lib/async-execution"
+    );
+
+    expect(getAgentJobExecutionStrategy()).toEqual({
+      mode: "manual",
+      handoff: "manual_followup_required",
+    });
+    await expect(enqueueAgentJob("job-1")).resolves.toEqual({
+      mode: "manual",
+      handoff: "manual_followup_required",
+    });
   });
 });

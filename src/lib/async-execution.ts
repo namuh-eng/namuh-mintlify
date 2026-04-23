@@ -25,6 +25,14 @@ export function getDeploymentExecutionStrategy(): AsyncEnqueueResult {
   };
 }
 
+export function getAgentJobExecutionStrategy(): AsyncEnqueueResult {
+  const mode = getAsyncExecutionMode();
+  return {
+    mode,
+    handoff: mode === "simulation" ? "simulated" : "manual_followup_required",
+  };
+}
+
 export function getDeploymentExecutionMetadata(status: string): ExecutionMetadataOptions {
   const simulated = isAsyncSimulationEnabled();
   return {
@@ -102,10 +110,10 @@ async function enqueueSimulatedDeployment(
 export async function enqueueAgentJob(
   jobId: string,
 ): Promise<AsyncEnqueueResult> {
-  const mode = getAsyncExecutionMode();
+  const strategy = getAgentJobExecutionStrategy();
 
-  if (mode !== "simulation") {
-    return { mode, handoff: "manual_followup_required" };
+  if (strategy.mode !== "simulation") {
+    return strategy;
   }
 
   scheduleSimulation(ASYNC_SIMULATION_TIMINGS_MS.agentJobStart, async () => {
@@ -126,7 +134,7 @@ export async function enqueueAgentJob(
       .where(and(eq(agentJobs.id, jobId), eq(agentJobs.status, "running")));
   });
 
-  return { mode, handoff: "simulated" };
+  return strategy;
 }
 
 export async function enqueueDeployment(
