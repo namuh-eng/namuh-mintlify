@@ -181,7 +181,7 @@ async function enqueueSimulatedDeployment(
 }
 
 async function enqueueSimulatedAgentJob(jobId: string) {
-  scheduleSimulationPhases(buildAgentJobSimulationPlan(jobId));
+  await simulationPhaseExecutor.execute(buildAgentJobSimulationPlan(jobId));
 }
 
 export async function enqueueAgentJob(
