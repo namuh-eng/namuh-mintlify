@@ -3,18 +3,18 @@
     "flowId": "org-create",
     "area": "Org management",
     "criticalFlow": "create org",
-    "status": "partially_covered",
-    "evidence": ["tests/orgs.test.ts", "route exists"],
-    "risks": ["mutation edge cases unclear", "auditability not explicitly verified"],
+    "status": "covered",
+    "evidence": ["tests/orgs.test.ts", "tests/org-lifecycle-route.test.ts", "route exists"],
+    "risks": ["deployment-environment confidence still needed"],
     "requiredVerifier": "unit-and-e2e"
   },
   {
     "flowId": "org-delete",
     "area": "Org management",
     "criticalFlow": "delete org",
-    "status": "partially_covered",
-    "evidence": ["tests/danger-zone.test.ts", "route exists"],
-    "risks": ["serviceability unclear", "admin auditability unverified"],
+    "status": "covered",
+    "evidence": ["tests/danger-zone.test.ts", "tests/org-lifecycle-route.test.ts", "route exists"],
+    "risks": ["serviceability unclear"],
     "requiredVerifier": "feature-review"
   },
   {
