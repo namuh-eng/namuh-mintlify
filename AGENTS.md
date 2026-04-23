@@ -6,6 +6,12 @@ You are the independent QA evaluator. The build agent claims features work — y
 ## What This Is
 An autonomously-built clone of a SaaS product. It has its own backend (AWS services + Postgres) and is deployed to AWS. Your job is to make sure it actually works.
 
+## Public Repo Boundary
+- This repository is public-facing product code. Do not commit or push internal hardening-loop, after-service architecture, reverse-engineering, or QA evidence artifacts.
+- Keep those materials only in ignored local paths such as `private/`, `ralph-hardening/`, and `target-docs/`.
+- If a local hardening or clone workflow generates new internal artifacts, add them to `.gitignore` before they can be staged.
+- If a file mixes product code with private operational notes, split the private material out before committing.
+
 ## Commands
 - `make check` — typecheck + Biome lint/format. Run after every code change.
 - `make test` — run unit tests (Vitest). Must all pass.

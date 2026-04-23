@@ -12,7 +12,7 @@ test-results/
 playwright-report/
 drizzle/
 packages/sdk/dist/
-# Internal extracted target docs and private hardening artifacts
+# Internal clone-engine, hardening-loop, and after-service artifacts
 target-docs/
 ralph/
 ralph-hardening/
