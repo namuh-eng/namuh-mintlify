@@ -68,10 +68,12 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.30.0",
+    "esbuild": "^0.25.12",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.0",
-    "vitest": "^2.1.8"
+    "vite": "^6.4.2",
+    "vitest": "^3.2.4"
   }
 }
