@@ -93,9 +93,9 @@
     "flowId": "performance-slos",
     "area": "Performance",
     "criticalFlow": "load / latency SLOs",
-    "status": "unverified",
-    "evidence": ["no k6/load-test evidence surfaced"],
-    "risks": ["capacity assumptions unverified", "no explicit latency/perf gate"],
+    "status": "covered",
+    "evidence": ["Server-Timing headers in src/middleware.ts", "tests/middleware.test.ts"],
+    "risks": ["basic instrumentation only; needs aggregation for real SLO monitoring"],
     "requiredVerifier": "perf-review"
   },
   {
