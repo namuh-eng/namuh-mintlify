@@ -235,4 +235,14 @@ describe("formatAgentJobResponse", () => {
     expect(result.createdAt).toBe("2026-04-09T12:00:00.000Z");
     expect(typeof result.createdAt).toBe("string");
   });
+
+  it("allows explicit execution handoff metadata to override inferred defaults", () => {
+    const result = formatAgentJobResponse(mockJob, {
+      simulated: false,
+      handoff: "simulated",
+    });
+
+    expect(result.executionMode).toBe("manual");
+    expect(result.executionHandoff).toBe("simulated");
+  });
 });

@@ -20,6 +20,11 @@ export interface SendMessageInput {
   content: string;
 }
 
+export interface AgentExecutionOptions {
+  simulated?: boolean;
+  handoff?: "simulated" | "manual_followup_required";
+}
+
 export interface AgentJobResponse {
   id: string;
   projectId: string;
@@ -94,10 +99,7 @@ export function validateSendMessageInput(
 
 export function formatAgentJobResponse(
   job: AgentJob,
-  options?: {
-    simulated?: boolean;
-    handoff?: "simulated" | "manual_followup_required";
-  },
+  options?: AgentExecutionOptions,
 ): AgentJobResponse {
   return {
     id: job.id,

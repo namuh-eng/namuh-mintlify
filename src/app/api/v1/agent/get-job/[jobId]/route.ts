@@ -69,9 +69,16 @@ export async function GET(
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
 
+  const simulated = isAsyncSimulationEnabled();
+  const handoff =
+    simulated || job.status !== "pending"
+      ? "simulated"
+      : "manual_followup_required";
+
   return NextResponse.json(
     formatAgentJobResponse(job, {
-      simulated: isAsyncSimulationEnabled(),
+      simulated,
+      handoff,
     }),
   );
 }

@@ -113,9 +113,16 @@ export async function POST(
     .where(eq(agentJobs.id, jobId))
     .returning();
 
+  const simulated = isAsyncSimulationEnabled();
+  const handoff =
+    simulated || updatedJob.status !== "pending"
+      ? "simulated"
+      : "manual_followup_required";
+
   return NextResponse.json(
     formatAgentJobResponse(updatedJob, {
-      simulated: isAsyncSimulationEnabled(),
+      simulated,
+      handoff,
     }),
   );
 }
