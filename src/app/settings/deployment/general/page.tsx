@@ -1,6 +1,7 @@
 "use client";
 
 import { useActiveProject } from "@/hooks/use-active-project";
+import { useProjectUpdater } from "@/hooks/use-project-updater";
 import { useEffect, useState } from "react";
 
 interface ProjectData {
@@ -14,7 +15,10 @@ interface ProjectData {
 
 export default function SettingsGeneralPage() {
   const { project, setProject, loading } = useActiveProject<ProjectData>();
-  const [saving, setSaving] = useState(false);
+  const { saving, updateProject } = useProjectUpdater<ProjectData>({
+    projectId: project?.id,
+    setProject,
+  });
   const [name, setName] = useState("");
   const [subdomain, setSubdomain] = useState("");
   const [message, setMessage] = useState<{
@@ -35,34 +39,19 @@ export default function SettingsGeneralPage() {
     e.preventDefault();
     if (!project) return;
 
-    setSaving(true);
     setMessage(null);
 
-    try {
-      const res = await fetch(`/api/projects/${project.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          subdomain: subdomain.trim(),
-        }),
-      });
+    const result = await updateProject({
+      name: name.trim(),
+      subdomain: subdomain.trim(),
+    });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setMessage({ type: "error", text: data.error || "Failed to save" });
-        setSaving(false);
-        return;
-      }
-
-      const data = await res.json();
-      setProject(data.project);
-      setMessage({ type: "success", text: "Changes saved" });
-    } catch {
-      setMessage({ type: "error", text: "Something went wrong" });
-    } finally {
-      setSaving(false);
+    if (!result.ok) {
+      setMessage({ type: "error", text: result.error });
+      return;
     }
+
+    setMessage({ type: "success", text: "Changes saved" });
   };
 
   if (loading) {
