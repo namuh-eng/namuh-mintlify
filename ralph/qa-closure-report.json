@@ -124,5 +124,14 @@
     "evidence": ["tests/onboarding-provision-route.test.ts", "tests/e2e/onboarding.spec.ts", "provisioning route exists"],
     "risks": ["idempotency logic for concurrent provision calls verified"],
     "requiredVerifier": "unit-and-e2e"
+  },
+  {
+    "flowId": "user-account-deletion",
+    "area": "Compliance",
+    "criticalFlow": "delete user account / personal data",
+    "status": "covered",
+    "evidence": ["src/app/api/users/profile/route.ts", "src/app/settings/workspace/profile/page.tsx", "cascading schema constraints"],
+    "risks": ["orphaned organizations may persist if the user was the sole member; manual cleanup logic still optional"],
+    "requiredVerifier": "feature-review"
   }
 ]
