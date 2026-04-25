@@ -167,6 +167,29 @@ describe("create project request validation", () => {
   });
 });
 
+describe("github import access helpers", () => {
+  it("treats regular github repos as likely public by default", async () => {
+    const mod = await import("@/lib/github-import");
+    expect(
+      mod.isLikelyPublicGitHubRepo("https://github.com/acme/docs"),
+    ).toBe(true);
+  });
+
+  it("treats explicitly private-marked urls as requiring connection", async () => {
+    const mod = await import("@/lib/github-import");
+    expect(
+      mod.isLikelyPublicGitHubRepo("https://github.com/acme/docs?private=true"),
+    ).toBe(false);
+  });
+
+  it("returns connection-required message for private auth-required status", async () => {
+    const mod = await import("@/lib/github-import");
+    expect(
+      mod.getGitHubImportAccessMessage({ status: "private_auth_required" }),
+    ).toBe("Connect GitHub before importing docs from a private repository");
+  });
+});
+
 // ── Update project request validation ──────────────────────────────────────
 
 describe("update project request validation", () => {

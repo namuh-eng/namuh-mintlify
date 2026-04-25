@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { orgMemberships, pages, projects } from "@/lib/db/schema";
 import { createRequestId, logger } from "@/lib/logger";
+import { getGitHubImportAccessMessage, resolveGitHubImportAccessForProject } from "@/lib/github-import";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -61,6 +62,22 @@ export async function POST(request: Request) {
 
   if (existingPages.length > 0) {
     return NextResponse.json({ error: "Project already has content" }, { status: 409 });
+  }
+
+  const importAccess = await resolveGitHubImportAccessForProject({
+    projectId,
+    userId: session.user.id,
+  });
+
+  const importAccessError = getGitHubImportAccessMessage(importAccess);
+  if (importAccessError) {
+    return NextResponse.json(
+      {
+        error: importAccessError,
+        githubImportAccess: importAccess,
+      },
+      { status: 409 },
+    );
   }
 
   // Provision initial content

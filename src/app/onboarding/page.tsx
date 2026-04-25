@@ -15,7 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const STEPS = ["org", "github", "project", "success"] as const;
 
@@ -85,6 +85,7 @@ export default function OnboardingPage() {
   // Step 2 state
   const [repoUrl, setRepoUrl] = useState("");
   const [repoError, setRepoError] = useState("");
+  const [repoHint, setRepoHint] = useState("");
 
   // Step 3 state
   const [projectName, setProjectName] = useState("");
@@ -193,8 +194,22 @@ export default function OnboardingPage() {
 
   // ── Step 2: GitHub connection (skippable) ───────────────────────────────────
 
+  const parsedRepo = useMemo(() => {
+    const trimmed = repoUrl.trim().toLowerCase();
+    if (!trimmed) return null;
+    return trimmed;
+  }, [repoUrl]);
+
+  const looksPrivateRepo = Boolean(
+    parsedRepo &&
+      (parsedRepo.includes("/private") ||
+        parsedRepo.includes("?private=") ||
+        parsedRepo.includes("#private")),
+  );
+
   const handleSkipGitHub = useCallback(() => {
     setRepoError("");
+    setRepoHint("");
     setStep(2);
   }, []);
 
@@ -204,13 +219,23 @@ export default function OnboardingPage() {
 
     if (error) {
       setRepoError(error);
+      setRepoHint("");
       return;
     }
 
     setRepoError("");
     setRepoUrl(trimmed);
+    if (looksPrivateRepo) {
+      setRepoHint(
+        "Private repos need a verified GitHub connection before import. You can continue, but project creation will block until GitHub is connected.",
+      );
+    } else {
+      setRepoHint(
+        "Public repos can be imported without a GitHub connection. Connect GitHub for private repos or future verified sync.",
+      );
+    }
     setStep(2);
-  }, [repoUrl]);
+  }, [looksPrivateRepo, repoUrl]);
 
   // ── Step 3: Create Project ──────────────────────────────────────────────────
 
@@ -237,6 +262,12 @@ export default function OnboardingPage() {
       if (!res.ok) {
         const data = await res.json();
         setProjectError(data.error || "Failed to create project");
+        if (data.githubImportAccess?.status === "private_auth_required") {
+          setStep(1);
+          setRepoHint(
+            "GitHub connection is required before importing docs from that repository.",
+          );
+        }
         setProjectLoading(false);
         return;
       }
@@ -247,11 +278,25 @@ export default function OnboardingPage() {
       });
 
       // Provision initial content after project creation
-      await fetch("/api/onboarding/provision", {
+      const provisionRes = await fetch("/api/onboarding/provision", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId: data.project.id }),
       });
+
+      if (!provisionRes.ok) {
+        const provisionData = await provisionRes.json().catch(() => null);
+        setProjectError(
+          provisionData?.error || "Failed to provision initial content",
+        );
+        if (provisionData?.githubImportAccess?.status === "private_auth_required") {
+          setStep(1);
+          setRepoHint(
+            "GitHub connection is required before importing docs from that repository.",
+          );
+        }
+        return;
+      }
 
       setStep(3);
     } catch {
@@ -407,8 +452,7 @@ export default function OnboardingPage() {
                   Connect your repository
                 </h1>
                 <p className="text-sm text-gray-400">
-                  Link a GitHub repository to sync your documentation, or skip
-                  this step
+                  Link a GitHub repository to sync your documentation. Public repos can work without auth, but private repos require a verified GitHub connection.
                 </p>
               </div>
 
@@ -428,12 +472,16 @@ export default function OnboardingPage() {
                     onChange={(e) => {
                       setRepoUrl(e.target.value);
                       setRepoError("");
+                      setRepoHint("");
                     }}
                     placeholder="https://github.com/org/repo"
                     className="w-full rounded-lg border border-gray-700 bg-[#1a1a1a] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   />
                   {repoError && (
                     <p className="text-sm text-red-400">{repoError}</p>
+                  )}
+                  {repoHint && (
+                    <p className="text-sm text-amber-300">{repoHint}</p>
                   )}
                 </div>
 

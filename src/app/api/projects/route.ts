@@ -14,6 +14,10 @@ import {
   slugifyProject,
   validateCreateProjectRequest,
 } from "@/lib/projects";
+import {
+  getGitHubImportAccessMessage,
+  resolveGitHubImportAccessForRepoUrl,
+} from "@/lib/github-import";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -140,6 +144,32 @@ export async function POST(request: Request) {
       error: validation.error,
     });
     return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+
+  if (validation.repoUrl) {
+    const importAccess = await resolveGitHubImportAccessForRepoUrl({
+      orgId,
+      repoUrl: validation.repoUrl,
+    });
+
+    const importAccessError = getGitHubImportAccessMessage(importAccess);
+    if (importAccessError) {
+      logger.warn("projects_create_github_connection_required", {
+        requestId,
+        route: "/api/projects",
+        method: "POST",
+        orgId,
+        repoUrl: validation.repoUrl,
+        importAccessStatus: importAccess.status,
+      });
+      return NextResponse.json(
+        {
+          error: importAccessError,
+          githubImportAccess: importAccess,
+        },
+        { status: 400 },
+      );
+    }
   }
 
   const slug = slugifyProject(validation.name);
