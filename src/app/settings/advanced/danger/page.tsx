@@ -1,5 +1,6 @@
 "use client";
 
+import { useActiveProject } from "@/hooks/use-active-project";
 import { AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -21,9 +22,9 @@ const MIN_REASON_LENGTH = 3;
 
 export default function DangerZonePage() {
   const router = useRouter();
-  const [project, setProject] = useState<ProjectData | null>(null);
+  const { project, loading } = useActiveProject<ProjectData>();
   const [org, setOrg] = useState<OrgData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [orgLoading, setOrgLoading] = useState(true);
 
   // Deployment deletion state
   const [deployReason, setDeployReason] = useState("");
@@ -40,20 +41,15 @@ export default function DangerZonePage() {
   const [orgError, setOrgError] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/projects").then((r) => r.json()),
-      fetch("/api/orgs").then((r) => r.json()),
-    ])
-      .then(([projectsData, orgsData]) => {
-        if (projectsData.projects?.length > 0) {
-          setProject(projectsData.projects[0]);
-        }
+    fetch("/api/orgs")
+      .then((r) => r.json())
+      .then((orgsData) => {
         if (orgsData.orgs?.length > 0) {
           setOrg(orgsData.orgs[0]);
         }
-        setLoading(false);
+        setOrgLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => setOrgLoading(false));
   }, []);
 
   const handleDeleteDeployment = useCallback(async () => {
@@ -113,7 +109,7 @@ export default function DangerZonePage() {
     }
   }, [org, orgConfirmText, orgReason, router]);
 
-  if (loading) {
+  if (loading || orgLoading) {
     return (
       <div className="p-6 max-w-2xl">
         <div className="text-gray-400">Loading...</div>

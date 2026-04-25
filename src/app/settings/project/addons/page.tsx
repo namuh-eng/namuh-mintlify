@@ -17,6 +17,8 @@ import {
   Type,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useActiveProject } from "@/hooks/use-active-project";
+import { useProjectUpdater } from "@/hooks/use-project-updater";
 import { useEffect, useState } from "react";
 
 interface ProjectData {
@@ -25,9 +27,11 @@ interface ProjectData {
 }
 
 export default function AddonsSettingsPage() {
-  const [project, setProject] = useState<ProjectData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { project, setProject, loading } = useActiveProject<ProjectData>();
+  const { saving, updateProject } = useProjectUpdater<ProjectData>({
+    projectId: project?.id,
+    setProject,
+  });
   const [addons, setAddons] = useState<AddonsSettings>(mergeAddons(undefined));
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -35,51 +39,30 @@ export default function AddonsSettingsPage() {
   } | null>(null);
 
   useEffect(() => {
-    fetch("/api/projects")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.projects?.length > 0) {
-          const p = data.projects[0];
-          setProject(p);
-          const existing = (p.settings as Record<string, unknown>)?.addons as
-            | Partial<AddonsSettings>
-            | undefined;
-          setAddons(mergeAddons(existing));
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    if (!project) {
+      return;
+    }
+
+    const existing = (project.settings as Record<string, unknown>)?.addons as
+      | Partial<AddonsSettings>
+      | undefined;
+    setAddons(mergeAddons(existing));
+  }, [project]);
 
   const handleSave = async () => {
     if (!project) return;
-    setSaving(true);
     setMessage(null);
 
-    try {
-      const res = await fetch(`/api/projects/${project.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          settings: { ...project.settings, addons },
-        }),
-      });
+    const result = await updateProject({
+      settings: { ...project.settings, addons },
+    });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setMessage({ type: "error", text: data.error || "Failed to save" });
-        setSaving(false);
-        return;
-      }
-
-      const data = await res.json();
-      setProject(data.project);
-      setMessage({ type: "success", text: "Changes saved" });
-    } catch {
-      setMessage({ type: "error", text: "Something went wrong" });
-    } finally {
-      setSaving(false);
+    if (!result.ok) {
+      setMessage({ type: "error", text: result.error });
+      return;
     }
+
+    setMessage({ type: "success", text: "Changes saved" });
   };
 
   const toggleFeedback = (key: keyof AddonsSettings["feedback"]) => {
