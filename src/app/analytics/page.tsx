@@ -1,6 +1,7 @@
 "use client";
 
 import { EmptyState } from "@/components/empty-state";
+import { useActiveProject } from "@/hooks/use-active-project";
 import {
   getDatePresets,
   parseDateParam,
@@ -215,28 +216,20 @@ function VisitorsContent() {
     parseDateParam(searchParams.get("from")) ?? defaultRange.from;
   const dateTo = parseDateParam(searchParams.get("to")) ?? defaultRange.to;
 
-  const [projectId, setProjectId] = useState<string | null>(null);
+  const { project, loading: projectLoading } = useActiveProject<{ id: string }>();
+  const projectId = project?.id ?? null;
   const [dailyCounts, setDailyCounts] = useState<DailyVisitorCount[]>([]);
   const [topPages, setTopPages] = useState<TopPage[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [totalVisitors, setTotalVisitors] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Fetch project ID
-  useEffect(() => {
-    async function fetchProject() {
-      const res = await fetch("/api/projects");
-      const data = await res.json();
-      if (data.projects?.length > 0) {
-        setProjectId(data.projects[0].id);
-      }
-    }
-    fetchProject();
-  }, []);
-
   // Fetch analytics data
   const fetchData = useCallback(async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     const fromStr = dateFrom.toISOString().split("T")[0];
@@ -271,6 +264,14 @@ function VisitorsContent() {
     () => fillDailyCounts(dailyCounts, dateRange),
     [dailyCounts, dateRange],
   );
+
+  if (projectLoading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-sm text-gray-500">
+        Loading analytics...
+      </div>
+    );
+  }
 
   // Agent mode shows stat cards + empty state
   if (trafficSource === "agent") {
