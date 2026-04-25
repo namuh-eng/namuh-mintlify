@@ -1,8 +1,15 @@
 "use client";
 
 import { clsx } from "clsx";
-import { ExternalLink, GitBranch, Loader2, Shield, Trash2 } from "lucide-react";
-import { useCallback, useState } from "react";
+import {
+  CheckCircle2,
+  ExternalLink,
+  GitBranch,
+  Loader2,
+  Shield,
+  Trash2,
+} from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 
 interface RepoInfo {
   fullName: string;
@@ -21,6 +28,7 @@ interface ConnectionData {
 interface GitHubAppSettingsClientProps {
   initialConnections: ConnectionData[];
   isAdmin: boolean;
+  selectedRepoFullName?: string | null;
 }
 
 function GitHubIcon({
@@ -44,6 +52,7 @@ function GitHubIcon({
 export function GitHubAppSettingsClient({
   initialConnections,
   isAdmin,
+  selectedRepoFullName,
 }: GitHubAppSettingsClientProps) {
   const [connections, setConnections] =
     useState<ConnectionData[]>(initialConnections);
@@ -54,6 +63,20 @@ export function GitHubAppSettingsClient({
   const [removing, setRemoving] = useState<string | null>(null);
 
   const hasConnections = connections.length > 0;
+  const normalizedSelectedRepo = selectedRepoFullName?.toLowerCase() ?? null;
+
+  const selectedRepoConnected = useMemo(
+    () =>
+      Boolean(
+        normalizedSelectedRepo &&
+          connections.some((connection) =>
+            connection.repos.some(
+              (repo) => repo.fullName.toLowerCase() === normalizedSelectedRepo,
+            ),
+          ),
+      ),
+    [connections, normalizedSelectedRepo],
+  );
 
   const handleToggleAutoUpdate = useCallback(
     async (connection: ConnectionData) => {
@@ -169,6 +192,37 @@ export function GitHubAppSettingsClient({
       <p className="mb-8 text-sm text-gray-400">
         Your active GitHub app connections
       </p>
+
+      {selectedRepoFullName && (
+        <div
+          data-testid="github-selected-repo-status"
+          className={clsx(
+            "mb-4 rounded-lg border px-4 py-3 text-sm",
+            selectedRepoConnected
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+              : "border-amber-500/30 bg-amber-500/10 text-amber-200",
+          )}
+        >
+          <div className="flex items-start gap-2">
+            <CheckCircle2
+              size={16}
+              className={clsx(
+                "mt-0.5 shrink-0",
+                selectedRepoConnected ? "text-emerald-300" : "text-amber-300",
+              )}
+            />
+            <div>
+              <p className="font-medium text-white">Selected repository</p>
+              <p>{selectedRepoFullName}</p>
+              <p className="mt-1 text-xs text-gray-300">
+                {selectedRepoConnected
+                  ? "This repository is available through the current GitHub connection."
+                  : "This repository is not available in the current GitHub connection yet. Connect GitHub and select the repo before import."}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
@@ -301,6 +355,11 @@ export function GitHubAppSettingsClient({
                         <span className="text-sm text-white">
                           {repo.fullName}
                         </span>
+                        {normalizedSelectedRepo === repo.fullName.toLowerCase() && (
+                          <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300">
+                            selected for import
+                          </span>
+                        )}
                         <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-xs text-gray-400">
                           {repo.branch}
                         </span>

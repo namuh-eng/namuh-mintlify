@@ -262,7 +262,7 @@ export default function OnboardingPage() {
       if (!res.ok) {
         const data = await res.json();
         setProjectError(data.error || "Failed to create project");
-        if (data.githubImportAccess?.status === "private_auth_required") {
+        if (data.githubImportAccess?.status === "repo_not_connected") {
           setStep(1);
           setRepoHint(
             "GitHub connection is required before importing docs from that repository.",
@@ -289,7 +289,7 @@ export default function OnboardingPage() {
         setProjectError(
           provisionData?.error || "Failed to provision initial content",
         );
-        if (provisionData?.githubImportAccess?.status === "private_auth_required") {
+        if (provisionData?.githubImportAccess?.status === "repo_not_connected") {
           setStep(1);
           setRepoHint(
             "GitHub connection is required before importing docs from that repository.",

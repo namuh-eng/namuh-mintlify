@@ -1,12 +1,19 @@
-import { githubConnections, orgMemberships, projects } from "@/lib/db/schema";
 import { db } from "@/lib/db";
-import { and, eq } from "drizzle-orm";
+import { githubConnections, orgMemberships, projects } from "@/lib/db/schema";
 import { parseGitHubUrl } from "@/lib/git-settings";
+import { and, eq } from "drizzle-orm";
+
+export interface ConnectedGitHubRepo {
+  fullName: string;
+  branch: string;
+  permissions: string;
+  installationId: string;
+}
 
 export type GitHubImportAccessStatus =
   | "no_repo"
   | "public"
-  | "private_auth_required"
+  | "repo_not_connected"
   | "private_connected"
   | "invalid_repo";
 
@@ -30,8 +37,8 @@ export function getGitHubImportAccessMessage(
       return null;
     case "invalid_repo":
       return "Repository URL must be a GitHub repository";
-    case "private_auth_required":
-      return "Connect GitHub before importing docs from a private repository";
+    case "repo_not_connected":
+      return "Connect GitHub and select this repository before importing docs";
     default:
       return "GitHub connection required";
   }
@@ -44,7 +51,30 @@ export function isLikelyPublicGitHubRepo(repoUrl: string): boolean {
   }
 
   const normalized = repoUrl.toLowerCase();
-  return !(normalized.includes("/private") || normalized.includes("?private=") || normalized.includes("#private"));
+  return !(
+    normalized.includes("/private") ||
+    normalized.includes("?private=") ||
+    normalized.includes("#private")
+  );
+}
+
+export async function listConnectedGitHubRepos(
+  orgId: string,
+): Promise<ConnectedGitHubRepo[]> {
+  const connections = await db
+    .select({
+      installationId: githubConnections.installationId,
+      repos: githubConnections.repos,
+    })
+    .from(githubConnections)
+    .where(eq(githubConnections.orgId, orgId));
+
+  return connections.flatMap((connection) =>
+    (connection.repos ?? []).map((repo) => ({
+      ...repo,
+      installationId: connection.installationId,
+    })),
+  );
 }
 
 export async function resolveGitHubImportAccessForRepoUrl(params: {
@@ -66,16 +96,10 @@ export async function resolveGitHubImportAccessForRepoUrl(params: {
   }
 
   const repoFullName = `${parsed.owner}/${parsed.repo}`.toLowerCase();
+  const connectedRepos = await listConnectedGitHubRepos(params.orgId);
 
-  const connections = await db
-    .select({ repos: githubConnections.repos })
-    .from(githubConnections)
-    .where(eq(githubConnections.orgId, params.orgId));
-
-  const hasConnectedRepo = connections.some((connection) =>
-    (connection.repos ?? []).some(
-      (repo) => repo.fullName.toLowerCase() === repoFullName,
-    ),
+  const hasConnectedRepo = connectedRepos.some(
+    (repo) => repo.fullName.toLowerCase() === repoFullName,
   );
 
   if (hasConnectedRepo) {
@@ -97,11 +121,11 @@ export async function resolveGitHubImportAccessForRepoUrl(params: {
   }
 
   return {
-    status: "private_auth_required",
+    status: "repo_not_connected",
     owner: parsed.owner,
     repo: parsed.repo,
     repoFullName,
-    message: "Connect GitHub before importing docs from a private repository",
+    message: "Connect GitHub and select this repository before importing docs",
   };
 }
 
@@ -117,13 +141,16 @@ export async function resolveGitHubImportAccessForProject(params: {
     .from(projects)
     .innerJoin(orgMemberships, eq(orgMemberships.orgId, projects.orgId))
     .where(
-      and(eq(projects.id, params.projectId), eq(orgMemberships.userId, params.userId)),
+      and(
+        eq(projects.id, params.projectId),
+        eq(orgMemberships.userId, params.userId),
+      ),
     )
     .limit(1);
 
   if (rows.length === 0) {
     return {
-      status: "private_auth_required",
+      status: "repo_not_connected",
       message: "GitHub connection required",
     };
   }

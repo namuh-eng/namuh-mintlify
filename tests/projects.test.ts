@@ -182,11 +182,11 @@ describe("github import access helpers", () => {
     ).toBe(false);
   });
 
-  it("returns connection-required message for private auth-required status", async () => {
+  it("returns connection-required message for repo-not-connected status", async () => {
     const mod = await import("@/lib/github-import");
     expect(
-      mod.getGitHubImportAccessMessage({ status: "private_auth_required" }),
-    ).toBe("Connect GitHub before importing docs from a private repository");
+      mod.getGitHubImportAccessMessage({ status: "repo_not_connected" }),
+    ).toBe("Connect GitHub and select this repository before importing docs");
   });
 });
 

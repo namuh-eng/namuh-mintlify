@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { githubConnections, orgMemberships } from "@/lib/db/schema";
+import { githubConnections, orgMemberships, projects } from "@/lib/db/schema";
+import { parseGitHubUrl } from "@/lib/git-settings";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -20,10 +21,27 @@ export default async function GitHubAppSettingsPage() {
 
   const orgId = membership[0].orgId;
 
-  const connections = await db
-    .select()
-    .from(githubConnections)
-    .where(eq(githubConnections.orgId, orgId));
+  const [connections, orgProjects] = await Promise.all([
+    db.select().from(githubConnections).where(eq(githubConnections.orgId, orgId)),
+    db
+      .select({ repoUrl: projects.repoUrl })
+      .from(projects)
+      .where(eq(projects.orgId, orgId)),
+  ]);
+
+  const selectedRepoFullName =
+    orgProjects
+      .map((project) => project.repoUrl)
+      .find((repoUrl): repoUrl is string => Boolean(parseGitHubUrl(repoUrl ?? "")))
+      ?.trim()
+      ? (() => {
+          const parsed = parseGitHubUrl(
+            orgProjects.find((project) => parseGitHubUrl(project.repoUrl ?? ""))
+              ?.repoUrl ?? "",
+          );
+          return parsed ? `${parsed.owner}/${parsed.repo}` : null;
+        })()
+      : null;
 
   return (
     <GitHubAppSettingsClient
@@ -41,6 +59,7 @@ export default async function GitHubAppSettingsPage() {
       isAdmin={
         membership[0].role === "admin" || membership[0].role === "editor"
       }
+      selectedRepoFullName={selectedRepoFullName}
     />
   );
 }

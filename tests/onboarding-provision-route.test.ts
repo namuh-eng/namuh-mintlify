@@ -128,10 +128,10 @@ describe("POST /api/onboarding/provision", () => {
       .mockReturnValueOnce(pagesLookup);
 
     resolveGitHubImportAccessForProjectMock.mockResolvedValue({
-      status: "private_auth_required",
+      status: "repo_not_connected",
     });
     getGitHubImportAccessMessageMock.mockReturnValue(
-      "Connect GitHub before importing docs from a private repository",
+      "Connect GitHub and select this repository before importing docs",
     );
 
     const { POST } = await import("@/app/api/onboarding/provision/route");
@@ -142,8 +142,8 @@ describe("POST /api/onboarding/provision", () => {
 
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toEqual({
-      error: "Connect GitHub before importing docs from a private repository",
-      githubImportAccess: { status: "private_auth_required" },
+      error: "Connect GitHub and select this repository before importing docs",
+      githubImportAccess: { status: "repo_not_connected" },
     });
   });
 
