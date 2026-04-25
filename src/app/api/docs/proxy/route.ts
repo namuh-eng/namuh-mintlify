@@ -98,9 +98,13 @@ export async function POST(req: Request): Promise<NextResponse> {
       }
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000); // 10s timeout
+
     const fetchOptions: RequestInit = {
       method,
       headers: fetchHeaders,
+      signal: controller.signal,
     };
 
     if (body && method !== "GET" && method !== "HEAD") {
@@ -108,6 +112,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     const response = await fetch(url, fetchOptions);
+    clearTimeout(timeoutId);
     const responseBody = await response.text();
 
     // Collect response headers

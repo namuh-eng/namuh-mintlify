@@ -152,6 +152,7 @@ describe("POST /api/docs/proxy", () => {
         Accept: "application/json",
       },
       body: '{"hello":"world"}',
+      signal: expect.any(AbortSignal),
     });
 
     expect(response.status).toBe(200);
@@ -207,6 +208,7 @@ describe("POST /api/docs/proxy", () => {
     expect(fetchMock).toHaveBeenCalledWith("https://example.com/docs.json", {
       method: "GET",
       headers: {},
+      signal: expect.any(AbortSignal),
     });
     expect(response.status).toBe(200);
   });
