@@ -286,7 +286,7 @@ export default function OnboardingPage() {
       );
     } else {
       setRepoHint(
-        "Public repos can be imported without a GitHub connection. Connect GitHub for private repos or future verified sync.",
+        "Public repos can be linked without a GitHub connection. We will create starter docs now, and verified GitHub sync can be connected later.",
       );
     }
     setStep(2);
@@ -497,9 +497,10 @@ export default function OnboardingPage() {
                   Connect your repository
                 </h1>
                 <p className="text-sm text-gray-400">
-                  Link a GitHub repository to sync your documentation. Public
-                  repos can work without auth, but private repos require a
-                  verified GitHub connection.
+                  Link a GitHub repository for source context. Private repos
+                  require a verified GitHub connection. Public repos can be
+                  linked without auth, but onboarding still starts from starter
+                  docs until verified sync/import is available.
                 </p>
               </div>
 
