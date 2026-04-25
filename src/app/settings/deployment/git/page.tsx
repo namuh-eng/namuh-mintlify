@@ -1,9 +1,9 @@
 "use client";
 
+import { resolveGitHubSource } from "@/lib/github-source";
 import {
   buildZipDownloadUrl,
   getRepoDisplayName,
-  parseGitHubUrl,
 } from "@/lib/git-settings";
 import type { VcsProvider } from "@/lib/git-settings";
 import { useEffect, useState } from "react";
@@ -82,21 +82,24 @@ export default function GitSettingsPage() {
     }
   };
 
+  const githubSource = resolveGitHubSource({
+    repoUrl: project?.repoUrl,
+    repoBranch: project?.repoBranch,
+    repoPath: project?.repoPath,
+    settings: project?.settings,
+  });
+
   const handleClone = (visibility: "public" | "private") => {
     if (!project?.repoUrl) return;
-    const parsed = parseGitHubUrl(project.repoUrl);
-    if (!parsed) return;
 
     const url = `https://github.com/new/import?url=${encodeURIComponent(project.repoUrl)}&visibility=${visibility}`;
     window.open(url, "_blank", "noopener");
   };
 
   const handleDownloadZip = () => {
-    if (!project?.repoUrl) return;
-    const parsed = parseGitHubUrl(project.repoUrl);
-    if (!parsed) return;
+    if (!githubSource) return;
 
-    const url = buildZipDownloadUrl(parsed.owner, parsed.repo, branch);
+    const url = buildZipDownloadUrl(githubSource.owner, githubSource.repo, branch);
     window.open(url, "_blank", "noopener");
   };
 
@@ -182,7 +185,7 @@ export default function GitSettingsPage() {
     );
   }
 
-  const repoDisplay = getRepoDisplayName(project.repoUrl);
+  const repoDisplay = githubSource?.repoFullName ?? getRepoDisplayName(project.repoUrl);
 
   return (
     <div className="p-6 max-w-2xl">
@@ -197,7 +200,7 @@ export default function GitSettingsPage() {
         <h2 className="text-sm font-medium text-white mb-1">Repository</h2>
         <p className="text-sm text-gray-400">
           {repoDisplay}
-          {project.repoUrl && (
+          {githubSource && (
             <span className="ml-2 text-xs text-gray-500">
               (branch: {branch}, path: {repoPath})
             </span>

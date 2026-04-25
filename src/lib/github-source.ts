@@ -37,6 +37,60 @@ export function buildGitHubSourceSelection(params: {
   };
 }
 
+export function readGitHubSourceFromSettings(
+  settings: Record<string, unknown> | null | undefined,
+): GitHubSourceSelection | null {
+  const candidate = settings?.githubSource;
+  if (!candidate || typeof candidate !== "object") {
+    return null;
+  }
+
+  const source = candidate as Record<string, unknown>;
+  if (
+    typeof source.repoFullName !== "string" ||
+    typeof source.owner !== "string" ||
+    typeof source.repo !== "string" ||
+    (source.sourceType !== "connected_repo" && source.sourceType !== "public_repo")
+  ) {
+    return null;
+  }
+
+  return {
+    repoFullName: source.repoFullName,
+    owner: source.owner,
+    repo: source.repo,
+    installationId:
+      typeof source.installationId === "string"
+        ? source.installationId
+        : undefined,
+    branch: typeof source.branch === "string" ? source.branch : undefined,
+    path: typeof source.path === "string" ? source.path : undefined,
+    sourceType: source.sourceType,
+  };
+}
+
+export function resolveGitHubSource(params: {
+  repoUrl?: string | null;
+  repoBranch?: string | null;
+  repoPath?: string | null;
+  settings?: Record<string, unknown> | null;
+}): GitHubSourceSelection | null {
+  const fromSettings = readGitHubSourceFromSettings(params.settings);
+  if (fromSettings) {
+    return {
+      ...fromSettings,
+      branch: params.repoBranch?.trim() || fromSettings.branch,
+      path: params.repoPath?.trim() || fromSettings.path,
+    };
+  }
+
+  return buildGitHubSourceSelection({
+    repoUrl: params.repoUrl,
+    repoBranch: params.repoBranch,
+    repoPath: params.repoPath,
+  });
+}
+
 export function mergeProjectSettingsWithGitHubSource(
   existing: Record<string, unknown> | null | undefined,
   selection: GitHubSourceSelection | null,

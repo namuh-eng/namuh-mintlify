@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { githubConnections, orgMemberships, projects } from "@/lib/db/schema";
-import { parseGitHubUrl } from "@/lib/git-settings";
+import { resolveGitHubSource } from "@/lib/github-source";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -24,24 +24,27 @@ export default async function GitHubAppSettingsPage() {
   const [connections, orgProjects] = await Promise.all([
     db.select().from(githubConnections).where(eq(githubConnections.orgId, orgId)),
     db
-      .select({ repoUrl: projects.repoUrl })
+      .select({
+        repoUrl: projects.repoUrl,
+        repoBranch: projects.repoBranch,
+        repoPath: projects.repoPath,
+        settings: projects.settings,
+      })
       .from(projects)
       .where(eq(projects.orgId, orgId)),
   ]);
 
   const selectedRepoFullName =
     orgProjects
-      .map((project) => project.repoUrl)
-      .find((repoUrl): repoUrl is string => Boolean(parseGitHubUrl(repoUrl ?? "")))
-      ?.trim()
-      ? (() => {
-          const parsed = parseGitHubUrl(
-            orgProjects.find((project) => parseGitHubUrl(project.repoUrl ?? ""))
-              ?.repoUrl ?? "",
-          );
-          return parsed ? `${parsed.owner}/${parsed.repo}` : null;
-        })()
-      : null;
+      .map((project) =>
+        resolveGitHubSource({
+          repoUrl: project.repoUrl,
+          repoBranch: project.repoBranch,
+          repoPath: project.repoPath,
+          settings: project.settings,
+        }),
+      )
+      .find((source) => Boolean(source?.repoFullName))?.repoFullName ?? null;
 
   return (
     <GitHubAppSettingsClient

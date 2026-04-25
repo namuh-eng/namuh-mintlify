@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { deployments, githubConnections, projects } from "@/lib/db/schema";
+import { resolveGitHubSource } from "@/lib/github-source";
 import {
   buildDeployMessage,
   extractBranchFromRef,
@@ -48,7 +49,6 @@ export async function POST(request: Request) {
 
   const secret = process.env.GITHUB_WEBHOOK_SECRET ?? "";
 
-  // Verify signature if secret is configured
   if (secret) {
     if (!verifyWebhookSignature(rawBody, signature, secret)) {
       logger.warn("github_webhook_invalid_signature", {
@@ -64,7 +64,6 @@ export async function POST(request: Request) {
     }
   }
 
-  // Only process push events
   if (eventType !== "push") {
     logger.info("github_webhook_ignored_event", {
       requestId,
@@ -113,7 +112,6 @@ export async function POST(request: Request) {
 
   const repoFullName = payload.repository.full_name;
 
-  // Find all GitHub connections that match this repo
   const connections = await db
     .select()
     .from(githubConnections)
@@ -135,25 +133,27 @@ export async function POST(request: Request) {
     const match = matchesPushTarget(repos, repoFullName, branch);
     if (!match) continue;
 
-    // Find projects belonging to this org that use this repo
     const orgProjects = await db
       .select({
         id: projects.id,
         repoUrl: projects.repoUrl,
         repoBranch: projects.repoBranch,
+        repoPath: projects.repoPath,
+        settings: projects.settings,
       })
       .from(projects)
       .where(eq(projects.orgId, conn.orgId));
 
     for (const project of orgProjects) {
-      // Match by repo URL or deploy any project in the org if no repo URL set
-      const projectRepo = project.repoUrl
-        ? project.repoUrl
-            .replace(/^https?:\/\/github\.com\//, "")
-            .replace(/\.git$/, "")
-        : null;
+      const githubSource = resolveGitHubSource({
+        repoUrl: project.repoUrl,
+        repoBranch: project.repoBranch,
+        repoPath: project.repoPath,
+        settings: project.settings,
+      });
 
-      const branchMatch = !project.repoBranch || project.repoBranch === branch;
+      const projectRepo = githubSource?.repoFullName ?? null;
+      const branchMatch = !githubSource?.branch || githubSource.branch === branch;
 
       if (
         (projectRepo &&
@@ -171,7 +171,6 @@ export async function POST(request: Request) {
           commitMessage,
         });
 
-        // Update project status
         await db
           .update(projects)
           .set({ status: "deploying" })
