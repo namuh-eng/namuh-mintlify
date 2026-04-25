@@ -12,6 +12,7 @@ import {
   type VisualEditorHandle,
 } from "@/components/editor/visual-editor";
 import { EmptyState } from "@/components/empty-state";
+import { useActiveProject } from "@/hooks/use-active-project";
 import type { EditorMode, MdxSnippetKey } from "@/lib/editor";
 import {
   createAutoSave,
@@ -77,8 +78,6 @@ async function getErrorMessage(
     return fallback;
   }
 }
-
-// ── File Tree Node Component ─────────────────────────────────────────────
 
 function TreeNodeItem({
   node,
@@ -166,8 +165,6 @@ function TreeNodeItem({
     </div>
   );
 }
-
-// ── Create Page Modal ────────────────────────────────────────────────────
 
 function CreatePageModal({
   onClose,
@@ -277,8 +274,6 @@ function CreatePageModal({
   );
 }
 
-// ── Delete Confirmation Modal ────────────────────────────────────────────
-
 function DeletePageModal({
   page,
   onClose,
@@ -346,8 +341,6 @@ function DeletePageModal({
   );
 }
 
-// ── Main Editor Page ─────────────────────────────────────────────────────
-
 export default function EditorPage() {
   const [pages, setPages] = useState<PageListItem[]>([]);
   const [selectedPage, setSelectedPage] = useState<PageData | null>(null);
@@ -359,8 +352,9 @@ export default function EditorPage() {
     title: string;
     path: string;
   } | null>(null);
-  const [projectId, setProjectId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { project, loading } = useActiveProject<{ id: string }>();
+  const projectId = project?.id ?? null;
+  const [pagesLoading, setPagesLoading] = useState(true);
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -372,8 +366,6 @@ export default function EditorPage() {
   const [currentBranch, setCurrentBranch] = useState("main");
   const [cursorPos, setCursorPos] = useState<number | null>(null);
   const visualEditorRef = useRef<VisualEditorHandle | null>(null);
-
-  // Auto-save setup
   const autoSaveRef = useRef<ReturnType<typeof createAutoSave> | null>(null);
 
   const doSave = useCallback(
@@ -405,7 +397,6 @@ export default function EditorPage() {
     [projectId, selectedPageId],
   );
 
-  // Initialize auto-save
   useEffect(() => {
     autoSaveRef.current = createAutoSave(doSave, 2000);
     return () => {
@@ -413,7 +404,6 @@ export default function EditorPage() {
     };
   }, [doSave]);
 
-  // Handle content changes with auto-save
   const handleContentChange = useCallback((newContent: string) => {
     setContent(newContent);
     setHasUnsavedChanges(true);
@@ -421,7 +411,6 @@ export default function EditorPage() {
     autoSaveRef.current?.trigger(newContent);
   }, []);
 
-  // Extract TOC from body
   const tocEntries = useMemo(() => {
     const { body } = extractFrontmatter(content);
     return extractToc(body);
@@ -429,21 +418,12 @@ export default function EditorPage() {
 
   const visualBody = useMemo(() => extractFrontmatter(content).body, [content]);
 
-  // Fetch the first project to get its ID
-  useEffect(() => {
-    async function fetchProject() {
-      const res = await fetch("/api/projects");
-      const data = await res.json();
-      if (data.projects?.length > 0) {
-        setProjectId(data.projects[0].id);
-      }
-      setLoading(false);
-    }
-    fetchProject();
-  }, []);
-
   const fetchPages = useCallback(async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      setPagesLoading(false);
+      return;
+    }
+
     const res = await fetch(`/api/projects/${projectId}/pages`);
     const data = await res.json();
     if (data.pages) {
@@ -463,13 +443,13 @@ export default function EditorPage() {
         return data.pages[0].id;
       });
     }
+    setPagesLoading(false);
   }, [projectId]);
 
   useEffect(() => {
     fetchPages();
   }, [fetchPages]);
 
-  // Fetch selected page content
   useEffect(() => {
     if (!projectId || !selectedPageId) {
       setSelectedPage(null);
@@ -493,13 +473,11 @@ export default function EditorPage() {
     fetchPage();
   }, [projectId, selectedPageId]);
 
-  // Manual save
   async function handleSaveContent() {
     autoSaveRef.current?.cancel();
     await doSave(content);
   }
 
-  // Save page settings
   async function handleSaveSettings(updates: Record<string, unknown>) {
     if (!projectId || !selectedPageId) return;
     const updateResponse = await fetch(
@@ -535,7 +513,6 @@ export default function EditorPage() {
     return cursorPos ?? content.length;
   }
 
-  // Toolbar formatting handlers
   function handleBold() {
     if (editorMode === "visual") {
       visualEditorRef.current?.toggleBold();
@@ -621,24 +598,7 @@ export default function EditorPage() {
     autoSaveRef.current?.trigger(newText);
   }
 
-  function handleCodeBlock() {
-    if (editorMode === "visual") {
-      visualEditorRef.current?.insertCodeBlock();
-      return;
-    }
-
-    const { newText, newCursorPos } = insertSnippetAtCursor(
-      content,
-      getInsertCursorPos(),
-      mdxSnippets.codeBlock,
-    );
-    setContent(newText);
-    setCursorPos(newCursorPos);
-    setHasUnsavedChanges(true);
-    autoSaveRef.current?.trigger(newText);
-  }
-
-  function handleInsertSnippet(key: MdxSnippetKey) {
+  function handleSnippet(key: MdxSnippetKey) {
     const snippet = mdxSnippets[key];
     const { newText, newCursorPos } = insertSnippetAtCursor(
       content,
@@ -651,368 +611,209 @@ export default function EditorPage() {
     autoSaveRef.current?.trigger(newText);
   }
 
-  const tree: TreeNode[] = buildPageTree(
-    pages.map((p) => ({ id: p.id, path: p.path, title: p.title })),
-  );
+  const pageTree = useMemo(() => buildPageTree(pages), [pages]);
 
-  if (loading) {
+  if (loading || pagesLoading) {
     return (
-      <div className="flex items-center justify-center h-full min-h-[400px] text-gray-500">
-        Loading editor...
+      <div className="p-6 max-w-2xl">
+        <div className="text-gray-400">Loading...</div>
       </div>
     );
   }
 
   if (!projectId) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[400px] text-gray-500">
-        No project found. Create a project first.
-      </div>
-    );
+    return <EmptyState {...editorEmptyState} />;
   }
 
   return (
-    <div
-      className="flex flex-col h-[calc(100vh-48px)]"
-      data-testid="editor-page"
-    >
-      {/* Toolbar */}
-      <EditorToolbar
-        mode={editorMode}
-        onModeChange={setEditorMode}
-        onBold={handleBold}
-        onItalic={handleItalic}
-        onHeading={handleHeading}
-        onLink={handleLink}
-        onImage={handleImage}
-        onCodeBlock={handleCodeBlock}
-        onInsertSnippet={handleInsertSnippet}
-        onToggleSettings={() => {
-          setShowSettings(!showSettings);
-          setShowComments(false);
-          setShowSuggestions(false);
-        }}
-        onToggleComments={() => {
-          setShowComments(!showComments);
-          setShowSettings(false);
-          setShowSuggestions(false);
-        }}
-        onToggleSuggestions={() => {
-          setShowSuggestions(!showSuggestions);
-          setShowSettings(false);
-          setShowComments(false);
-        }}
-        onPublish={handleSaveContent}
-        projectId={projectId}
-        currentBranch={currentBranch}
-        onBranchChange={setCurrentBranch}
-        isSaving={saving}
-        hasUnsavedChanges={hasUnsavedChanges}
-      />
-
-      {/* Main content area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left panel — Navigation / Files */}
-        <div className="w-64 border-r border-white/[0.08] flex flex-col bg-[#0f0f0f] shrink-0">
-          {/* Tabs */}
-          <div className="flex border-b border-white/[0.08]">
+    <div className="h-screen flex bg-[#0f0f0f] text-white overflow-hidden">
+      <aside className="w-72 border-r border-white/[0.08] bg-[#111111] flex flex-col">
+        <div className="p-4 border-b border-white/[0.08]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <File size={18} className="text-emerald-400" />
+              <h1 className="font-semibold">Editor</h1>
+            </div>
             <button
               type="button"
-              onClick={() => setActiveTab("navigation")}
-              className={clsx(
-                "flex-1 px-4 py-2.5 text-xs font-medium transition-colors",
-                activeTab === "navigation"
-                  ? "text-white border-b-2 border-emerald-500"
-                  : "text-gray-500 hover:text-gray-300",
-              )}
+              onClick={() => setShowCreateModal(true)}
+              className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors"
+              title="Create new page"
             >
-              Navigation
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("files")}
-              className={clsx(
-                "flex-1 px-4 py-2.5 text-xs font-medium transition-colors",
-                activeTab === "files"
-                  ? "text-white border-b-2 border-emerald-500"
-                  : "text-gray-500 hover:text-gray-300",
-              )}
-            >
-              Files
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("configurations")}
-              data-testid="configs-tab"
-              className={clsx(
-                "flex-1 px-2 py-2.5 text-xs font-medium transition-colors flex items-center justify-center gap-1",
-                activeTab === "configurations"
-                  ? "text-white border-b-2 border-emerald-500"
-                  : "text-gray-500 hover:text-gray-300",
-              )}
-            >
-              <Settings2 size={12} />
-              Config
+              <Plus size={14} />
             </button>
           </div>
 
-          {activeTab === "configurations" ? (
-            <div className="flex-1 overflow-y-auto">
-              <ConfigsPanel
-                projectId={projectId}
-                onClose={() => setActiveTab("navigation")}
-              />
-            </div>
-          ) : (
-            <>
-              {/* Panel header with Add button */}
-              <div className="flex items-center justify-between px-3 py-2">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {activeTab === "navigation" ? "Navigation" : "File Explorer"}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(true)}
-                  className="p-1 rounded hover:bg-white/[0.06] text-gray-400 hover:text-white transition-colors"
-                  aria-label="Add new page"
-                  data-testid="add-page-btn"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-
-              {/* Tree / File list */}
-              <div className="flex-1 overflow-y-auto px-1 py-1">
-                {activeTab === "navigation" ? (
-                  tree.length > 0 ? (
-                    <div data-testid="page-tree">
-                      {tree.map((node) => (
-                        <TreeNodeItem
-                          key={node.path}
-                          node={node}
-                          depth={0}
-                          selectedPageId={selectedPageId}
-                          onSelectPage={setSelectedPageId}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="px-3 py-8 text-center text-sm text-gray-600">
-                      No pages yet.{" "}
-                      <button
-                        type="button"
-                        onClick={() => setShowCreateModal(true)}
-                        className="text-emerald-500 hover:underline"
-                      >
-                        Add new
-                      </button>
-                    </div>
-                  )
-                ) : (
-                  <div data-testid="file-list">
-                    {pages.map((page) => (
-                      <button
-                        type="button"
-                        key={page.id}
-                        onClick={() => setSelectedPageId(page.id)}
-                        className={clsx(
-                          "flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded-md transition-colors",
-                          selectedPageId === page.id
-                            ? "bg-emerald-600/20 text-emerald-400"
-                            : "text-gray-400 hover:bg-white/[0.06] hover:text-gray-200",
-                        )}
-                      >
-                        <File size={14} className="shrink-0 text-gray-500" />
-                        <span className="truncate">{page.path}</span>
-                      </button>
-                    ))}
-                    {pages.length === 0 && (
-                      <div className="px-3 py-8 text-center text-sm text-gray-600">
-                        No files yet.
-                      </div>
-                    )}
-                  </div>
+          <div className="flex items-center gap-2 rounded-lg bg-[#0f0f0f] p-1">
+            {[
+              { key: "navigation", label: "Navigation", icon: FolderOpen },
+              { key: "files", label: "Files", icon: FileText },
+              { key: "configurations", label: "Configs", icon: Settings2 },
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActiveTab(key as ActiveTab)}
+                className={clsx(
+                  "flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-colors",
+                  activeTab === key
+                    ? "bg-white/[0.08] text-white"
+                    : "text-gray-500 hover:text-gray-300",
                 )}
-              </div>
-
-              {/* Add new link at bottom */}
-              <div className="border-t border-white/[0.08] p-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-2 w-full px-2 py-1.5 text-sm text-gray-500 hover:bg-white/[0.06] hover:text-gray-300 rounded-md transition-colors"
-                >
-                  <Plus size={14} />
-                  <span>Add new</span>
-                </button>
-              </div>
-            </>
-          )}
+              >
+                <Icon size={12} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Center: Editor content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {selectedPage ? (
-            <>
-              {/* Page header */}
-              <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.08]">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-3">
-                    <h1
-                      className="text-xl font-semibold text-white"
-                      data-testid="page-title"
-                    >
-                      {selectedPage.title}
-                    </h1>
-                    <code className="text-xs text-gray-500 bg-white/[0.04] px-2 py-0.5 rounded">
-                      {selectedPage.path}
-                    </code>
-                    {selectedPage.isPublished && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-600/20 text-emerald-400 font-medium">
-                        Published
-                      </span>
-                    )}
-                  </div>
-                  {actionError ? (
-                    <p
-                      className="mt-1 text-sm text-red-400"
-                      data-testid="editor-action-error"
-                    >
-                      {actionError}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="flex items-center gap-2">
+        <div className="flex-1 overflow-y-auto p-3">
+          {activeTab === "navigation" && (
+            <div className="space-y-1">
+              {pageTree.length === 0 ? (
+                <p className="text-sm text-gray-500 px-2 py-4">No pages yet</p>
+              ) : (
+                pageTree.map((node) => (
+                  <TreeNodeItem
+                    key={node.path}
+                    node={node}
+                    depth={0}
+                    selectedPageId={selectedPageId}
+                    onSelectPage={setSelectedPageId}
+                  />
+                ))
+              )}
+            </div>
+          )}
+
+          {activeTab === "files" && (
+            <div className="space-y-1">
+              {pages.map((page) => (
+                <div
+                  key={page.id}
+                  className={clsx(
+                    "group flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors",
+                    selectedPageId === page.id
+                      ? "bg-emerald-600/20 text-emerald-400"
+                      : "text-gray-400 hover:bg-white/[0.06] hover:text-gray-200",
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPageId(page.id)}
+                    className="flex-1 flex items-center gap-2 min-w-0 text-left"
+                  >
+                    <FileText size={14} className="shrink-0" />
+                    <span className="truncate">{page.title}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() =>
                       setDeleteTarget({
-                        id: selectedPage.id,
-                        title: selectedPage.title,
-                        path: selectedPage.path,
+                        id: page.id,
+                        title: page.title,
+                        path: page.path,
                       })
                     }
-                    className="p-2 rounded-md text-gray-500 hover:bg-red-600/10 hover:text-red-400 transition-colors"
-                    aria-label="Delete page"
-                    data-testid="delete-page-btn"
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-600/20 hover:text-red-400 transition-all"
+                    title="Delete page"
                   >
-                    <Trash2 size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveContent}
-                    disabled={saving}
-                    className="px-4 py-1.5 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-500 disabled:opacity-50"
-                    data-testid="save-content-btn"
-                  >
-                    {saving ? "Saving..." : "Save"}
+                    <Trash2 size={12} />
                   </button>
                 </div>
-              </div>
-
-              {/* Dual-mode editor */}
-              <div className="flex-1 overflow-hidden">
-                {editorMode === "visual" ? (
-                  <VisualEditor
-                    ref={visualEditorRef}
-                    content={visualBody}
-                    onChange={(newBody) => {
-                      const { frontmatter } = extractFrontmatter(content);
-                      handleContentChange(
-                        serializeFrontmatter(frontmatter, newBody),
-                      );
-                    }}
-                  />
-                ) : (
-                  <MarkdownEditor
-                    value={content}
-                    onChange={handleContentChange}
-                    onCursorChange={setCursorPos}
-                  />
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
-              {pages.length === 0 ? (
-                <EmptyState
-                  icon={<FileText size={32} className="text-emerald-500" />}
-                  title={editorEmptyState.title}
-                  description={editorEmptyState.description}
-                  action={{
-                    label: editorEmptyState.ctaLabel,
-                    onClick: () => setShowCreateModal(true),
-                  }}
-                />
-              ) : (
-                <div className="text-center">
-                  <FileText size={48} className="mx-auto mb-4 text-gray-700" />
-                  <p className="text-lg font-medium text-gray-400">
-                    Select a page to edit
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Choose a page from the sidebar or create a new one
-                  </p>
-                </div>
-              )}
+              ))}
             </div>
+          )}
+
+          {activeTab === "configurations" && (
+            <ConfigsPanel
+              projectId={projectId}
+              currentBranch={currentBranch}
+              onBranchChange={setCurrentBranch}
+            />
           )}
         </div>
+      </aside>
 
-        {/* Right panel: Settings, Comments, Suggestions, or TOC */}
-        {selectedPage && showSettings && (
-          <PageSettingsPanel
-            settings={{
-              title: selectedPage.title,
-              path: selectedPage.path,
-              description: selectedPage.description || "",
-              isPublished: selectedPage.isPublished,
-              frontmatter:
-                (selectedPage.frontmatter as Record<string, unknown>) || {},
-            }}
-            onSave={handleSaveSettings}
-            onClose={() => setShowSettings(false)}
-          />
-        )}
+      <main className="flex-1 flex flex-col min-w-0">
+        {selectedPage ? (
+          <>
+            <EditorToolbar
+              mode={editorMode}
+              onModeChange={setEditorMode}
+              onBold={handleBold}
+              onItalic={handleItalic}
+              onHeading={handleHeading}
+              onLink={handleLink}
+              onImage={handleImage}
+              onSave={handleSaveContent}
+              saving={saving}
+              hasUnsavedChanges={hasUnsavedChanges}
+              showSettings={showSettings}
+              onToggleSettings={() => setShowSettings(!showSettings)}
+              showComments={showComments}
+              onToggleComments={() => setShowComments(!showComments)}
+              showSuggestions={showSuggestions}
+              onToggleSuggestions={() => setShowSuggestions(!showSuggestions)}
+              onInsertSnippet={handleSnippet}
+            />
 
-        {selectedPage && showComments && (
-          <CommentsSidebar
-            pageId={selectedPageId}
-            onClose={() => setShowComments(false)}
-          />
-        )}
+            <div className="flex-1 flex min-h-0">
+              <div className="flex-1 min-w-0 flex flex-col">
+                {actionError && (
+                  <div className="px-4 py-2 border-b border-red-500/20 bg-red-500/5 text-sm text-red-400">
+                    {actionError}
+                  </div>
+                )}
+                <div className="flex-1 min-h-0">
+                  {editorMode === "visual" ? (
+                    <VisualEditor
+                      ref={visualEditorRef}
+                      value={visualBody}
+                      onChange={handleContentChange}
+                    />
+                  ) : (
+                    <MarkdownEditor
+                      value={content}
+                      onChange={handleContentChange}
+                      onCursorChange={setCursorPos}
+                    />
+                  )}
+                </div>
+              </div>
 
-        {selectedPage && showSuggestions && (
-          <SuggestionsPanel
-            pageId={selectedPageId}
-            onClose={() => setShowSuggestions(false)}
-          />
-        )}
-
-        {selectedPage &&
-          !showSettings &&
-          !showComments &&
-          !showSuggestions &&
-          tocEntries.length > 0 && (
-            <div className="w-48 border-l border-white/[0.08] bg-[#0f0f0f] shrink-0 overflow-y-auto">
               <TocPanel entries={tocEntries} />
-            </div>
-          )}
-      </div>
 
-      {/* Modals */}
-      {showCreateModal && (
+              {showSuggestions && <SuggestionsPanel content={content} />}
+
+              {showComments && <CommentsSidebar pageId={selectedPage.id} />}
+
+              {showSettings && (
+                <PageSettingsPanel
+                  page={selectedPage}
+                  onSave={handleSaveSettings}
+                />
+              )}
+            </div>
+          </>
+        ) : (
+          <EmptyState {...editorEmptyState} />
+        )}
+      </main>
+
+      {showCreateModal && projectId && (
         <CreatePageModal
           projectId={projectId}
           onClose={() => setShowCreateModal(false)}
           onCreated={(pageId) => {
-            setSelectedPageId(pageId);
             fetchPages();
+            setSelectedPageId(pageId);
           }}
         />
       )}
 
-      {deleteTarget && (
+      {deleteTarget && projectId && (
         <DeletePageModal
           page={deleteTarget}
           projectId={projectId}
@@ -1020,7 +821,6 @@ export default function EditorPage() {
           onDeleted={() => {
             if (selectedPageId === deleteTarget.id) {
               setSelectedPageId(null);
-              setSelectedPage(null);
             }
             fetchPages();
           }}
