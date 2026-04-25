@@ -65,7 +65,10 @@ export default function DangerZonePage() {
       const res = await fetch(`/api/projects/${project.id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: deployReason.trim() }),
+        body: JSON.stringify({
+          reason: deployReason.trim(),
+          confirmName: deployConfirmText,
+        }),
       });
 
       if (!res.ok) {
