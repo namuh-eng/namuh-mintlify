@@ -6,7 +6,15 @@ export interface ImportedGitHubDocPage {
   content: string;
 }
 
-export type PublicGitHubImportResult =
+export interface GitHubImportRequestOptions {
+  repoUrl?: string | null;
+  repoBranch?: string | null;
+  repoPath?: string | null;
+  fetchImpl?: typeof fetch;
+  headers?: HeadersInit;
+}
+
+export type GitHubDocsImportResult =
   | {
       ok: true;
       status: "imported";
@@ -61,12 +69,9 @@ function toTitle(markdown: string, fallbackPath: string): string {
     .join(" ");
 }
 
-export async function importPublicGitHubDocs(params: {
-  repoUrl?: string | null;
-  repoBranch?: string | null;
-  repoPath?: string | null;
-  fetchImpl?: typeof fetch;
-}): Promise<PublicGitHubImportResult> {
+export async function importGitHubDocs(
+  params: GitHubImportRequestOptions,
+): Promise<GitHubDocsImportResult> {
   const parsed = parseGitHubUrl(params.repoUrl?.trim() || "");
   if (!parsed) {
     return {
@@ -82,7 +87,10 @@ export async function importPublicGitHubDocs(params: {
   const treeUrl = `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
 
   const treeResponse = await fetchImpl(treeUrl, {
-    headers: { Accept: "application/vnd.github+json" },
+    headers: {
+      Accept: "application/vnd.github+json",
+      ...(params.headers ?? {}),
+    },
   });
 
   if (!treeResponse.ok) {
@@ -101,7 +109,11 @@ export async function importPublicGitHubDocs(params: {
     .filter((path) => {
       if (!/\.(md|mdx)$/i.test(path)) return false;
       if (!basePath) return true;
-      return path === `${basePath}.md` || path === `${basePath}.mdx` || path.startsWith(`${basePath}/`);
+      return (
+        path === `${basePath}.md` ||
+        path === `${basePath}.mdx` ||
+        path.startsWith(`${basePath}/`)
+      );
     });
 
   if (markdownFiles.length === 0) {
@@ -115,9 +127,13 @@ export async function importPublicGitHubDocs(params: {
   const pages = await Promise.all(
     markdownFiles.map(async (filePath) => {
       const rawUrl = `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/${encodeURIComponent(branch)}/${filePath}`;
-      const response = await fetchImpl(rawUrl);
+      const response = await fetchImpl(rawUrl, {
+        headers: params.headers,
+      });
       if (!response.ok) {
-        throw new Error(`GitHub content request failed with status ${response.status} for ${filePath}`);
+        throw new Error(
+          `GitHub content request failed with status ${response.status} for ${filePath}`,
+        );
       }
       const content = await response.text();
       const pagePath = toPagePath(filePath, basePath);
@@ -132,7 +148,9 @@ export async function importPublicGitHubDocs(params: {
     }),
   );
 
-  const importedPages = pages.filter((page): page is ImportedGitHubDocPage => Boolean(page));
+  const importedPages = pages.filter(
+    (page): page is ImportedGitHubDocPage => Boolean(page),
+  );
 
   if (importedPages.length === 0) {
     return {
@@ -153,4 +171,10 @@ export async function importPublicGitHubDocs(params: {
       path: basePath ? `/${basePath}` : "/",
     },
   };
+}
+
+export async function importPublicGitHubDocs(
+  params: GitHubImportRequestOptions,
+): Promise<GitHubDocsImportResult> {
+  return importGitHubDocs(params);
 }

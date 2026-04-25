@@ -361,7 +361,7 @@ describe("POST /api/onboarding/provision", () => {
     });
   });
 
-  it("returns explicit starter-doc metadata for connected github repos until real import exists", async () => {
+  it("returns explicit pending-auth import metadata for connected github repos until authenticated import exists", async () => {
     getSessionMock.mockResolvedValue({ user: { id: "user-1" } });
 
     const membershipLookup = {
@@ -414,10 +414,10 @@ describe("POST /api/onboarding/provision", () => {
     await expect(response.json()).resolves.toMatchObject({
       ok: true,
       provisioning: {
-        mode: "starter_docs",
+        mode: "github_import_pending_auth",
         source: "private_connected",
         message:
-          "Starter docs were created during onboarding. Verified GitHub import has not run yet.",
+          "GitHub repository access is verified, but authenticated import is not implemented yet. Starter docs were created during onboarding.",
       },
     });
   });

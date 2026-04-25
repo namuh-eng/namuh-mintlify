@@ -90,7 +90,7 @@ export async function POST(request: Request) {
   let provisioning:
     | {
         mode: "starter_docs";
-        source: "blank" | "public" | "private_connected";
+        source: "blank" | "public";
         message: string;
       }
     | {
@@ -98,6 +98,11 @@ export async function POST(request: Request) {
         source: "public";
         message: string;
         importedPageCount: number;
+      }
+    | {
+        mode: "github_import_pending_auth";
+        source: "private_connected";
+        message: string;
       };
 
   if (importAccess.status === "public" && projectRows[0].repoUrl) {
@@ -169,10 +174,10 @@ export async function POST(request: Request) {
     provisioning =
       importAccess.status === "private_connected"
         ? {
-            mode: "starter_docs",
+            mode: "github_import_pending_auth",
             source: "private_connected",
             message:
-              "Starter docs were created during onboarding. Verified GitHub import has not run yet.",
+              "GitHub repository access is verified, but authenticated import is not implemented yet. Starter docs were created during onboarding.",
           }
         : {
             mode: "starter_docs",

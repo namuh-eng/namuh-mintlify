@@ -109,6 +109,45 @@ describe("importPublicGitHubDocs", () => {
     }
   });
 
+  it("passes custom headers through to GitHub requests for future authenticated imports", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/git/trees/")) {
+        return {
+          ok: true,
+          json: async () => ({ tree: [{ path: "README.md", type: "blob" }] }),
+        };
+      }
+
+      return {
+        ok: true,
+        text: async () => "# Welcome\n\nHello world",
+      };
+    });
+
+    const { importGitHubDocs } = await import("@/lib/github-docs-import");
+    const result = await importGitHubDocs({
+      repoUrl: "https://github.com/acme/docs",
+      headers: { Authorization: "Bearer secret-token" },
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("/git/trees/"),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer secret-token" }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("raw.githubusercontent.com"),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer secret-token" }),
+      }),
+    );
+  });
+
   it("returns no_markdown_found when the repo path has no markdown files", async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
