@@ -8,6 +8,8 @@ import {
   mergeAppearance,
   validateAppearance,
 } from "@/lib/appearance";
+import { useActiveProject } from "@/hooks/use-active-project";
+import { useProjectUpdater } from "@/hooks/use-project-updater";
 import { clsx } from "clsx";
 import { Monitor, Moon, Sun, Upload, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -241,9 +243,11 @@ function FileUploadZone({
 }
 
 export default function AppearanceSettingsPage() {
-  const [project, setProject] = useState<ProjectData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { project, setProject, loading } = useActiveProject<ProjectData>();
+  const { saving, updateProject } = useProjectUpdater<ProjectData>({
+    projectId: project?.id,
+    setProject,
+  });
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -253,22 +257,14 @@ export default function AppearanceSettingsPage() {
     useState<AppearanceSettings>(DEFAULT_APPEARANCE);
 
   useEffect(() => {
-    fetch("/api/projects")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.projects?.length > 0) {
-          const p = data.projects[0];
-          setProject(p);
-          const existing =
-            (p.settings as Record<string, unknown>)?.appearance ?? {};
-          setAppearance(
-            mergeAppearance(existing as Partial<AppearanceSettings>),
-          );
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    if (!project) {
+      return;
+    }
+
+    const existing =
+      (project.settings as Record<string, unknown>)?.appearance ?? {};
+    setAppearance(mergeAppearance(existing as Partial<AppearanceSettings>));
+  }, [project]);
 
   const updateField = <K extends keyof AppearanceSettings>(
     field: K,
@@ -287,36 +283,21 @@ export default function AppearanceSettingsPage() {
       return;
     }
 
-    setSaving(true);
     setMessage(null);
 
-    try {
-      const res = await fetch(`/api/projects/${project.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          settings: {
-            ...((project.settings as Record<string, unknown>) ?? {}),
-            appearance,
-          },
-        }),
-      });
+    const result = await updateProject({
+      settings: {
+        ...((project.settings as Record<string, unknown>) ?? {}),
+        appearance,
+      },
+    });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setMessage({ type: "error", text: data.error || "Failed to save" });
-        setSaving(false);
-        return;
-      }
-
-      const data = await res.json();
-      setProject(data.project);
-      setMessage({ type: "success", text: "Changes saved" });
-    } catch {
-      setMessage({ type: "error", text: "Something went wrong" });
-    } finally {
-      setSaving(false);
+    if (!result.ok) {
+      setMessage({ type: "error", text: result.error });
+      return;
     }
+
+    setMessage({ type: "success", text: "Changes saved" });
   };
 
   if (loading) {
