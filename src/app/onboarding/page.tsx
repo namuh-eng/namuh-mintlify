@@ -33,6 +33,21 @@ type OnboardingState = {
   } | null;
 };
 
+interface ProjectGitHubSource {
+  repoFullName: string;
+  owner: string;
+  repo: string;
+  installationId?: string;
+  branch?: string;
+  path?: string;
+  sourceType: "connected_repo" | "public_repo";
+}
+
+interface ExistingProject {
+  id: string;
+  githubSource?: ProjectGitHubSource | null;
+}
+
 function readOnboardingState(): OnboardingState | null {
   if (typeof window === "undefined") {
     return null;
@@ -124,7 +139,7 @@ export default function OnboardingPage() {
         setConnectedRepos(repos);
 
         const existingOrg = orgData.orgs?.[0];
-        const existingProject = projectData.projects?.[0];
+        const existingProject = projectData.projects?.[0] as ExistingProject | undefined;
 
         if (existingOrg && existingProject) {
           clearOnboardingState();

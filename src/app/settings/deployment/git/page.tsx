@@ -1,21 +1,11 @@
 "use client";
 
-import { resolveGitHubSource } from "@/lib/github-source";
 import {
   buildZipDownloadUrl,
   getRepoDisplayName,
 } from "@/lib/git-settings";
 import type { VcsProvider } from "@/lib/git-settings";
 import { useEffect, useState } from "react";
-
-interface ProjectData {
-  id: string;
-  slug: string;
-  repoUrl: string | null;
-  repoBranch: string | null;
-  repoPath: string | null;
-  settings: Record<string, unknown> | null;
-}
 
 interface GitHubSourceDisplay {
   repoFullName: string;
@@ -25,6 +15,16 @@ interface GitHubSourceDisplay {
   branch?: string;
   path?: string;
   sourceType: "connected_repo" | "public_repo";
+}
+
+interface ProjectData {
+  id: string;
+  slug: string;
+  repoUrl: string | null;
+  repoBranch: string | null;
+  repoPath: string | null;
+  settings: Record<string, unknown> | null;
+  githubSource: GitHubSourceDisplay | null;
 }
 
 export default function GitSettingsPage() {
@@ -92,12 +92,7 @@ export default function GitSettingsPage() {
     }
   };
 
-  const githubSource = resolveGitHubSource({
-    repoUrl: project?.repoUrl,
-    repoBranch: project?.repoBranch,
-    repoPath: project?.repoPath,
-    settings: project?.settings,
-  }) as GitHubSourceDisplay | null;
+  const githubSource = project?.githubSource ?? null;
 
   const handleClone = (visibility: "public" | "private") => {
     if (!project?.repoUrl) return;
