@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     from ${auditLogs} as resolutions
     where resolutions.org_id = ${auditLogs.orgId}
       and resolutions.action = ${auditLogs.action} || '_resolved'
-      and resolutions.details ->> 'handoffId' = ${auditLogs.id}
+      and (resolutions.details ->> 'handoffId')::uuid = ${auditLogs.id}
   )`;
 
   const handoffs = await db
