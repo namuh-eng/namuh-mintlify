@@ -1,15 +1,43 @@
 "use client";
 
+import { ConnectedRepoSelect, type ConnectedRepoOption } from "@/components/github/connected-repo-select";
 import { setStoredActiveProjectId } from "@/components/layout/shell-preferences";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function NewProjectPage() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [repoUrl, setRepoUrl] = useState("");
+  const [selectedRepoFullName, setSelectedRepoFullName] = useState("");
+  const [publicRepoUrl, setPublicRepoUrl] = useState("");
+  const [connectedRepos, setConnectedRepos] = useState<ConnectedRepoOption[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingRepos, setLoadingRepos] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/github-connections")
+      .then((res) => res.json())
+      .then((data) => {
+        const repos = (data.connections ?? []).flatMap(
+          (connection: { installationId: string; repos?: ConnectedRepoOption[] }) =>
+            (connection.repos ?? []).map((repo) => ({
+              ...repo,
+              installationId: connection.installationId,
+            })),
+        );
+        setConnectedRepos(repos);
+        setLoadingRepos(false);
+      })
+      .catch(() => setLoadingRepos(false));
+  }, []);
+
+  const repoUrl = useMemo(() => {
+    if (selectedRepoFullName) {
+      return `https://github.com/${selectedRepoFullName}`;
+    }
+    return publicRepoUrl.trim();
+  }, [publicRepoUrl, selectedRepoFullName]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,20 +109,24 @@ export default function NewProjectPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label
-            htmlFor="repo-url"
-            className="block text-sm font-medium text-gray-300"
-          >
-            GitHub repository URL{" "}
-            <span className="text-gray-500">(optional)</span>
-          </label>
-          <input
-            id="repo-url"
-            type="text"
-            value={repoUrl}
-            onChange={(e) => setRepoUrl(e.target.value)}
-            placeholder="https://github.com/org/repo"
-            className="w-full rounded-lg border border-white/[0.08] bg-[#1a1a1a] px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          <ConnectedRepoSelect
+            repos={connectedRepos}
+            value={selectedRepoFullName}
+            onChange={(value) => {
+              setSelectedRepoFullName(value);
+              if (value) {
+                setPublicRepoUrl("");
+              }
+            }}
+            disabled={loading || loadingRepos}
+            allowPublicUrl
+            publicUrlValue={publicRepoUrl}
+            onPublicUrlChange={(value) => {
+              setPublicRepoUrl(value);
+              if (value.trim()) {
+                setSelectedRepoFullName("");
+              }
+            }}
           />
         </div>
 

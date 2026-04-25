@@ -14,7 +14,6 @@ test.describe("Project CRUD", () => {
     const res = await request.post("/api/projects", {
       data: { name },
     });
-    // Should succeed or require auth (201 or 401/403)
     expect([201, 401, 403]).toContain(res.status());
     if (res.status() === 201) {
       const body = await res.json();
@@ -34,7 +33,6 @@ test.describe("Project CRUD", () => {
 
   test("settings general page loads", async ({ page }) => {
     await page.goto("/settings/deployment/general");
-    // Should either show the settings form or redirect to login
     const url = page.url();
     const isSettings = url.includes("/settings/deployment/general");
     const isLogin = url.includes("/login");
@@ -49,6 +47,26 @@ test.describe("Project CRUD", () => {
     expect(isNewProject || isLogin).toBe(true);
   });
 
+  test("new project page shows connected repo selection and public url fallback", async ({
+    page,
+  }) => {
+    await page.goto("/dashboard/new-project");
+
+    const url = page.url();
+    if (url.includes("/login")) {
+      expect(url.includes("/login")).toBe(true);
+      return;
+    }
+
+    await expect(page.getByText(/GitHub repository/i).first()).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: /No repository selected/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByLabel(/Or paste a public GitHub repo URL/i),
+    ).toBeVisible();
+  });
+
   test("new project becomes active and settings follow the selected project", async ({
     page,
   }) => {
@@ -57,7 +75,7 @@ test.describe("Project CRUD", () => {
     await page.goto("/dashboard/new-project");
     await page.getByLabel(/project name/i).fill(projectName);
     await page
-      .getByLabel(/github repository url/i)
+      .getByLabel(/Or paste a public GitHub repo URL/i)
       .fill("https://github.com/example/project-qa");
     await page.getByRole("button", { name: /create project/i }).click();
 

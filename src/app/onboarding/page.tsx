@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  ConnectedRepoSelect,
+  type ConnectedRepoOption,
+} from "@/components/github/connected-repo-select";
 import { validateOrgName } from "@/lib/orgs";
 import {
   generateSubdomain,
@@ -7,13 +11,7 @@ import {
   validateGitHubRepoUrl,
   validateProjectName,
 } from "@/lib/projects";
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  GitBranch,
-  Loader2,
-} from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -27,6 +25,7 @@ type OnboardingState = {
   step: number;
   orgName: string;
   repoUrl: string;
+  selectedRepoFullName: string;
   projectName: string;
   createdOrg: {
     id: string;
@@ -73,7 +72,6 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [checking, setChecking] = useState(true);
 
-  // Step 1 state
   const [orgName, setOrgName] = useState("");
   const [orgError, setOrgError] = useState("");
   const [orgLoading, setOrgLoading] = useState(false);
@@ -82,12 +80,14 @@ export default function OnboardingPage() {
     slug: string;
   } | null>(null);
 
-  // Step 2 state
   const [repoUrl, setRepoUrl] = useState("");
+  const [selectedRepoFullName, setSelectedRepoFullName] = useState("");
+  const [connectedRepos, setConnectedRepos] = useState<ConnectedRepoOption[]>(
+    [],
+  );
   const [repoError, setRepoError] = useState("");
   const [repoHint, setRepoHint] = useState("");
 
-  // Step 3 state
   const [projectName, setProjectName] = useState("");
   const [projectError, setProjectError] = useState("");
   const [projectLoading, setProjectLoading] = useState(false);
@@ -96,13 +96,13 @@ export default function OnboardingPage() {
     subdomain: string;
   } | null>(null);
 
-  // Check if user already has an org — if so, skip onboarding
   useEffect(() => {
     const persistedState = readOnboardingState();
 
     if (persistedState) {
       setOrgName(persistedState.orgName);
       setRepoUrl(persistedState.repoUrl);
+      setSelectedRepoFullName(persistedState.selectedRepoFullName ?? "");
       setProjectName(persistedState.projectName);
       setCreatedOrg(persistedState.createdOrg);
       setStep(persistedState.step);
@@ -111,8 +111,18 @@ export default function OnboardingPage() {
     Promise.all([
       fetch("/api/orgs").then((res) => res.json()),
       fetch("/api/projects").then((res) => res.json()),
+      fetch("/api/github-connections").then((res) => res.json()),
     ])
-      .then(([orgData, projectData]) => {
+      .then(([orgData, projectData, connectionData]) => {
+        const repos = (connectionData.connections ?? []).flatMap(
+          (connection: { installationId: string; repos?: ConnectedRepoOption[] }) =>
+            (connection.repos ?? []).map((repo) => ({
+              ...repo,
+              installationId: connection.installationId,
+            })),
+        );
+        setConnectedRepos(repos);
+
         const existingOrg = orgData.orgs?.[0];
         const existingProject = projectData.projects?.[0];
 
@@ -144,7 +154,14 @@ export default function OnboardingPage() {
       return;
     }
 
-    if (!createdOrg && !orgName && !repoUrl && !projectName && step === 0) {
+    if (
+      !createdOrg &&
+      !orgName &&
+      !repoUrl &&
+      !selectedRepoFullName &&
+      !projectName &&
+      step === 0
+    ) {
       clearOnboardingState();
       return;
     }
@@ -153,12 +170,19 @@ export default function OnboardingPage() {
       step,
       orgName,
       repoUrl,
+      selectedRepoFullName,
       projectName,
       createdOrg,
     });
-  }, [checking, createdOrg, orgName, projectName, repoUrl, step]);
-
-  // ── Step 1: Create Organization ─────────────────────────────────────────────
+  }, [
+    checking,
+    createdOrg,
+    orgName,
+    projectName,
+    repoUrl,
+    selectedRepoFullName,
+    step,
+  ]);
 
   const handleCreateOrg = useCallback(async () => {
     setOrgError("");
@@ -192,13 +216,19 @@ export default function OnboardingPage() {
     }
   }, [orgName]);
 
-  // ── Step 2: GitHub connection (skippable) ───────────────────────────────────
+  const resolvedRepoUrl = useMemo(() => {
+    if (selectedRepoFullName) {
+      return `https://github.com/${selectedRepoFullName}`;
+    }
+
+    return repoUrl;
+  }, [repoUrl, selectedRepoFullName]);
 
   const parsedRepo = useMemo(() => {
-    const trimmed = repoUrl.trim().toLowerCase();
+    const trimmed = resolvedRepoUrl.trim().toLowerCase();
     if (!trimmed) return null;
     return trimmed;
-  }, [repoUrl]);
+  }, [resolvedRepoUrl]);
 
   const looksPrivateRepo = Boolean(
     parsedRepo &&
@@ -214,7 +244,7 @@ export default function OnboardingPage() {
   }, []);
 
   const handleConnectGitHub = useCallback(() => {
-    const trimmed = repoUrl.trim();
+    const trimmed = resolvedRepoUrl.trim();
     const error = validateGitHubRepoUrl(trimmed);
 
     if (error) {
@@ -224,7 +254,9 @@ export default function OnboardingPage() {
     }
 
     setRepoError("");
-    setRepoUrl(trimmed);
+    if (!selectedRepoFullName) {
+      setRepoUrl(trimmed);
+    }
     if (looksPrivateRepo) {
       setRepoHint(
         "Private repos need a verified GitHub connection before import. You can continue, but project creation will block until GitHub is connected.",
@@ -235,9 +267,7 @@ export default function OnboardingPage() {
       );
     }
     setStep(2);
-  }, [looksPrivateRepo, repoUrl]);
-
-  // ── Step 3: Create Project ──────────────────────────────────────────────────
+  }, [looksPrivateRepo, resolvedRepoUrl, selectedRepoFullName]);
 
   const handleCreateProject = useCallback(async () => {
     setProjectError("");
@@ -255,7 +285,7 @@ export default function OnboardingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: trimmed,
-          repoUrl: repoUrl.trim() || undefined,
+          repoUrl: resolvedRepoUrl.trim() || undefined,
           createInitialDeployment: true,
         }),
       });
@@ -277,7 +307,6 @@ export default function OnboardingPage() {
         subdomain: data.project.subdomain,
       });
 
-      // Provision initial content after project creation
       const provisionRes = await fetch("/api/onboarding/provision", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -304,16 +333,12 @@ export default function OnboardingPage() {
     } finally {
       setProjectLoading(false);
     }
-  }, [projectName, repoUrl]);
-
-  // ── Step 4: Success → Go to dashboard ───────────────────────────────────────
+  }, [projectName, resolvedRepoUrl]);
 
   const handleGoToDashboard = useCallback(() => {
     clearOnboardingState();
     router.push("/dashboard");
   }, [router]);
-
-  // ── Render ──────────────────────────────────────────────────────────────────
 
   if (checking) {
     return (
@@ -328,7 +353,6 @@ export default function OnboardingPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
       <div className="w-full max-w-md space-y-8 p-8">
-        {/* Progress indicator */}
         <div className="flex items-center justify-center gap-2">
           {STEP_LABELS.map((label, i) => (
             <div key={label} className="flex items-center gap-2">
@@ -363,9 +387,7 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        {/* Step content */}
         <div className="rounded-xl border border-gray-800 bg-[#111111] p-8">
-          {/* ── Step 1: Organization ──────────────────────────────────── */}
           {currentStepId === "org" && (
             <div className="space-y-6">
               <div className="space-y-2 text-center">
@@ -439,43 +461,47 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── Step 2: GitHub connection ─────────────────────────────── */}
           {currentStepId === "github" && (
             <div className="space-y-6">
               <div className="space-y-2 text-center">
                 <div className="mb-4 flex justify-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800">
-                    <GitBranch className="h-6 w-6 text-white" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 text-sm font-semibold text-white">
+                    GH
                   </div>
                 </div>
                 <h1 className="text-2xl font-semibold text-white">
                   Connect your repository
                 </h1>
                 <p className="text-sm text-gray-400">
-                  Link a GitHub repository to sync your documentation. Public repos can work without auth, but private repos require a verified GitHub connection.
+                  Link a GitHub repository to sync your documentation. Public
+                  repos can work without auth, but private repos require a
+                  verified GitHub connection.
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label
-                    htmlFor="repo-url"
-                    className="block text-sm font-medium text-gray-300"
-                  >
-                    GitHub repository URL
-                    <span className="ml-1 text-gray-500">(optional)</span>
-                  </label>
-                  <input
-                    id="repo-url"
-                    type="text"
-                    value={repoUrl}
-                    onChange={(e) => {
-                      setRepoUrl(e.target.value);
+                  <ConnectedRepoSelect
+                    repos={connectedRepos}
+                    value={selectedRepoFullName}
+                    onChange={(value) => {
+                      setSelectedRepoFullName(value);
+                      if (value) {
+                        setRepoUrl("");
+                      }
                       setRepoError("");
                       setRepoHint("");
                     }}
-                    placeholder="https://github.com/org/repo"
-                    className="w-full rounded-lg border border-gray-700 bg-[#1a1a1a] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                    allowPublicUrl
+                    publicUrlValue={repoUrl}
+                    onPublicUrlChange={(value) => {
+                      setRepoUrl(value);
+                      if (value.trim()) {
+                        setSelectedRepoFullName("");
+                      }
+                      setRepoError("");
+                      setRepoHint("");
+                    }}
                   />
                   {repoError && (
                     <p className="text-sm text-red-400">{repoError}</p>
@@ -488,10 +514,9 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={handleConnectGitHub}
-                  disabled={!repoUrl.trim()}
+                  disabled={!resolvedRepoUrl.trim()}
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
                 >
-                  <GitBranch className="h-4 w-4" />
                   Connect repository
                 </button>
 
@@ -522,7 +547,6 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── Step 3: Create project ───────────────────────────────── */}
           {currentStepId === "project" && (
             <div className="space-y-6">
               <div className="space-y-2 text-center">
@@ -558,7 +582,6 @@ export default function OnboardingPage() {
                   )}
                 </div>
 
-                {/* Subdomain preview */}
                 {projectName.trim() && createdOrg && (
                   <div className="rounded-lg border border-gray-700 bg-[#1a1a1a] px-4 py-3">
                     <p className="text-xs text-gray-500">
@@ -569,7 +592,7 @@ export default function OnboardingPage() {
                         createdOrg.slug,
                         slugifyProject(projectName.trim()),
                       )}
-                      .mintlify.app
+                      .namuh.dev
                     </p>
                   </div>
                 )}
@@ -590,48 +613,27 @@ export default function OnboardingPage() {
                   )}
                 </button>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300"
-              >
-                <ChevronLeft className="h-3 w-3" />
-                Back
-              </button>
             </div>
           )}
 
-          {/* ── Step 4: Success ───────────────────────────────────────── */}
-          {currentStepId === "success" && (
-            <div className="space-y-6">
-              <div className="space-y-2 text-center">
-                <div className="mb-4 flex justify-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10">
-                    <Check className="h-8 w-8 text-emerald-500" />
-                  </div>
-                </div>
-                <h1 className="text-2xl font-semibold text-white">
-                  You&apos;re all set!
-                </h1>
+          {currentStepId === "success" && createdProject && (
+            <div className="space-y-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+                <Check className="h-6 w-6" />
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-2xl font-semibold text-white">All set</h1>
                 <p className="text-sm text-gray-400">
-                  Your documentation project has been created successfully
+                  Your docs project is ready at
+                </p>
+                <p className="text-sm text-emerald-400">
+                  {createdProject.subdomain}.namuh.dev
                 </p>
               </div>
-
-              {createdProject && (
-                <div className="rounded-lg border border-gray-700 bg-[#1a1a1a] px-4 py-4 text-center">
-                  <p className="text-xs text-gray-500">Your docs site</p>
-                  <p className="mt-1 text-sm font-medium text-emerald-400">
-                    {createdProject.subdomain}.mintlify.app
-                  </p>
-                </div>
-              )}
-
               <button
                 type="button"
                 onClick={handleGoToDashboard}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
               >
                 Go to dashboard
                 <ChevronRight className="h-4 w-4" />

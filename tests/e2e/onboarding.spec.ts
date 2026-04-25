@@ -228,7 +228,7 @@ test.describe("onboarding wizard — multi-step flow", () => {
     await page.goto("/onboarding");
     await page.getByLabel(/organization name/i).fill(orgName);
     await page.getByRole("button", { name: /continue/i }).click();
-    await page.getByLabel(/GitHub repository URL/i).fill(repoUrl);
+    await page.getByLabel(/Or paste a public GitHub repo URL/i).fill(repoUrl);
     await page.getByRole("button", { name: /connect repository/i }).click();
     await page.getByLabel(/project name/i).fill("Initial Deploy");
     await page.getByRole("button", { name: /create project/i }).click();
