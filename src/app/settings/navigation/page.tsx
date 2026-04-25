@@ -17,6 +17,8 @@ import {
   moveItem,
   validateNavigation,
 } from "@/lib/navigation";
+import { useActiveProject } from "@/hooks/use-active-project";
+import { useProjectUpdater } from "@/hooks/use-project-updater";
 import { clsx } from "clsx";
 import {
   ChevronDown,
@@ -608,9 +610,11 @@ function EntryCard({
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function NavigationSettingsPage() {
-  const [project, setProject] = useState<ProjectData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { project, setProject, loading } = useActiveProject<ProjectData>();
+  const { saving, updateProject } = useProjectUpdater<ProjectData>({
+    projectId: project?.id,
+    setProject,
+  });
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -619,20 +623,14 @@ export default function NavigationSettingsPage() {
   const [nav, setNav] = useState<NavigationConfig>({ entries: [] });
 
   useEffect(() => {
-    fetch("/api/projects")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.projects?.length > 0) {
-          const p = data.projects[0];
-          setProject(p);
-          const existing =
-            (p.settings as Record<string, unknown>)?.navigation ?? {};
-          setNav(mergeNavigation(existing as Partial<NavigationConfig>));
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    if (!project) {
+      return;
+    }
+
+    const existing =
+      (project.settings as Record<string, unknown>)?.navigation ?? {};
+    setNav(mergeNavigation(existing as Partial<NavigationConfig>));
+  }, [project]);
 
   const updateEntry = useCallback((index: number, updated: NavEntry) => {
     setNav((prev) => ({
@@ -674,36 +672,21 @@ export default function NavigationSettingsPage() {
       return;
     }
 
-    setSaving(true);
     setMessage(null);
 
-    try {
-      const res = await fetch(`/api/projects/${project.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          settings: {
-            ...((project.settings as Record<string, unknown>) ?? {}),
-            navigation: nav,
-          },
-        }),
-      });
+    const result = await updateProject({
+      settings: {
+        ...((project.settings as Record<string, unknown>) ?? {}),
+        navigation: nav,
+      },
+    });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setMessage({ type: "error", text: data.error || "Failed to save" });
-        setSaving(false);
-        return;
-      }
-
-      const data = await res.json();
-      setProject(data.project);
-      setMessage({ type: "success", text: "Navigation saved" });
-    } catch {
-      setMessage({ type: "error", text: "Something went wrong" });
-    } finally {
-      setSaving(false);
+    if (!result.ok) {
+      setMessage({ type: "error", text: result.error });
+      return;
     }
+
+    setMessage({ type: "success", text: "Navigation saved" });
   };
 
   if (loading) {
