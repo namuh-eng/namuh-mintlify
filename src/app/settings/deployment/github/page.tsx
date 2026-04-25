@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { githubConnections, orgMemberships, projects } from "@/lib/db/schema";
-import { resolveGitHubSource } from "@/lib/github-source";
+import { attachResolvedGitHubSource } from "@/lib/project-response";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -36,14 +36,7 @@ export default async function GitHubAppSettingsPage() {
 
   const selectedSource =
     orgProjects
-      .map((project) =>
-        resolveGitHubSource({
-          repoUrl: project.repoUrl,
-          repoBranch: project.repoBranch,
-          repoPath: project.repoPath,
-          settings: project.settings,
-        }),
-      )
+      .map((project) => attachResolvedGitHubSource(project).githubSource)
       .find((source) => Boolean(source?.repoFullName)) ?? null;
 
   return (
