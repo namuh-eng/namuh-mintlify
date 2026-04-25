@@ -1,5 +1,7 @@
 "use client";
 
+import { useActiveProject } from "@/hooks/use-active-project";
+import { useProjectUpdater } from "@/hooks/use-project-updater";
 import {
   buildZipDownloadUrl,
   getRepoDisplayName,
@@ -28,9 +30,11 @@ interface ProjectData {
 }
 
 export default function GitSettingsPage() {
-  const [project, setProject] = useState<ProjectData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { project, setProject, loading } = useActiveProject<ProjectData>();
+  const { saving, updateProject } = useProjectUpdater<ProjectData>({
+    projectId: project?.id,
+    setProject,
+  });
   const [branch, setBranch] = useState("main");
   const [repoPath, setRepoPath] = useState("/");
   const [vcsProvider, setVcsProvider] = useState<VcsProvider>("github");
@@ -40,56 +44,37 @@ export default function GitSettingsPage() {
   } | null>(null);
 
   useEffect(() => {
-    fetch("/api/projects")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.projects?.length > 0) {
-          const p = data.projects[0] as ProjectData;
-          setProject(p);
-          setBranch(p.repoBranch ?? "main");
-          setRepoPath(p.repoPath ?? "/");
-          const provider = p.settings?.vcsProvider;
-          if (provider === "gitlab") {
-            setVcsProvider("gitlab");
-          }
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    if (!project) {
+      return;
+    }
+
+    setBranch(project.repoBranch ?? "main");
+    setRepoPath(project.repoPath ?? "/");
+    const provider = project.settings?.vcsProvider;
+    if (provider === "gitlab") {
+      setVcsProvider("gitlab");
+      return;
+    }
+    setVcsProvider("github");
+  }, [project]);
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!project) return;
-    setSaving(true);
     setMessage(null);
 
-    try {
-      const res = await fetch(`/api/projects/${project.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          repoBranch: branch.trim(),
-          repoPath: repoPath.trim(),
-          settings: { ...project.settings, vcsProvider },
-        }),
-      });
+    const result = await updateProject({
+      repoBranch: branch.trim(),
+      repoPath: repoPath.trim(),
+      settings: { ...project.settings, vcsProvider },
+    });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setMessage({ type: "error", text: data.error || "Failed to save" });
-        setSaving(false);
-        return;
-      }
-
-      const data = await res.json();
-      setProject(data.project);
-      setMessage({ type: "success", text: "Git settings saved" });
-    } catch {
-      setMessage({ type: "error", text: "Something went wrong" });
-    } finally {
-      setSaving(false);
+    if (!result.ok) {
+      setMessage({ type: "error", text: result.error });
+      return;
     }
+
+    setMessage({ type: "success", text: "Git settings saved" });
   };
 
   const githubSource = project?.githubSource ?? null;
@@ -114,64 +99,36 @@ export default function GitSettingsPage() {
 
   const handleSwitchToGitLab = async () => {
     if (!project) return;
-    setSaving(true);
     setMessage(null);
 
-    try {
-      const res = await fetch(`/api/projects/${project.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          settings: { ...project.settings, vcsProvider: "gitlab" },
-        }),
-      });
+    const result = await updateProject({
+      settings: { ...project.settings, vcsProvider: "gitlab" },
+    });
 
-      if (!res.ok) {
-        setMessage({ type: "error", text: "Failed to switch VCS provider" });
-        setSaving(false);
-        return;
-      }
-
-      const data = await res.json();
-      setProject(data.project);
-      setVcsProvider("gitlab");
-      setMessage({ type: "success", text: "Switched to GitLab" });
-    } catch {
-      setMessage({ type: "error", text: "Something went wrong" });
-    } finally {
-      setSaving(false);
+    if (!result.ok) {
+      setMessage({ type: "error", text: "Failed to switch VCS provider" });
+      return;
     }
+
+    setVcsProvider("gitlab");
+    setMessage({ type: "success", text: "Switched to GitLab" });
   };
 
   const handleSwitchToGitHub = async () => {
     if (!project) return;
-    setSaving(true);
     setMessage(null);
 
-    try {
-      const res = await fetch(`/api/projects/${project.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          settings: { ...project.settings, vcsProvider: "github" },
-        }),
-      });
+    const result = await updateProject({
+      settings: { ...project.settings, vcsProvider: "github" },
+    });
 
-      if (!res.ok) {
-        setMessage({ type: "error", text: "Failed to switch VCS provider" });
-        setSaving(false);
-        return;
-      }
-
-      const data = await res.json();
-      setProject(data.project);
-      setVcsProvider("github");
-      setMessage({ type: "success", text: "Switched to GitHub" });
-    } catch {
-      setMessage({ type: "error", text: "Something went wrong" });
-    } finally {
-      setSaving(false);
+    if (!result.ok) {
+      setMessage({ type: "error", text: "Failed to switch VCS provider" });
+      return;
     }
+
+    setVcsProvider("github");
+    setMessage({ type: "success", text: "Switched to GitHub" });
   };
 
   if (loading) {

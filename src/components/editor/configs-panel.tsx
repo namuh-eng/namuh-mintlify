@@ -1,5 +1,6 @@
 "use client";
 
+import { useProjectUpdater } from "@/hooks/use-project-updater";
 import { isValidHexColor } from "@/lib/appearance";
 import {
   type AssistantSearchConfig,
@@ -34,7 +35,10 @@ interface ConfigsPanelProps {
 export function ConfigsPanel({ projectId }: ConfigsPanelProps) {
   const [config, setConfig] = useState<DocsConfig>(mergeDocsConfig(undefined));
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { saving, updateProject } = useProjectUpdater<{ settings: Record<string, unknown> }>({
+    projectId,
+    setProject: (project) => setProjectSettings(project.settings ?? {}),
+  });
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -48,12 +52,9 @@ export function ConfigsPanel({ projectId }: ConfigsPanelProps) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/projects");
+        const res = await fetch(`/api/projects/${projectId}`);
         const data = await res.json();
-        const p =
-          data.projects?.find(
-            (proj: { id: string }) => proj.id === projectId,
-          ) ?? data.projects?.[0];
+        const p = data.project;
         if (p) {
           const settings = (p.settings as Record<string, unknown>) ?? {};
           setProjectSettings(settings);
@@ -80,32 +81,22 @@ export function ConfigsPanel({ projectId }: ConfigsPanelProps) {
       return;
     }
 
-    setSaving(true);
     setMessage(null);
-    try {
-      const res = await fetch(`/api/projects/${projectId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          settings: { ...projectSettings, docsConfig: config },
-        }),
+    const result = await updateProject({
+      settings: { ...projectSettings, docsConfig: config },
+    });
+
+    if (!result.ok) {
+      setMessage({
+        type: "error",
+        text: result.error || "Failed to save",
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setMessage({
-          type: "error",
-          text: (data as { error?: string }).error || "Failed to save",
-        });
-      } else {
-        setProjectSettings((prev) => ({ ...prev, docsConfig: config }));
-        setMessage({ type: "success", text: "Saved" });
-        setTimeout(() => setMessage(null), 2000);
-      }
-    } catch {
-      setMessage({ type: "error", text: "Network error" });
-    } finally {
-      setSaving(false);
+      return;
     }
+
+    setProjectSettings((prev) => ({ ...prev, docsConfig: config }));
+    setMessage({ type: "success", text: "Saved" });
+    setTimeout(() => setMessage(null), 2000);
   }, [config, projectId, projectSettings]);
 
   // Update a top-level section
