@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { githubConnections, orgMemberships, projects } from "@/lib/db/schema";
 import { parseGitHubUrl } from "@/lib/git-settings";
+import { resolveGitHubSource } from "@/lib/github-source";
 import { and, eq } from "drizzle-orm";
 
 export interface ConnectedGitHubRepo {
@@ -77,56 +78,82 @@ export async function listConnectedGitHubRepos(
   );
 }
 
-export async function resolveGitHubImportAccessForRepoUrl(params: {
+export async function resolveGitHubImportAccess(params: {
   orgId: string;
   repoUrl?: string | null;
+  repoBranch?: string | null;
+  repoPath?: string | null;
+  settings?: Record<string, unknown> | null;
 }): Promise<GitHubImportAccessResult> {
+  const githubSource = resolveGitHubSource({
+    repoUrl: params.repoUrl,
+    repoBranch: params.repoBranch,
+    repoPath: params.repoPath,
+    settings: params.settings,
+  });
   const repoUrl = params.repoUrl?.trim();
 
-  if (!repoUrl) {
+  if (!githubSource && !repoUrl) {
     return { status: "no_repo" };
   }
 
-  const parsed = parseGitHubUrl(repoUrl);
-  if (!parsed) {
-    return {
-      status: "invalid_repo",
-      message: "Repository URL must be a GitHub repository",
-    };
+  if (!githubSource && repoUrl) {
+    const parsed = parseGitHubUrl(repoUrl);
+    if (!parsed) {
+      return {
+        status: "invalid_repo",
+        message: "Repository URL must be a GitHub repository",
+      };
+    }
   }
 
-  const repoFullName = `${parsed.owner}/${parsed.repo}`.toLowerCase();
+  const owner = githubSource?.owner;
+  const repo = githubSource?.repo;
+  const repoFullName = githubSource?.repoFullName?.toLowerCase();
   const connectedRepos = await listConnectedGitHubRepos(params.orgId);
 
-  const hasConnectedRepo = connectedRepos.some(
-    (repo) => repo.fullName.toLowerCase() === repoFullName,
-  );
+  const hasConnectedRepo = repoFullName
+    ? connectedRepos.some((connectedRepo) => {
+        const sameRepo = connectedRepo.fullName.toLowerCase() === repoFullName;
+        const installationId = githubSource?.installationId;
+        if (!sameRepo) return false;
+        if (!installationId) return true;
+        return connectedRepo.installationId === installationId;
+      })
+    : false;
 
   if (hasConnectedRepo) {
     return {
       status: "private_connected",
-      owner: parsed.owner,
-      repo: parsed.repo,
+      owner,
+      repo,
       repoFullName,
     };
   }
 
-  if (isLikelyPublicGitHubRepo(repoUrl)) {
+  if (repoUrl && !githubSource?.installationId && isLikelyPublicGitHubRepo(repoUrl)) {
     return {
       status: "public",
-      owner: parsed.owner,
-      repo: parsed.repo,
+      owner,
+      repo,
       repoFullName,
     };
   }
 
   return {
     status: "repo_not_connected",
-    owner: parsed.owner,
-    repo: parsed.repo,
+    owner,
+    repo,
     repoFullName,
     message: "Connect GitHub and select this repository before importing docs",
   };
+}
+
+export async function resolveGitHubImportAccessForRepoUrl(params: {
+  orgId: string;
+  repoUrl?: string | null;
+}): Promise<GitHubImportAccessResult> {
+  return resolveGitHubImportAccess(params);
 }
 
 export async function resolveGitHubImportAccessForProject(params: {
@@ -136,6 +163,9 @@ export async function resolveGitHubImportAccessForProject(params: {
   const rows = await db
     .select({
       repoUrl: projects.repoUrl,
+      repoBranch: projects.repoBranch,
+      repoPath: projects.repoPath,
+      settings: projects.settings,
       orgId: projects.orgId,
     })
     .from(projects)
@@ -155,8 +185,11 @@ export async function resolveGitHubImportAccessForProject(params: {
     };
   }
 
-  return resolveGitHubImportAccessForRepoUrl({
+  return resolveGitHubImportAccess({
     orgId: rows[0].orgId,
     repoUrl: rows[0].repoUrl,
+    repoBranch: rows[0].repoBranch,
+    repoPath: rows[0].repoPath,
+    settings: rows[0].settings,
   });
 }

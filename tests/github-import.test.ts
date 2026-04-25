@@ -98,4 +98,45 @@ describe("github-import helpers", () => {
       message: "Connect GitHub and select this repository before importing docs",
     });
   });
+
+  it("requires matching installation id when githubSource specifies one", async () => {
+    selectMock.mockReturnValueOnce({
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([
+        {
+          installationId: "inst_other",
+          repos: [
+            {
+              fullName: "namuh-eng/namuh-mintlify",
+              branch: "main",
+              permissions: "admin",
+            },
+          ],
+        },
+      ]),
+    });
+
+    const mod = await import("@/lib/github-import");
+    await expect(
+      mod.resolveGitHubImportAccess({
+        orgId: "org-1",
+        repoUrl: "https://github.com/namuh-eng/namuh-mintlify",
+        repoBranch: "main",
+        repoPath: "/",
+        settings: {
+          githubSource: {
+            repoFullName: "namuh-eng/namuh-mintlify",
+            owner: "namuh-eng",
+            repo: "namuh-mintlify",
+            installationId: "inst_123",
+            branch: "main",
+            path: "/",
+            sourceType: "connected_repo",
+          },
+        },
+      }),
+    ).resolves.toMatchObject({
+      status: "repo_not_connected",
+    });
+  });
 });
