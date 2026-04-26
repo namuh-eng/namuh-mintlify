@@ -4,7 +4,7 @@ import { importGitHubDocs } from "@/lib/github-docs-import";
 import { resolveGitHubImportAccess } from "@/lib/github-import";
 import { buildGitHubInstallationAuthHeaders } from "@/lib/github-installation-auth";
 import { createRequestId, logger } from "@/lib/logger";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 export interface SyncDocsResult {
   ok: boolean;
@@ -79,26 +79,68 @@ export async function syncProjectDocsFromGitHub(params: {
     return { ok: false, message: importResult.message };
   }
 
-  // 5. Atomic update: delete old pages and insert new ones
-  // Note: For now we overwrite everything to ensure the site matches the repo source of truth.
-  // In the future, we could do a diffing sync to preserve comments/history if path-stable.
+  // 5. Atomic update: diffing sync
+  // We match by path to preserve IDs for comments/suggestions and avoid unnecessary timestamp resets.
   await db.transaction(async (tx) => {
-    // Delete existing pages for this project
-    await tx.delete(pages).where(eq(pages.projectId, projectId));
+    // Fetch existing pages to diff
+    const existingPages = await tx
+      .select({
+        id: pages.id,
+        path: pages.path,
+        content: pages.content,
+        title: pages.title,
+      })
+      .from(pages)
+      .where(eq(pages.projectId, projectId));
 
-    // Insert newly imported pages
-    if (importResult.pages.length > 0) {
-      await tx.insert(pages).values(
-        importResult.pages.map((page) => ({
+    const existingPathMap = new Map(existingPages.map((p) => [p.path, p]));
+    const importedPaths = new Set(importResult.pages.map((p) => p.path));
+
+    // 1. Delete pages that no longer exist in GitHub
+    const pageIdsToDelete = existingPages
+      .filter((p) => !importedPaths.has(p.path))
+      .map((p) => p.id);
+
+    if (pageIdsToDelete.length > 0) {
+      await tx
+        .delete(pages)
+        .where(
+          and(eq(pages.projectId, projectId), inArray(pages.id, pageIdsToDelete)),
+        );
+    }
+
+    // 2. Update existing or insert new
+    for (const importedPage of importResult.pages) {
+      const existing = existingPathMap.get(importedPage.path);
+
+      if (existing) {
+        // Only update if content or title changed
+        if (
+          existing.content !== importedPage.content ||
+          existing.title !== importedPage.title
+        ) {
+          await tx
+            .update(pages)
+            .set({
+              title: importedPage.title,
+              content: importedPage.content,
+              updatedAt: new Date(),
+            })
+            .where(eq(pages.id, existing.id));
+        }
+      } else {
+        // New page
+        await tx.insert(pages).values({
           projectId,
-          path: page.path,
-          title: page.title,
-          content: page.content,
+          path: importedPage.path,
+          title: importedPage.title,
+          content: importedPage.content,
           isPublished: true,
-        })),
-      );
+        });
+      }
     }
   });
+
 
   logger.info("sync_docs_completed", {
     requestId,
