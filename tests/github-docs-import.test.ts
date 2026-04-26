@@ -325,23 +325,37 @@ describe("importPublicGitHubDocs", () => {
     }
   });
 
-  it("returns no_markdown_found when the repo path has no markdown files", async () => {
-    const fetchMock = vi.fn(async () => ({
-      ok: true,
-      json: async () => ({ tree: [{ path: "assets/logo.png", type: "blob" }] }),
-    }));
+  it("handles relative images inside nested docs folders", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/git/trees/")) {
+        return {
+          ok: true,
+          json: async () => ({
+            tree: [
+              { path: "README.md", type: "blob" },
+              { path: "docs/index.md", type: "blob" },
+            ],
+          }),
+        };
+      }
+      return {
+        ok: true,
+        text: async () => `![Dashboard](docs/assets/dashboard.png)`,
+      };
+    });
 
-    const { importPublicGitHubDocs } = await import("@/lib/github-docs-import");
-    const result = await importPublicGitHubDocs({
+    const { importGitHubDocs } = await import("@/lib/github-docs-import");
+    const result = await importGitHubDocs({
       repoUrl: "https://github.com/acme/docs",
       fetchImpl: fetchMock as unknown as typeof fetch,
     });
 
-    expect(result).toEqual({
-      ok: false,
-      status: "no_markdown_found",
-      message:
-        "No markdown files were found in the selected GitHub repository path",
-    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const doc = result.pages.find((p) => p.path === "introduction");
+      expect(doc?.content).toContain(
+        "![Dashboard](https://raw.githubusercontent.com/acme/docs/main/docs/assets/dashboard.png)",
+      );
+    }
   });
 });

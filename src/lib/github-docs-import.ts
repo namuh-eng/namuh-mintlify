@@ -249,8 +249,13 @@ export async function importGitHubDocs(
         while (fullPath.includes("/../")) {
            fullPath = fullPath.replace(/[^\/]+\/\.\.\//, "");
         }
-        fullPath = fullPath.replace(/^\.\//, "").replace(/^\.\.\//, "");
+        fullPath = fullPath.replace(/^\.\//, "").replace(/^\.\..?\//, "");
         
+        // Handle images in docs/ folder when the markdown file is in docs/ already
+        if (fileDir === "docs" && cleanPath.startsWith("docs/")) {
+           fullPath = cleanPath;
+        }
+
         return `![${alt}](${rawBase}/${fullPath.replace(/\/+/g, "/")}${titlePart})`;
       },
     );
