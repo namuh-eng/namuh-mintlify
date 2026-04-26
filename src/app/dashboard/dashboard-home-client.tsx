@@ -262,6 +262,7 @@ export function DashboardHomeClient({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"live" | "previews">("live");
   const [triggering, setTriggering] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [creatingPreview, setCreatingPreview] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewBranch, setPreviewBranch] = useState("");
@@ -379,6 +380,19 @@ export function DashboardHomeClient({
       router.refresh();
     } finally {
       setTriggering(false);
+    }
+  }
+
+  async function triggerSync() {
+    if (!project) return;
+    setSyncing(true);
+    try {
+      await fetch(`/api/projects/${project.id}/sync`, {
+        method: "POST",
+      });
+      router.refresh();
+    } finally {
+      setSyncing(false);
     }
   }
 
@@ -516,11 +530,24 @@ export function DashboardHomeClient({
                 </button>
                 <button
                   type="button"
+                  onClick={triggerSync}
+                  disabled={syncing}
+                  className="p-2 rounded-md bg-[#1a1a1a] border border-white/[0.08] text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors disabled:opacity-50"
+                  title="Sync from GitHub"
+                >
+                  {syncing ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <RefreshCw size={16} />
+                  )}
+                </button>
+                <button
+                  type="button"
                   onClick={() => router.refresh()}
                   className="p-2 rounded-md bg-[#1a1a1a] border border-white/[0.08] text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
-                  title="Refresh"
+                  title="Refresh Dashboard"
                 >
-                  <RefreshCw size={16} />
+                  <RefreshCw size={16} className="rotate-90 opacity-60" />
                 </button>
                 <a
                   href={siteUrl}
