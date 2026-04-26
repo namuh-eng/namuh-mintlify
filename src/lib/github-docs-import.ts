@@ -94,6 +94,23 @@ function toTitle(markdown: string, fallbackPath: string): string {
     .join(" ");
 }
 
+const EXCLUDED_PATHS = [
+  /^agents\.md$/i,
+  /^claude\.md$/i,
+  /^memory\.md$/i,
+  /^soul\.md$/i,
+  /^tools\.md$/i,
+  /^\.github\//i,
+  /^agent_docs\//i,
+  /^memory\//i,
+  /^private\//i,
+  /^node_modules\//i,
+];
+
+function isExcludedPath(filePath: string): boolean {
+  return EXCLUDED_PATHS.some((pattern) => pattern.test(filePath));
+}
+
 export async function importGitHubDocs(
   params: GitHubImportRequestOptions,
 ): Promise<GitHubDocsImportResult> {
@@ -133,6 +150,7 @@ export async function importGitHubDocs(
     .filter((path): path is string => Boolean(path))
     .filter((path) => {
       if (!/\.(md|mdx)$/i.test(path)) return false;
+      if (isExcludedPath(path)) return false;
       if (!basePath) return true;
       return (
         path === `${basePath}.md` ||

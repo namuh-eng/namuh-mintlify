@@ -253,6 +253,41 @@ describe("importPublicGitHubDocs", () => {
     }
   });
 
+  it("excludes internal agent and repo files", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/git/trees/")) {
+        return {
+          ok: true,
+          json: async () => ({
+            tree: [
+              { path: "README.md", type: "blob" },
+              { path: "AGENTS.md", type: "blob" },
+              { path: "CLAUDE.md", type: "blob" },
+              { path: "agent_docs/notes.md", type: "blob" },
+              { path: ".github/workflows/ci.yml", type: "blob" },
+            ],
+          }),
+        };
+      }
+      return {
+        ok: true,
+        text: async () => "# README",
+      };
+    });
+
+    const { importGitHubDocs } = await import("@/lib/github-docs-import");
+    const result = await importGitHubDocs({
+      repoUrl: "https://github.com/acme/docs",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.pages).toHaveLength(1);
+      expect(result.pages[0].path).toBe("introduction");
+    }
+  });
+
   it("returns no_markdown_found when the repo path has no markdown files", async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
