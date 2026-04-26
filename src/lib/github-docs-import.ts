@@ -40,11 +40,18 @@ function normalizeBasePath(repoPath?: string | null): string {
 
 function toPagePath(filePath: string, basePath: string): string | null {
   const normalized = filePath.replace(/\\/g, "/").replace(/^\/+/, "");
-  const relative = basePath
-    ? normalized.startsWith(`${basePath}/`)
-      ? normalized.slice(basePath.length + 1)
-      : null
-    : normalized;
+  
+  let relative: string | null = null;
+  if (!basePath) {
+    relative = normalized;
+  } else {
+    const basePrefix = `${basePath}/`;
+    if (normalized.startsWith(basePrefix)) {
+      relative = normalized.slice(basePrefix.length);
+    } else {
+      return null;
+    }
+  }
 
   if (!relative) return null;
   if (!/\.(md|mdx)$/i.test(relative)) return null;
@@ -54,8 +61,13 @@ function toPagePath(filePath: string, basePath: string): string | null {
     return "introduction";
   }
 
-  const withoutIndex = withoutExt.replace(/\/index$|\/readme$/i, "");
-  return (withoutIndex || "introduction").toLowerCase();
+  const pathParts = withoutExt.split("/");
+  const lastPart = pathParts[pathParts.length - 1];
+  if (/^index$|^readme$/i.test(lastPart)) {
+    return pathParts.slice(0, -1).join("/").toLowerCase();
+  }
+
+  return withoutExt.toLowerCase();
 }
 
 function toTitle(markdown: string, fallbackPath: string): string {
@@ -82,7 +94,9 @@ function toTitle(markdown: string, fallbackPath: string): string {
 
     // HTML H1 (common in READMEs)
     const htmlMatch = line.match(/<h1[^>]*>(.*?)<\/h1>/i);
-    if (htmlMatch) return htmlMatch[1].trim();
+    if (htmlMatch) {
+       return htmlMatch[1].replace(/<[^>]*>/g, "").trim();
+    }
   }
 
   // 3. Fallback to path
@@ -153,9 +167,9 @@ export async function importGitHubDocs(
       if (isExcludedPath(path)) return false;
       if (!basePath) return true;
       return (
+        path.startsWith(`${basePath}/`) ||
         path === `${basePath}.md` ||
-        path === `${basePath}.mdx` ||
-        path.startsWith(`${basePath}/`)
+        path === `${basePath}.mdx`
       );
     });
 
@@ -205,6 +219,7 @@ export async function importGitHubDocs(
 
   // Rewrite relative images and links
   const processedPages = importedPages.map((page) => {
+    // Find source file by path
     const filePath = markdownFiles.find((f) => {
       const p = toPagePath(f, basePath);
       return p === page.path;
@@ -217,33 +232,70 @@ export async function importGitHubDocs(
 
     let content = page.content;
 
-    // 1. Rewrite images: ![alt](relative/path.png)
+    const splitRelPath = (attr: string): [string, string] => {
+      const trimmed = attr.trim();
+      const match = trimmed.match(/^([^\s"']+)(.*)$/);
+      if (!match) return [trimmed, ""];
+      return [match[1], match[2]];
+    };
+
+    // 1. Rewrite images: ![alt](relative/path.png "title")
     content = content.replace(
       /!\[([^\]]*)\]\((?!https?:\/\/|ftp:\/\/|mailto:|\/)([^)]+)\)/g,
-      (match, alt, relPath) => {
-        const fullPath = fileDir ? `${fileDir}/${relPath}` : relPath;
-        const normalized = fullPath.replace(/\.\//g, "").replace(/\/+/g, "/");
-        return `![${alt}](${rawBase}/${normalized})`;
+      (match, alt, relPathAttr) => {
+        const [cleanPath, titlePart] = splitRelPath(relPathAttr);
+        let fullPath = fileDir ? `${fileDir}/${cleanPath}` : cleanPath;
+        fullPath = fullPath.replace(/^\.\//, "");
+        while (fullPath.includes("/../")) {
+           fullPath = fullPath.replace(/[^\/]+\/\.\.\//, "");
+        }
+        fullPath = fullPath.replace(/^\.\//, "").replace(/^\.\.\//, "");
+        
+        return `![${alt}](${rawBase}/${fullPath.replace(/\/+/g, "/")}${titlePart})`;
       },
     );
 
-    // 2. Rewrite links: [text](relative/path.md)
-    // For now we only rewrite if they end in .md/.mdx to avoid breaking external site links that happen to be relative
+    // 2. Rewrite links: [text](relative/path.md "title")
     content = content.replace(
-      /\[([^\]]*)\]\((?!https?:\/\/|ftp:\/\/|mailto:|\/)([^)]+\.(md|mdx))\)/g,
-      (match, text, relPath) => {
-        const fullPath = fileDir ? `${fileDir}/${relPath}` : relPath;
-        const normalized = fullPath.replace(/\.\//g, "").replace(/\/+/g, "/");
-        const pagePath = toPagePath(normalized, basePath);
+      /\[([^\]]*)\]\((?!https?:\/\/|ftp:\/\/|mailto:|\/)([^)]+)\)/g,
+      (match, text, relPathAttr) => {
+        const [cleanPath, titlePart] = splitRelPath(relPathAttr);
 
-        if (pagePath && importedPages.some((p) => p.path === pagePath)) {
-          // Internal doc link
-          return `[${text}](../${pagePath})`;
+        let fullPath = fileDir ? `${fileDir}/${cleanPath}` : cleanPath;
+        fullPath = fullPath.replace(/^\.\//, "");
+        while (fullPath.includes("/../")) {
+           fullPath = fullPath.replace(/[^\/]+\/\.\.\//, "");
+        }
+        fullPath = fullPath.replace(/^\.\//, "").replace(/^\.\..?\//, "");
+        const normalized = fullPath.replace(/\/+/g, "/");
+
+        let targetPagePath: string | null = null;
+        if (/\.(md|mdx)$/i.test(normalized)) {
+          targetPagePath = toPagePath(normalized, basePath);
+        } else {
+          targetPagePath = toPagePath(`${normalized}/README.md`, basePath);
         }
 
-        // Fallback to GitHub source
-        const githubUrl = `https://github.com/${parsed.owner}/${parsed.repo}/blob/${encodeURIComponent(branch)}/${normalized}`;
-        return `[${text}](${githubUrl})`;
+        if (targetPagePath && importedPages.some((p) => p.path === targetPagePath)) {
+          // If the link target is actually in our imported set, rewrite to doc-relative path.
+          const currentPathParts = page.path === "introduction" ? [] : page.path.split("/");
+          let prefix = "";
+          if (currentPathParts.length === 0) {
+            // Root intro page to other pages
+            prefix = "../";
+          } else {
+            // Nested page to other pages (need to back out then into target)
+            prefix = "../".repeat(currentPathParts.length + 1);
+          }
+          return `[${text}](${prefix}${targetPagePath}${titlePart})`;
+        }
+
+        if (/\.(md|mdx)$/i.test(cleanPath)) {
+          const githubUrl = `https://github.com/${parsed.owner}/${parsed.repo}/blob/${encodeURIComponent(branch)}/${normalized}`;
+          return `[${text}](${githubUrl}${titlePart})`;
+        }
+
+        return match;
       },
     );
 

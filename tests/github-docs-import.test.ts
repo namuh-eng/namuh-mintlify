@@ -253,6 +253,43 @@ describe("importPublicGitHubDocs", () => {
     }
   });
 
+  it("handles relative links with titles", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/git/trees/")) {
+        return {
+          ok: true,
+          json: async () => ({
+            tree: [{ path: "README.md", type: "blob" }],
+          }),
+        };
+      }
+      return {
+        ok: true,
+        text: async () => `
+![Dashboard](docs/assets/dashboard.png "Optional Title")
+[Guide](docs/guide.md "Another Title")
+`,
+      };
+    });
+
+    const { importGitHubDocs } = await import("@/lib/github-docs-import");
+    const result = await importGitHubDocs({
+      repoUrl: "https://github.com/acme/docs",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.pages[0].content).toContain(
+        "![Dashboard](https://raw.githubusercontent.com/acme/docs/main/docs/assets/dashboard.png \"Optional Title\")",
+      );
+      // Fallback to GitHub URL because docs/guide.md is not in the imported pages list for this test
+      expect(result.pages[0].content).toContain(
+        "[Guide](https://github.com/acme/docs/blob/main/docs/guide.md \"Another Title\")",
+      );
+    }
+  });
+
   it("excludes internal agent and repo files", async () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (url.includes("/git/trees/")) {
