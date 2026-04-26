@@ -40,6 +40,7 @@ interface EditorToolbarProps {
   onToggleSettings?: () => void;
   onToggleComments?: () => void;
   onToggleSuggestions?: () => void;
+  onToggleAnalytics?: () => void;
   onPublish?: () => void;
   siteUrl?: string;
   projectId?: string | null;
@@ -66,6 +67,7 @@ export function EditorToolbar({
   onToggleSettings,
   onToggleComments,
   onToggleSuggestions,
+  onToggleAnalytics,
   onPublish,
   siteUrl,
   projectId,
@@ -332,6 +334,16 @@ export function EditorToolbar({
           data-testid="suggestions-btn"
         >
           <FileText size={14} />
+        </button>
+
+        <button
+          type="button"
+          onClick={onToggleAnalytics}
+          className="p-1.5 rounded text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors"
+          aria-label="Page analytics"
+          data-testid="analytics-btn"
+        >
+          <BarChart3 size={14} />
         </button>
 
         <button

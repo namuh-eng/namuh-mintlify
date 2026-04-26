@@ -4,6 +4,7 @@ import { CommentsSidebar } from "@/components/editor/comments-sidebar";
 import { ConfigsPanel } from "@/components/editor/configs-panel";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
 import { MarkdownEditor } from "@/components/editor/markdown-editor";
+import { PageAnalyticsPanel } from "@/components/editor/page-analytics-panel";
 import { PageSettingsPanel } from "@/components/editor/page-settings-panel";
 import { SuggestionsPanel } from "@/components/editor/suggestions-panel";
 import { TocPanel } from "@/components/editor/toc-panel";
@@ -361,6 +362,7 @@ export default function EditorPage() {
   const [actionError, setActionError] = useState("");
   const [editorMode, setEditorMode] = useState<EditorMode>("visual");
   const [showSettings, setShowSettings] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentBranch, setCurrentBranch] = useState("main");
@@ -756,6 +758,7 @@ export default function EditorPage() {
               onToggleComments={() => setShowComments(!showComments)}
               showSuggestions={showSuggestions}
               onToggleSuggestions={() => setShowSuggestions(!showSuggestions)}
+              onToggleAnalytics={() => setShowAnalytics(!showAnalytics)}
               onInsertSnippet={handleSnippet}
             />
 
@@ -788,6 +791,10 @@ export default function EditorPage() {
               {showSuggestions && <SuggestionsPanel content={content} />}
 
               {showComments && <CommentsSidebar pageId={selectedPage.id} />}
+
+              {showAnalytics && (
+                <PageAnalyticsPanel pagePath={selectedPage.path} />
+              )}
 
               {showSettings && (
                 <PageSettingsPanel
