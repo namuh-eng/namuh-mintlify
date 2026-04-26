@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const projectId = searchParams.get("projectId");
+  const pagePath = searchParams.get("pagePath");
   const from = searchParams.get("from");
   const to = searchParams.get("to");
 
@@ -62,6 +63,10 @@ export async function GET(request: NextRequest) {
     eq(analyticsEvents.projectId, projectId),
     eq(analyticsEvents.type, "view"),
   ];
+
+  if (pagePath) {
+    conditions.push(eq(sql`${analyticsEvents.data}->>'page'`, pagePath));
+  }
 
   if (from) {
     conditions.push(
