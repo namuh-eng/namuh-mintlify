@@ -1,6 +1,13 @@
 import { ACTIVE_PROJECT_COOKIE, findActiveProject } from "@/lib/active-project";
+import { projectDisplayStatus } from "@/lib/dashboard";
 import { db } from "@/lib/db";
-import { deployments, orgMemberships, organizations, projects } from "@/lib/db/schema";
+import {
+  deployments,
+  orgMemberships,
+  organizations,
+  pages,
+  projects,
+} from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { and, desc, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
@@ -74,8 +81,16 @@ export default async function DashboardPage() {
     oldestUnresolvedMs?: number | null;
     averageResolutionMs?: number | null;
   } = {};
+  let publishedPageCount = 0;
 
   if (project) {
+    const publishedPages = await db
+      .select({ id: pages.id })
+      .from(pages)
+      .where(and(eq(pages.projectId, project.id), eq(pages.isPublished, true)))
+      .limit(1);
+    publishedPageCount = publishedPages.length;
+
     projectDeployments = await db
       .select({
         id: deployments.id,
@@ -196,7 +211,11 @@ export default async function DashboardPage() {
               id: project.id,
               name: project.name,
               subdomain: project.subdomain,
-              status: project.status,
+              status: projectDisplayStatus({
+                projectStatus: project.status,
+                publishedPageCount,
+                latestDeploymentStatus: projectDeployments[0]?.status ?? null,
+              }),
               customDomain: project.customDomain,
             }
           : null

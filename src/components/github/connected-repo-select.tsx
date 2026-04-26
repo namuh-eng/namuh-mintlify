@@ -1,7 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
-import { GitBranch, Github, Lock, Globe } from "lucide-react";
+import { GitBranch, Globe, Lock } from "lucide-react";
 
 export interface ConnectedRepoOption {
   fullName: string;
@@ -33,15 +33,19 @@ export function ConnectedRepoSelect({
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-300">
+      <label
+        htmlFor="connected-repo-select"
+        className="block text-sm font-medium text-gray-300"
+      >
         GitHub repository <span className="text-gray-500">(optional)</span>
       </label>
 
       {hasRepos ? (
         <div className="space-y-2">
           <div className="relative">
-            <Github className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <GitBranch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
             <select
+              id="connected-repo-select"
               value={value}
               onChange={(e) => onChange(e.target.value)}
               disabled={disabled}
@@ -49,7 +53,10 @@ export function ConnectedRepoSelect({
             >
               <option value="">No repository selected</option>
               {repos.map((repo) => (
-                <option key={`${repo.fullName}:${repo.branch}`} value={repo.fullName}>
+                <option
+                  key={`${repo.fullName}:${repo.branch}`}
+                  value={repo.fullName}
+                >
                   {repo.fullName} ({repo.branch})
                 </option>
               ))}
@@ -58,7 +65,8 @@ export function ConnectedRepoSelect({
 
           <div className="space-y-2">
             {repos.map((repo) => {
-              const isSelected = value.toLowerCase() === repo.fullName.toLowerCase();
+              const isSelected =
+                value.toLowerCase() === repo.fullName.toLowerCase();
               return (
                 <div
                   key={`${repo.fullName}:${repo.branch}:details`}
@@ -71,7 +79,9 @@ export function ConnectedRepoSelect({
                 >
                   <div className="flex items-center gap-2">
                     <GitBranch className="h-3.5 w-3.5" />
-                    <span className="font-medium text-white">{repo.fullName}</span>
+                    <span className="font-medium text-white">
+                      {repo.fullName}
+                    </span>
                     <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[10px] text-gray-300">
                       {repo.branch}
                     </span>
@@ -94,7 +104,8 @@ export function ConnectedRepoSelect({
         </div>
       ) : (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          No connected GitHub repositories yet. Connect GitHub first to import a private repository.
+          No connected GitHub repositories yet. Connect GitHub first to import a
+          private repository.
         </div>
       )}
 
@@ -117,7 +128,8 @@ export function ConnectedRepoSelect({
             className="w-full rounded-lg border border-white/[0.08] bg-[#1a1a1a] px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
           />
           <p className="text-xs text-gray-500">
-            Use this only for public repositories. Private repos should be selected from a verified GitHub connection above.
+            Use this only for public repositories. Private repos should be
+            selected from a verified GitHub connection above.
           </p>
         </div>
       )}

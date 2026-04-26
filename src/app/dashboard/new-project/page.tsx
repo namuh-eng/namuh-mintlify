@@ -1,6 +1,9 @@
 "use client";
 
-import { ConnectedRepoSelect, type ConnectedRepoOption } from "@/components/github/connected-repo-select";
+import {
+  type ConnectedRepoOption,
+  ConnectedRepoSelect,
+} from "@/components/github/connected-repo-select";
 import { setStoredActiveProjectId } from "@/components/layout/shell-preferences";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -10,7 +13,9 @@ export default function NewProjectPage() {
   const [name, setName] = useState("");
   const [selectedRepoFullName, setSelectedRepoFullName] = useState("");
   const [publicRepoUrl, setPublicRepoUrl] = useState("");
-  const [connectedRepos, setConnectedRepos] = useState<ConnectedRepoOption[]>([]);
+  const [connectedRepos, setConnectedRepos] = useState<ConnectedRepoOption[]>(
+    [],
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingRepos, setLoadingRepos] = useState(true);
@@ -20,7 +25,10 @@ export default function NewProjectPage() {
       .then((res) => res.json())
       .then((data) => {
         const repos = (data.connections ?? []).flatMap(
-          (connection: { installationId: string; repos?: ConnectedRepoOption[] }) =>
+          (connection: {
+            installationId: string;
+            repos?: ConnectedRepoOption[];
+          }) =>
             (connection.repos ?? []).map((repo) => ({
               ...repo,
               installationId: connection.installationId,
@@ -35,7 +43,8 @@ export default function NewProjectPage() {
   const selectedRepo = useMemo(
     () =>
       connectedRepos.find(
-        (repo) => repo.fullName.toLowerCase() === selectedRepoFullName.toLowerCase(),
+        (repo) =>
+          repo.fullName.toLowerCase() === selectedRepoFullName.toLowerCase(),
       ) ?? null,
     [connectedRepos, selectedRepoFullName],
   );
@@ -64,9 +73,10 @@ export default function NewProjectPage() {
     setLoading(true);
 
     try {
-      const body: Record<string, string> = { name: trimmed };
+      const body: Record<string, string | boolean> = { name: trimmed };
       if (repoUrl.trim()) {
         body.repoUrl = repoUrl.trim();
+        body.createInitialDeployment = true;
       }
       if (selectedRepo?.installationId) {
         body.githubInstallationId = selectedRepo.installationId;
@@ -86,6 +96,23 @@ export default function NewProjectPage() {
       }
 
       const data = await res.json();
+      if (repoUrl.trim()) {
+        const provisionRes = await fetch("/api/onboarding/provision", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectId: data.project.id }),
+        });
+
+        if (!provisionRes.ok) {
+          const provisionData = await provisionRes.json().catch(() => null);
+          setError(
+            provisionData?.error || "Failed to provision initial content",
+          );
+          setLoading(false);
+          return;
+        }
+      }
+
       setStoredActiveProjectId(data.project.id);
       router.push("/dashboard");
       router.refresh();

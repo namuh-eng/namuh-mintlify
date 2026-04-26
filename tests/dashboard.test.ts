@@ -2,6 +2,7 @@ import {
   buildQuickActionCards,
   buildSiteUrl,
   formatDomainDisplay,
+  projectDisplayStatus,
   projectStatusSummary,
 } from "@/lib/dashboard";
 import { describe, expect, it } from "vitest";
@@ -116,5 +117,37 @@ describe("projectStatusSummary", () => {
     expect(projectStatusSummary("active", "Something", null)).toBe(
       "No deployments yet",
     );
+  });
+});
+
+describe("projectDisplayStatus", () => {
+  it("does not mark an active project live until it has published pages", () => {
+    expect(
+      projectDisplayStatus({
+        projectStatus: "active",
+        publishedPageCount: 0,
+        latestDeploymentStatus: null,
+      }),
+    ).toBe("deploying");
+  });
+
+  it("marks active projects live when published content exists", () => {
+    expect(
+      projectDisplayStatus({
+        projectStatus: "active",
+        publishedPageCount: 1,
+        latestDeploymentStatus: "succeeded",
+      }),
+    ).toBe("active");
+  });
+
+  it("keeps queued and running deployments in updating state", () => {
+    expect(
+      projectDisplayStatus({
+        projectStatus: "active",
+        publishedPageCount: 1,
+        latestDeploymentStatus: "queued",
+      }),
+    ).toBe("deploying");
   });
 });

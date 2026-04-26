@@ -64,6 +64,33 @@ export function formatDomainDisplay(
   return "";
 }
 
+export type ProjectDisplayStatus = "active" | "deploying" | "error";
+
+/** Determine the dashboard status from deploy state and published content. */
+export function projectDisplayStatus(params: {
+  projectStatus: string;
+  publishedPageCount: number;
+  latestDeploymentStatus?: string | null;
+}): ProjectDisplayStatus {
+  if (
+    params.projectStatus === "error" ||
+    params.latestDeploymentStatus === "failed"
+  ) {
+    return "error";
+  }
+
+  if (
+    params.projectStatus === "deploying" ||
+    params.latestDeploymentStatus === "queued" ||
+    params.latestDeploymentStatus === "in_progress" ||
+    params.publishedPageCount < 1
+  ) {
+    return "deploying";
+  }
+
+  return "active";
+}
+
 /** Determine the project status summary label. */
 export function projectStatusSummary(
   status: string,

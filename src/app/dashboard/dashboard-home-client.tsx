@@ -95,12 +95,16 @@ function formatDuration(from: string, to: string, suffix = "open") {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   if (hours < 24) {
-    return minutes > 0 ? `${hours}h ${minutes}m ${suffix}` : `${hours}h ${suffix}`;
+    return minutes > 0
+      ? `${hours}h ${minutes}m ${suffix}`
+      : `${hours}h ${suffix}`;
   }
 
   const days = Math.floor(hours / 24);
   const remHours = hours % 24;
-  return remHours > 0 ? `${days}d ${remHours}h ${suffix}` : `${days}d ${suffix}`;
+  return remHours > 0
+    ? `${days}d ${remHours}h ${suffix}`
+    : `${days}d ${suffix}`;
 }
 
 interface Props {
@@ -261,9 +265,8 @@ export function DashboardHomeClient({
   const [creatingPreview, setCreatingPreview] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewBranch, setPreviewBranch] = useState("");
-  const [handoffFilter, setHandoffFilter] = useState<
-    (typeof HANDOFF_FILTERS)[number]["key"]
-  >("all");
+  const [handoffFilter, setHandoffFilter] =
+    useState<(typeof HANDOFF_FILTERS)[number]["key"]>("all");
   const [resolvingHandoffId, setResolvingHandoffId] = useState<string | null>(
     null,
   );
@@ -272,12 +275,12 @@ export function DashboardHomeClient({
   const [handoffResolutionNotes, setHandoffResolutionNotes] = useState<
     Record<string, string>
   >({});
-  const [expandedNoteHandoffId, setExpandedNoteHandoffId] = useState<string | null>(
-    null,
-  );
-  const [handoffSort, setHandoffSort] = useState<"newest" | "oldest" | "longest-open">(
-    "newest",
-  );
+  const [expandedNoteHandoffId, setExpandedNoteHandoffId] = useState<
+    string | null
+  >(null);
+  const [handoffSort, setHandoffSort] = useState<
+    "newest" | "oldest" | "longest-open"
+  >("newest");
   const [showAllHandoffs, setShowAllHandoffs] = useState(false);
   const [handoffView, setHandoffView] = useState<"active" | "resolved">(
     "active",
@@ -288,9 +291,11 @@ export function DashboardHomeClient({
     ? `${latestDeployment.commitMessage ?? "Initializing Project"} ${timeAgo(latestDeployment.createdAt)}`
     : null;
 
-  const siteUrl = project
-    ? buildSiteUrl(project.subdomain, project.customDomain)
-    : "#";
+  const projectIsLive = project?.status === "active";
+  const siteUrl =
+    project && projectIsLive
+      ? buildSiteUrl(project.subdomain, project.customDomain)
+      : "#";
   const visibleManualHandoffs = useMemo(
     () =>
       manualHandoffs.filter(
@@ -299,7 +304,8 @@ export function DashboardHomeClient({
     [dismissedHandoffIds, manualHandoffs],
   );
 
-  const handoffRows = handoffView === "active" ? visibleManualHandoffs : resolvedManualHandoffs;
+  const handoffRows =
+    handoffView === "active" ? visibleManualHandoffs : resolvedManualHandoffs;
 
   const filteredManualHandoffs = handoffRows.filter((handoff) => {
     if (handoffFilter === "all") return true;
@@ -312,10 +318,13 @@ export function DashboardHomeClient({
     }
 
     if (handoffSort === "longest-open") {
-      const aResolvedAt = a.details.resolution?.resolvedAt ?? new Date().toISOString();
-      const bResolvedAt = b.details.resolution?.resolvedAt ?? new Date().toISOString();
+      const aResolvedAt =
+        a.details.resolution?.resolvedAt ?? new Date().toISOString();
+      const bResolvedAt =
+        b.details.resolution?.resolvedAt ?? new Date().toISOString();
       return (
-        new Date(bResolvedAt).getTime() - new Date(b.createdAt).getTime() -
+        new Date(bResolvedAt).getTime() -
+        new Date(b.createdAt).getTime() -
         (new Date(aResolvedAt).getTime() - new Date(a.createdAt).getTime())
       );
     }
@@ -341,7 +350,9 @@ export function DashboardHomeClient({
     resolvedManualHandoffStats.averageResolutionMs > 0
       ? formatDuration(
           new Date(0).toISOString(),
-          new Date(resolvedManualHandoffStats.averageResolutionMs).toISOString(),
+          new Date(
+            resolvedManualHandoffStats.averageResolutionMs,
+          ).toISOString(),
           "avg",
         )
       : null;
@@ -389,7 +400,8 @@ export function DashboardHomeClient({
   }
 
   async function deleteHandoff(handoffId: string) {
-    if (!confirm("Are you sure you want to delete this handoff record?")) return;
+    if (!confirm("Are you sure you want to delete this handoff record?"))
+      return;
     try {
       const response = await fetch(
         `/api/analytics/manual-handoffs/${handoffId}`,
@@ -514,7 +526,13 @@ export function DashboardHomeClient({
                   href={siteUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1a1a1a] border border-white/[0.08] text-sm text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+                  aria-disabled={!projectIsLive}
+                  className={clsx(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1a1a1a] border border-white/[0.08] text-sm transition-colors",
+                    projectIsLive
+                      ? "text-gray-400 hover:text-white hover:bg-white/[0.06]"
+                      : "pointer-events-none cursor-not-allowed text-gray-600 opacity-60",
+                  )}
                 >
                   <ExternalLink size={14} />
                   Visit site
@@ -529,7 +547,13 @@ export function DashboardHomeClient({
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="site-url-link"
-                  className="text-sm text-emerald-400 hover:underline inline-flex items-center gap-1"
+                  aria-disabled={!projectIsLive}
+                  className={clsx(
+                    "text-sm inline-flex items-center gap-1",
+                    projectIsLive
+                      ? "text-emerald-400 hover:underline"
+                      : "pointer-events-none cursor-not-allowed text-gray-500",
+                  )}
                 >
                   {domainDisplay}
                   <ExternalLink size={12} className="text-gray-500" />
@@ -554,14 +578,23 @@ export function DashboardHomeClient({
               const isExternal = card.id === "view-site";
               const Wrapper = isExternal ? "a" : Link;
               const extraProps = isExternal
-                ? { target: "_blank" as const, rel: "noopener noreferrer" }
+                ? {
+                    target: "_blank" as const,
+                    rel: "noopener noreferrer",
+                    "aria-disabled": !projectIsLive,
+                  }
                 : {};
               return (
                 <Wrapper
                   key={card.id}
                   href={card.href}
                   data-testid={`quick-action-card-${card.id}`}
-                  className="group rounded-xl border border-white/[0.08] bg-[#1a1a1a] p-4 hover:bg-white/[0.06] hover:border-white/[0.12] transition-all cursor-pointer"
+                  className={clsx(
+                    "group rounded-xl border border-white/[0.08] bg-[#1a1a1a] p-4 transition-all",
+                    isExternal && !projectIsLive
+                      ? "pointer-events-none cursor-not-allowed opacity-60"
+                      : "cursor-pointer hover:bg-white/[0.06] hover:border-white/[0.12]",
+                  )}
                   {...extraProps}
                 >
                   <div
@@ -618,8 +651,8 @@ export function DashboardHomeClient({
             {handoffNotice ? (
               <div className="mb-3 rounded-md border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200 flex items-center justify-between">
                 <span>{handoffNotice}</span>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setHandoffNotice(null)}
                   className="text-emerald-400 hover:text-emerald-300"
                 >
@@ -639,7 +672,9 @@ export function DashboardHomeClient({
               </div>
               <div className="rounded-md border border-white/[0.06] bg-black/20 px-3 py-2 text-gray-300">
                 <span className="block text-gray-500">Avg resolve time</span>
-                <span className="text-white">{averageResolvedDuration ?? "—"}</span>
+                <span className="text-white">
+                  {averageResolvedDuration ?? "—"}
+                </span>
               </div>
               <div className="rounded-md border border-white/[0.06] bg-black/20 px-3 py-2 text-gray-300">
                 <span className="block text-gray-500">Oldest unresolved</span>
@@ -695,7 +730,10 @@ export function DashboardHomeClient({
                   value={handoffSort}
                   onChange={(event) =>
                     setHandoffSort(
-                      event.target.value as "newest" | "oldest" | "longest-open",
+                      event.target.value as
+                        | "newest"
+                        | "oldest"
+                        | "longest-open",
                     )
                   }
                   className="rounded-md border border-white/[0.08] bg-black/20 px-2 py-1 text-xs text-gray-300 focus:outline-none"
@@ -723,9 +761,15 @@ export function DashboardHomeClient({
                         {handoff.action}
                       </p>
                       <p className="text-xs text-gray-500 truncate">
-                        {String(handoff.details.projectId ?? handoff.details.deploymentId ?? handoff.details.jobId ?? "manual follow-up required")}
+                        {String(
+                          handoff.details.projectId ??
+                            handoff.details.deploymentId ??
+                            handoff.details.jobId ??
+                            "manual follow-up required",
+                        )}
                       </p>
-                      {handoffView === "resolved" && handoff.details.resolution ? (
+                      {handoffView === "resolved" &&
+                      handoff.details.resolution ? (
                         <>
                           <p className="text-xs text-gray-500 truncate mt-1">
                             Created {timeAgo(handoff.createdAt)}
@@ -737,7 +781,10 @@ export function DashboardHomeClient({
                               : ""}
                           </p>
                           <p className="text-xs text-gray-500 truncate mt-1">
-                            Resolved by {handoff.details.resolution.resolvedByName ?? handoff.details.resolution.resolvedByUserId ?? "unknown"}
+                            Resolved by{" "}
+                            {handoff.details.resolution.resolvedByName ??
+                              handoff.details.resolution.resolvedByUserId ??
+                              "unknown"}
                           </p>
                           {handoff.details.resolution.resolutionNote ? (
                             <p className="text-xs text-gray-400 mt-1 line-clamp-2">
@@ -767,7 +814,9 @@ export function DashboardHomeClient({
                             disabled={resolvingHandoffId === handoff.id}
                             className="px-2 py-1 rounded-md text-xs bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-50 transition-colors"
                           >
-                            {resolvingHandoffId === handoff.id ? "Resolving..." : "Resolve"}
+                            {resolvingHandoffId === handoff.id
+                              ? "Resolving..."
+                              : "Resolve"}
                           </button>
                         </div>
                       ) : null}
