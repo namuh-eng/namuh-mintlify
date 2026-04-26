@@ -8,6 +8,26 @@ export function McpPageClient({ projectSlug }: { projectSlug: string }) {
   const mcpUrl = getMcpServerUrl(projectSlug);
   const tools = getMcpTools(projectSlug);
   const [copied, setCopied] = useState(false);
+  const [searches, setSearches] = useState<any[]>([]);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(true);
+
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/analytics/searches?trafficSource=agent`);
+      if (res.ok) {
+        const data = await res.json();
+        setSearches(data.entries?.slice(0, 5) ?? []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch MCP analytics:", err);
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(mcpUrl);
@@ -30,9 +50,15 @@ export function McpPageClient({ projectSlug }: { projectSlug: string }) {
       {/* Hosted MCP server */}
       <section className="space-y-3">
         <h2 className="text-xl font-semibold text-white">Hosted MCP server</h2>
-        <p className="text-sm text-zinc-400">
-          Access your MCP server and preview available tools
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-zinc-400">
+            Access your MCP server and preview available tools
+          </p>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-medium border border-emerald-500/20">
+            <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+            Online
+          </span>
+        </div>
         <a
           href="https://mintlify.com/docs/mcp"
           target="_blank"
@@ -85,7 +111,7 @@ export function McpPageClient({ projectSlug }: { projectSlug: string }) {
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {tools.map((tool) => (
             <div
               key={tool.name}
@@ -103,6 +129,39 @@ export function McpPageClient({ projectSlug }: { projectSlug: string }) {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Analytics integrated into MCP dashboard */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold text-white">Recent activity</h2>
+          <p className="mt-1 text-sm text-zinc-400">
+            Monitor search requests processed via MCP
+          </p>
+        </div>
+
+        {loadingAnalytics ? (
+          <div className="h-24 rounded-lg border border-dashed border-zinc-700 animate-pulse bg-zinc-800/20" />
+        ) : searches.length > 0 ? (
+          <div className="rounded-lg border border-zinc-700 bg-zinc-800/20 overflow-hidden">
+            <div className="divide-y divide-zinc-700/50">
+              {searches.map((s, i) => (
+                <div key={i} className="px-4 py-3 text-sm flex items-center justify-between">
+                  <span className="text-zinc-300 truncate max-w-[400px] font-mono text-xs">
+                    {s.query}
+                  </span>
+                  <span className="text-zinc-500 text-[11px]">
+                    {new Date(s.createdAt).toLocaleTimeString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-zinc-700 p-8 text-center bg-zinc-800/10">
+            <p className="text-sm text-zinc-500">No recent MCP activity recorded</p>
+          </div>
+        )}
       </section>
     </div>
   );
