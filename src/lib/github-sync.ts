@@ -22,9 +22,10 @@ export async function syncProjectDocsFromGitHub(params: {
   projectId: string;
   orgId: string;
   requestId?: string;
+  branchOverride?: string;
 }): Promise<SyncDocsResult> {
   const requestId = params.requestId ?? createRequestId();
-  const { projectId, orgId } = params;
+  const { projectId, orgId, branchOverride } = params;
 
   // 1. Fetch project details
   const [project] = await db
@@ -51,6 +52,7 @@ export async function syncProjectDocsFromGitHub(params: {
   });
 
   // 3. Prepare headers (if connected)
+  const branch = branchOverride || project.repoBranch || "main";
   let headers: HeadersInit | undefined;
   if (importAccess.status === "private_connected") {
     const installationId = (
@@ -70,7 +72,7 @@ export async function syncProjectDocsFromGitHub(params: {
   // 4. Run import
   const importResult = await importGitHubDocs({
     repoUrl: project.repoUrl,
-    repoBranch: project.repoBranch,
+    repoBranch: branch,
     repoPath: project.repoPath,
     headers,
   });

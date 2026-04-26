@@ -131,15 +131,35 @@ function buildDeploymentSimulationPlan(
         // Run real doc sync
         try {
           const [project] = await db
-            .select({ orgId: projects.orgId })
+            .select({
+              orgId: projects.orgId,
+              repoUrl: projects.repoUrl,
+              repoBranch: projects.repoBranch,
+              repoPath: projects.repoPath,
+              settings: projects.settings,
+            })
             .from(projects)
             .where(eq(projects.id, projectId))
             .limit(1);
 
           if (project) {
+            // Determine the branch to sync: 
+            // if it's a preview deployment, use the deployment's branch; 
+            // otherwise use the project's default branch.
+            const [deployment] = await db
+              .select({ type: deployments.type, branch: deployments.branch })
+              .from(deployments)
+              .where(eq(deployments.id, deploymentId))
+              .limit(1);
+
+            const branchToSync = (deployment?.type === "preview" && deployment.branch) 
+              ? deployment.branch 
+              : project.repoBranch;
+
             await syncProjectDocsFromGitHub({
               projectId,
               orgId: project.orgId,
+              branchOverride: branchToSync,
             });
           }
         } catch (err) {
