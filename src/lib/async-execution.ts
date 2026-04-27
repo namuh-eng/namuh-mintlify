@@ -207,7 +207,15 @@ function buildAgentJobSimulationPlan(jobId: string): SimulationPhase[] {
           .update(agentJobs)
           .set({
             status: "succeeded",
-            prUrl: `https://github.com/org/repo/pull/${Math.floor(Math.random() * 1000)}`,
+            prUrl: null,
+            messages: [
+              {
+                role: "agent",
+                content:
+                  "Simulation mode completed this job without creating a GitHub pull request.",
+                timestamp: new Date().toISOString(),
+              },
+            ],
             updatedAt: new Date(),
           })
           .where(and(eq(agentJobs.id, jobId), eq(agentJobs.status, "running")));
