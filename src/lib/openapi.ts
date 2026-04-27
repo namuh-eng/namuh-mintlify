@@ -9,6 +9,7 @@
  */
 
 import { type OpenApiEndpoint, parseOpenApiSpec } from "@/lib/openapi-parser";
+import { getCached, setCache } from "@/lib/cache/redis";
 
 // ── Types ───────────────────────────────────────────────────────────────────────
 
@@ -48,13 +49,18 @@ export interface VirtualAsyncApiPage {
 // ── Spec Fetching ───────────────────────────────────────────────────────────────
 
 /**
- * Fetch an OpenAPI/AsyncAPI spec from a URL.
+ * Fetch an OpenAPI/AsyncAPI spec from a URL, with caching.
  * Returns parsed JSON or null on failure.
  */
 export async function fetchSpecFromUrl(
   url: string,
 ): Promise<Record<string, unknown> | null> {
   if (!url.trim()) return null;
+  
+  const cacheKey = `spec:url:${url}`;
+  const cached = await getCached<Record<string, unknown>>(cacheKey);
+  if (cached) return cached;
+
   try {
     const res = await fetch(url, {
       headers: { Accept: "application/json, application/yaml" },
@@ -62,7 +68,11 @@ export async function fetchSpecFromUrl(
     });
     if (!res.ok) return null;
     const text = await res.text();
-    return JSON.parse(text) as Record<string, unknown>;
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    
+    // Cache for 1 hour
+    await setCache(cacheKey, parsed, 3600);
+    return parsed;
   } catch {
     return null;
   }
