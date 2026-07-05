@@ -18,5 +18,13 @@ export default async function LoginPage({
     redirect(callbackURL);
   }
 
-  return <AuthScreen callbackURL={callbackURL} mode="login" />;
+  return (
+    <AuthScreen
+      callbackURL={callbackURL}
+      googleAuthEnabled={Boolean(
+        process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
+      )}
+      mode="login"
+    />
+  );
 }
