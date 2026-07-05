@@ -25,13 +25,23 @@ Each section should appear in the right-hand TOC.
 Publish the page and verify the public docs route.
 `;
 
-export async function POST() {
+export async function POST(request: Request) {
   const isTestEnv =
     process.env.NODE_ENV === "test" || process.env.PLAYWRIGHT_TEST === "true";
 
   if (!isTestEnv) {
     return NextResponse.json({ error: "Not available" }, { status: 404 });
   }
+
+  const body = (await request.json().catch(() => ({}))) as {
+    customDomain?: unknown;
+    domainVerified?: unknown;
+  };
+  const customDomain =
+    typeof body.customDomain === "string" && body.customDomain.trim()
+      ? body.customDomain.trim().toLowerCase()
+      : null;
+  const domainVerified = body.domainVerified === true;
 
   const fixtureSuffix = randomUUID().slice(0, 8);
   const orgName = "Playwright Docs Fixtures";
@@ -62,6 +72,11 @@ export async function POST() {
       name: projectName,
       slug: projectSlug,
       subdomain,
+      customDomain,
+      settings:
+        customDomain && domainVerified
+          ? { domainVerifiedAt: new Date().toISOString() }
+          : {},
       status: "active",
     })
     .returning({ id: projects.id, subdomain: projects.subdomain });
@@ -77,6 +92,7 @@ export async function POST() {
 
   return NextResponse.json({
     subdomain: project.subdomain,
+    customDomain,
     pagePath: FIXTURE_PAGE_PATH,
   });
 }
