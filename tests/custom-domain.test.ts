@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   domainVerificationStatus,
   generateCnameTarget,
+  isConfiguredAppHost,
+  normalizeHostHeader,
+  resolveManagedDocsSubdomain,
   validateCustomDomain,
 } from "@/lib/domains";
 
@@ -101,5 +104,53 @@ describe("domainVerificationStatus", () => {
     expect(
       domainVerificationStatus("docs.example.com", "2025-01-01T00:00:00Z"),
     ).toBe("verified");
+  });
+});
+
+describe("normalizeHostHeader", () => {
+  it("lowercases hosts and strips ports", () => {
+    expect(normalizeHostHeader("Docs.Example.COM:443")).toBe(
+      "docs.example.com",
+    );
+  });
+
+  it("uses the first forwarded host", () => {
+    expect(normalizeHostHeader("docs.example.com, proxy.internal")).toBe(
+      "docs.example.com",
+    );
+  });
+});
+
+describe("resolveManagedDocsSubdomain", () => {
+  it("extracts subdomains from the configured docs root", () => {
+    const previous = process.env.NEXT_PUBLIC_DOCS_ROOT_DOMAIN;
+    process.env.NEXT_PUBLIC_DOCS_ROOT_DOMAIN = "hosting.namuh.dev";
+
+    expect(resolveManagedDocsSubdomain("acme.hosting.namuh.dev")).toBe("acme");
+    expect(resolveManagedDocsSubdomain("hosting.namuh.dev")).toBeNull();
+    expect(resolveManagedDocsSubdomain("docs.example.com")).toBeNull();
+
+    if (previous === undefined) {
+      delete process.env.NEXT_PUBLIC_DOCS_ROOT_DOMAIN;
+    } else {
+      process.env.NEXT_PUBLIC_DOCS_ROOT_DOMAIN = previous;
+    }
+  });
+});
+
+describe("isConfiguredAppHost", () => {
+  it("treats localhost and configured app hosts as first-party app hosts", () => {
+    const previous = process.env.NEXT_PUBLIC_APP_URL;
+    process.env.NEXT_PUBLIC_APP_URL = "https://opendocs.namuh.co";
+
+    expect(isConfiguredAppHost("localhost")).toBe(true);
+    expect(isConfiguredAppHost("opendocs.namuh.co")).toBe(true);
+    expect(isConfiguredAppHost("docs.customer.com")).toBe(false);
+
+    if (previous === undefined) {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+    } else {
+      process.env.NEXT_PUBLIC_APP_URL = previous;
+    }
   });
 });
