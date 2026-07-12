@@ -219,6 +219,9 @@ describe("MDX Component Library (feature-004a)", () => {
       const html = renderMdxContent(md);
       expect(html).toContain("code-copy");
       expect(html).toContain("Copy");
+      expect(html).toContain(
+        'aria-label="Copy the contents from the code block"',
+      );
     });
 
     it("renders code block with Ask AI button", () => {
@@ -226,6 +229,16 @@ describe("MDX Component Library (feature-004a)", () => {
       const html = renderMdxContent(md);
       expect(html).toContain("code-ask-ai");
       expect(html).toContain("Ask AI");
+      expect(html).toContain('aria-label="Ask AI about this code block"');
+    });
+
+    it("renders actions for plain README code fences without language metadata", () => {
+      const md = "```\nOPEN_DOCS_TOKEN=example\n```";
+      const html = renderMdxContent(md);
+      expect(html).toContain("code-header");
+      expect(html).toContain('<span class="code-lang">text</span>');
+      expect(html).toContain("code-copy");
+      expect(html).toContain("code-ask-ai");
     });
 
     it("renders code block with language label when language specified", () => {
@@ -296,6 +309,9 @@ describe("MDX Component Library (feature-004a)", () => {
         props: {},
       });
       expect(html).toContain("code-copy");
+      expect(html).toContain(
+        'aria-label="Copy the contents from the code block"',
+      );
     });
   });
 
