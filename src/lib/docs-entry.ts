@@ -19,30 +19,71 @@ export interface DocsEntryProject {
   pageDescription: string | null;
 }
 
-function pagePriority(path: string): number {
-  if (path === "introduction") return 0;
-  if (path === "getting-started") return 1;
-  if (path === "quickstart") return 2;
-  return 3;
+type SelectedDocsEntryProject = DocsEntryProject & {
+  selectedPriority: number;
+};
+
+function trimRouteSlashes(value: string): string {
+  return value.trim().replace(/^\/+|\/+$/g, "");
 }
 
-function docsHref(subdomain: string, pagePath: string): string {
-  return `/docs/${subdomain}/${pagePath.replace(/^\/+/, "")}`;
+function normalizeDocsEntryPath(subdomain: string, pagePath: string): string {
+  const cleanSubdomain = trimRouteSlashes(subdomain);
+  const cleanPath = pagePath
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\.(md|mdx)$/i, "");
+  const segments = trimRouteSlashes(cleanPath).split("/").filter(Boolean);
+
+  if (segments[0] === "docs" && segments[1] === cleanSubdomain) {
+    segments.splice(0, 2);
+  }
+
+  return segments.join("/");
+}
+
+function pagePriority(path: string): number {
+  switch (path) {
+    case "introduction":
+      return 0;
+    case "getting-started":
+      return 1;
+    case "quickstart":
+      return 2;
+    default:
+      return 3;
+  }
+}
+
+export function buildDocsEntryHref(
+  subdomain: string,
+  pagePath: string,
+): string {
+  const cleanSubdomain = trimRouteSlashes(subdomain);
+  const cleanPagePath = normalizeDocsEntryPath(cleanSubdomain, pagePath);
+
+  return cleanPagePath
+    ? `/docs/${cleanSubdomain}/${cleanPagePath}`
+    : `/docs/${cleanSubdomain}`;
+}
+
+export function getPrimaryDocsEntryHref(
+  projects: Pick<DocsEntryProject, "href">[],
+): string {
+  return projects[0]?.href ?? "/onboarding";
 }
 
 export function buildDocsEntryProjects(
   rows: DocsEntryRow[],
 ): DocsEntryProject[] {
-  const projects = new Map<
-    string,
-    DocsEntryProject & { selectedPriority: number }
-  >();
+  const projects = new Map<string, SelectedDocsEntryProject>();
 
   for (const row of rows) {
     if (!row.subdomain || !row.pagePath) continue;
+    const cleanPagePath = normalizeDocsEntryPath(row.subdomain, row.pagePath);
     if (
       !isPublicDocsVisiblePage({
-        path: row.pagePath,
+        path: cleanPagePath,
         title: row.pageTitle,
         frontmatter: row.pageFrontmatter,
       })
@@ -54,10 +95,10 @@ export function buildDocsEntryProjects(
       id: row.projectId,
       name: row.projectName,
       subdomain: row.subdomain,
-      href: docsHref(row.subdomain, row.pagePath),
+      href: buildDocsEntryHref(row.subdomain, cleanPagePath),
       pageTitle: row.pageTitle,
       pageDescription: row.pageDescription,
-      selectedPriority: pagePriority(row.pagePath),
+      selectedPriority: pagePriority(cleanPagePath),
     };
 
     const existing = projects.get(row.projectId);
@@ -67,6 +108,6 @@ export function buildDocsEntryProjects(
   }
 
   return Array.from(projects.values()).map(
-    ({ selectedPriority: _, ...p }) => p,
+    ({ selectedPriority: _selectedPriority, ...project }) => project,
   );
 }
