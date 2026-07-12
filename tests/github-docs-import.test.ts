@@ -477,4 +477,77 @@ ${"```"}
       );
     }
   });
+
+  it("removes imported README table-of-contents blocks that duplicate generated navigation", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/git/trees/")) {
+        return {
+          ok: true,
+          json: async () => ({ tree: [{ path: "README.md", type: "blob" }] }),
+        };
+      }
+      return {
+        ok: true,
+        text: async () => `# Product Docs
+
+## Table of Contents
+
+- [Install](#install)
+- [Configure](#configure)
+
+## Install
+
+Run the installer.
+
+## Configure
+
+Set your token.`,
+      };
+    });
+
+    const { importGitHubDocs } = await import("@/lib/github-docs-import");
+    const result = await importGitHubDocs({
+      repoUrl: "https://github.com/acme/docs",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.pages[0].content).not.toContain("Table of Contents");
+      expect(result.pages[0].content).not.toContain("[Install](#install)");
+      expect(result.pages[0].content).toContain("## Install");
+      expect(result.pages[0].content).toContain("## Configure");
+    }
+  });
+
+  it("keeps short contents sections that are not markdown anchor lists", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/git/trees/")) {
+        return {
+          ok: true,
+          json: async () => ({ tree: [{ path: "README.md", type: "blob" }] }),
+        };
+      }
+      return {
+        ok: true,
+        text: async () => `# Product Docs
+
+## Contents
+
+This package includes the CLI, SDK, and hosted dashboard.`,
+      };
+    });
+
+    const { importGitHubDocs } = await import("@/lib/github-docs-import");
+    const result = await importGitHubDocs({
+      repoUrl: "https://github.com/acme/docs",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.pages[0].content).toContain("## Contents");
+      expect(result.pages[0].content).toContain("hosted dashboard");
+    }
+  });
 });

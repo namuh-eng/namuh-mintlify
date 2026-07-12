@@ -231,6 +231,13 @@ function applySyntaxHighlighting(code: string, lang: string): string {
   return result;
 }
 
+function renderCodeActionsHtml(): string {
+  return [
+    '<button type="button" class="code-copy" title="Copy" aria-label="Copy the contents from the code block">Copy</button>',
+    '<button type="button" class="code-ask-ai" title="Ask AI" aria-label="Ask AI about this code block">Ask AI</button>',
+  ].join("");
+}
+
 /** Convert inline markdown (bold, italic, code, links, images) to HTML. */
 function renderInline(text: string): string {
   let result = escapeHtml(text);
@@ -300,10 +307,8 @@ export function parseMdxToHtml(content: string): string {
         ? applySyntaxHighlighting(rawCode, lang)
         : rawCode;
       const langAttr = lang ? ` data-language="${escapeHtml(lang)}"` : "";
-      const displayName = filename || lang;
-      const headerHtml = displayName
-        ? `<div class="code-header"><span class="code-lang">${escapeHtml(displayName)}</span><div class="code-actions"><button class="code-copy" title="Copy">Copy</button><button class="code-ask-ai" title="Ask AI">Ask AI</button></div></div>`
-        : "";
+      const displayName = filename || lang || "text";
+      const headerHtml = `<div class="code-header"><span class="code-lang">${escapeHtml(displayName)}</span><div class="code-actions">${renderCodeActionsHtml()}</div></div>`;
       output.push(
         `<div class="code-block"${langAttr}>${headerHtml}<pre><code${lang ? ` class="language-${escapeHtml(lang)}"` : ""}>${highlightedCode}</code></pre></div>`,
       );
@@ -744,7 +749,7 @@ export function renderComponentBlock(block: ContentBlock): string {
       const codePanels = codeBlocks
         .map(
           (cb, idx) =>
-            `<div class="tab-panel${idx === 0 ? " active" : ""}" data-tab="${idx}"><div class="code-panel-actions"><button class="code-copy" title="Copy">Copy</button></div><pre><code class="language-${escapeHtml(cb.lang)}">${applySyntaxHighlighting(escapeHtml(cb.code), cb.lang)}</code></pre></div>`,
+            `<div class="tab-panel${idx === 0 ? " active" : ""}" data-tab="${idx}"><div class="code-panel-actions"><button type="button" class="code-copy" title="Copy" aria-label="Copy the contents from the code block">Copy</button></div><pre><code class="language-${escapeHtml(cb.lang)}">${applySyntaxHighlighting(escapeHtml(cb.code), cb.lang)}</code></pre></div>`,
         )
         .join("");
       return `<div class="code-group"><div class="tab-bar">${codeHeaders}</div><div class="tab-panels">${codePanels}</div></div>`;
