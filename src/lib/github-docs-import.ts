@@ -127,6 +127,60 @@ function stripHtmlTags(value: string): string {
   return value.replace(/<[^>]+>/g, "").trim();
 }
 
+function isTocHeading(line: string): boolean {
+  const match = line.trim().match(/^#{2,4}\s+(.+)$/);
+  if (!match) return false;
+
+  return /^(?:table\s+of\s+contents|contents|toc)$/i.test(
+    stripHtmlTags(match[1]).replace(/[*_`]/g, "").trim(),
+  );
+}
+
+function isMarkdownTocLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return true;
+
+  return (
+    /^[-*+]\s+\[[^\]]+\]\(#[^)]+\)/.test(trimmed) ||
+    /^\d+\.\s+\[[^\]]+\]\(#[^)]+\)/.test(trimmed)
+  );
+}
+
+function stripMarkdownTableOfContents(content: string): string {
+  const lines = content.split("\n");
+  const output: string[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    if (!isTocHeading(line)) {
+      output.push(line);
+      index++;
+      continue;
+    }
+
+    let cursor = index + 1;
+    let linkCount = 0;
+    while (cursor < lines.length && isMarkdownTocLine(lines[cursor])) {
+      if (/\[[^\]]+\]\(#[^)]+\)/.test(lines[cursor])) linkCount++;
+      cursor++;
+    }
+
+    if (linkCount >= 2) {
+      index = cursor;
+      continue;
+    }
+
+    output.push(line);
+    index++;
+  }
+
+  return output
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function normalizeGitHubMarkdownContent(
   content: string,
   title?: string | null,
@@ -163,13 +217,15 @@ function normalizeGitHubMarkdownContent(
   normalized = normalized.replace(/<\/?(?:p|div|span|center)\b[^>]*>/gi, "\n");
   normalized = normalized.replace(/<!--([\s\S]*?)-->/g, "");
 
+  const normalizedMarkdown = normalized
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+$/g, ""))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
   return normalizeMarkdownContent(
-    normalized
-      .split("\n")
-      .map((line) => line.replace(/[ \t]+$/g, ""))
-      .join("\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim(),
+    stripMarkdownTableOfContents(normalizedMarkdown),
     { title },
   );
 }

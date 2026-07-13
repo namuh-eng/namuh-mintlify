@@ -2,10 +2,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AuthScreen } from "@/components/auth/auth-screen";
 
-// Google OAuth is the only auth method offered right now — GitHub/SSO, the
-// email form, and magic link are hidden (SHOW_ALTERNATE_AUTH in auth-screen).
 describe("AuthScreen", () => {
-  it("renders the split login screen with Google as the only method", () => {
+  it("renders login with email/password and social options", () => {
     const html = renderToStaticMarkup(
       <AuthScreen callbackURL="/dashboard" mode="login" />,
     );
@@ -14,13 +12,16 @@ describe("AuthScreen", () => {
     expect(html).toContain("back.");
     expect(html).toContain("Docs you ship like product.");
     expect(html).toContain("Continue with Google");
-    expect(html).not.toContain("SSO");
-    expect(html).not.toContain("Or with email");
-    expect(html).not.toContain("Work email");
-    expect(html).not.toContain("magic link");
+    expect(html).toContain("GitHub");
+    expect(html).toContain("SSO");
+    expect(html).toContain("Or with email");
+    expect(html).toContain("Work email");
+    expect(html).toContain("Password");
+    expect(html).toContain("Continue →");
+    expect(html).toContain("magic link");
   });
 
-  it("renders the Google-only signup screen with the mock copy", () => {
+  it("renders signup with reachable email/password fields", () => {
     const html = renderToStaticMarkup(
       <AuthScreen callbackURL="/onboarding" mode="signup" />,
     );
@@ -30,9 +31,27 @@ describe("AuthScreen", () => {
     expect(html).toContain("An AI-native docs platform");
     expect(html).toContain("Free · No credit card");
     expect(html).toContain("Continue with Google");
-    expect(html).not.toContain("Your name");
-    expect(html).not.toContain("Create workspace");
-    expect(html).not.toContain("Privacy Policy");
+    expect(html).toContain("Your name");
+    expect(html).toContain("Work email");
+    expect(html).toContain("Create workspace");
+    expect(html).toContain("Privacy Policy");
+  });
+
+  it("clearly disables Google when OAuth credentials are missing", () => {
+    const html = renderToStaticMarkup(
+      <AuthScreen
+        callbackURL="/onboarding"
+        googleAuthEnabled={false}
+        mode="signup"
+      />,
+    );
+
+    expect(html).toContain("Google sign-in unavailable");
+    expect(html).toContain(
+      "Google OAuth credentials are not configured for this deployment.",
+    );
+    expect(html).toContain("Work email");
+    expect(html).toContain("Create workspace");
   });
 
   it("uses exactly one h1 per screen for accessibility and e2e stability", () => {

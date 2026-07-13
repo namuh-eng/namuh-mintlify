@@ -24,7 +24,11 @@ export default defineConfig({
     {
       name: "unauthenticated",
       // Public pages (auth screens, landing page) run without a session.
-      testMatch: [/(^|\/)auth\.spec\.ts$/, /(^|\/)landing\.spec\.ts$/],
+      testMatch: [
+        /(^|\/)auth\.spec\.ts$/,
+        /(^|\/)custom-domain-routing\.spec\.ts$/,
+        /(^|\/)landing\.spec\.ts$/,
+      ],
     },
   ],
   use: {

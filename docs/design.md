@@ -175,4 +175,3 @@ Before a new OpenDocs page is considered finished:
 
 - `docs/design/style-guide.md` — detailed Warm Craft tokens and component rules.
 - `docs/self-hosting.md` — production setup and environment guidance.
-- `docs/deployment/opendocs-production.md` — deployment notes for the live OpenDocs service.

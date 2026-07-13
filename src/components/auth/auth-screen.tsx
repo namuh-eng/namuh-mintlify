@@ -5,13 +5,9 @@ import { authClient } from "@/lib/auth-client";
 
 interface AuthScreenProps {
   callbackURL: string;
+  googleAuthEnabled?: boolean;
   mode: "login" | "signup";
 }
-
-// Google OAuth is the only auth method we offer right now. The GitHub/SSO
-// buttons, email/password form, and magic-link line are kept in the markup
-// below but hidden behind this flag — flip to true to bring them back.
-const SHOW_ALTERNATE_AUTH = false;
 
 type LoadingState = "email" | "google" | null;
 
@@ -92,7 +88,11 @@ const inputClass =
 
 const labelClass = "text-sm font-medium text-[#1f1d2c]";
 
-export function AuthScreen({ callbackURL, mode }: AuthScreenProps) {
+export function AuthScreen({
+  callbackURL,
+  googleAuthEnabled = true,
+  mode,
+}: AuthScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -102,6 +102,13 @@ export function AuthScreen({ callbackURL, mode }: AuthScreenProps) {
   const isSignup = mode === "signup";
 
   const handleGoogleAuth = async () => {
+    if (!googleAuthEnabled) {
+      setError(
+        "Google sign-in is not configured for this deployment. Use email and password instead.",
+      );
+      return;
+    }
+
     setLoading("google");
     setError(null);
 
@@ -303,171 +310,166 @@ export function AuthScreen({ callbackURL, mode }: AuthScreenProps) {
             <button
               type="button"
               onClick={handleGoogleAuth}
-              disabled={loading !== null}
+              disabled={loading !== null || !googleAuthEnabled}
               className="flex w-full items-center justify-center gap-3 rounded-xl border border-[#e5dfd0] bg-white px-4 py-3 text-[15px] font-medium text-[#1f1d2c] transition-colors hover:bg-[#faf6ec] disabled:opacity-50"
+              title={
+                googleAuthEnabled
+                  ? undefined
+                  : "Google OAuth credentials are not configured for this deployment."
+              }
             >
               <GoogleIcon />
-              {loading === "google" ? "Redirecting..." : "Continue with Google"}
+              {loading === "google"
+                ? "Redirecting..."
+                : googleAuthEnabled
+                  ? "Continue with Google"
+                  : "Google sign-in unavailable"}
             </button>
-            {SHOW_ALTERNATE_AUTH && (
-              <div className="flex gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => comingSoon("GitHub sign-in")}
-                  disabled={loading !== null}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#e5dfd0] bg-white px-4 py-2.5 text-sm font-medium text-[#1f1d2c] transition-colors hover:bg-[#faf6ec] disabled:opacity-50"
-                >
-                  <GitHubIcon />
-                  GitHub
-                </button>
-                <button
-                  type="button"
-                  onClick={() => comingSoon("SSO")}
-                  disabled={loading !== null}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#e5dfd0] bg-white px-4 py-2.5 text-sm font-medium text-[#1f1d2c] transition-colors hover:bg-[#faf6ec] disabled:opacity-50"
-                >
-                  <SsoIcon />
-                  SSO
-                </button>
-              </div>
-            )}
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => comingSoon("GitHub sign-in")}
+                disabled={loading !== null}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#e5dfd0] bg-white px-4 py-2.5 text-sm font-medium text-[#1f1d2c] transition-colors hover:bg-[#faf6ec] disabled:opacity-50"
+              >
+                <GitHubIcon />
+                GitHub
+              </button>
+              <button
+                type="button"
+                onClick={() => comingSoon("SSO")}
+                disabled={loading !== null}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#e5dfd0] bg-white px-4 py-2.5 text-sm font-medium text-[#1f1d2c] transition-colors hover:bg-[#faf6ec] disabled:opacity-50"
+              >
+                <SsoIcon />
+                SSO
+              </button>
+            </div>
           </div>
 
-          {!SHOW_ALTERNATE_AUTH && error && (
-            <p className="mt-5 rounded-lg border border-[var(--od-danger)]/40 bg-[var(--od-danger-soft)] px-3 py-2 text-sm text-[var(--od-danger)]">
-              {error}
-            </p>
-          )}
+          <div className="my-6 flex items-center gap-4">
+            <div className="h-px flex-1 bg-[#e5dfd0]" />
+            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#948f9e]">
+              Or with email
+            </span>
+            <div className="h-px flex-1 bg-[#e5dfd0]" />
+          </div>
 
-          {SHOW_ALTERNATE_AUTH && (
-            <>
-              <div className="my-6 flex items-center gap-4">
-                <div className="h-px flex-1 bg-[#e5dfd0]" />
-                <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#948f9e]">
-                  Or with email
-                </span>
-                <div className="h-px flex-1 bg-[#e5dfd0]" />
-              </div>
+          <form className="space-y-4" onSubmit={handleEmailAuth}>
+            {isSignup && (
+              <label className="block space-y-1.5">
+                <span className={labelClass}>Name</span>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Your name"
+                  className={inputClass}
+                />
+              </label>
+            )}
 
-              <form className="space-y-4" onSubmit={handleEmailAuth}>
-                {isSignup && (
-                  <label className="block space-y-1.5">
-                    <span className={labelClass}>Name</span>
-                    <input
-                      type="text"
-                      autoComplete="name"
-                      value={name}
-                      onChange={(event) => setName(event.target.value)}
-                      placeholder="Your name"
-                      className={inputClass}
-                    />
-                  </label>
-                )}
+            <label className="block space-y-1.5">
+              <span className={labelClass}>Work email</span>
+              <input
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@company.com"
+                required
+                className={inputClass}
+              />
+            </label>
 
-                <label className="block space-y-1.5">
-                  <span className={labelClass}>Work email</span>
-                  <input
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@company.com"
-                    required
-                    className={inputClass}
-                  />
-                </label>
-
-                <label className="block space-y-1.5">
-                  <span className="flex items-baseline justify-between">
-                    <span className={labelClass}>Password</span>
-                    {isSignup ? (
-                      <span className="text-xs text-[#948f9e]">
-                        Min. 8 characters
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => comingSoon("Password reset")}
-                        className="text-xs font-medium text-[var(--od-accent-text)] hover:text-[var(--od-accent-strong)]"
-                      >
-                        Forgot?
-                      </button>
-                    )}
+            <label className="block space-y-1.5">
+              <span className="flex items-baseline justify-between">
+                <span className={labelClass}>Password</span>
+                {isSignup ? (
+                  <span className="text-xs text-[#948f9e]">
+                    Min. 8 characters
                   </span>
-                  <input
-                    type="password"
-                    autoComplete={
-                      isSignup ? "new-password" : "current-password"
-                    }
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="••••••••"
-                    minLength={8}
-                    required
-                    className={inputClass}
-                  />
-                </label>
-
-                {isSignup && (
-                  <label className="flex items-start gap-2.5 text-sm text-[#6b6878]">
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      required
-                      className="mt-0.5 h-4 w-4 rounded border-[#e5dfd0] accent-[var(--od-accent)]"
-                    />
-                    <span>
-                      I agree to the{" "}
-                      <a
-                        href="/"
-                        className="text-[var(--od-accent-text)] hover:text-[var(--od-accent-strong)]"
-                      >
-                        Terms
-                      </a>{" "}
-                      and{" "}
-                      <a
-                        href="/"
-                        className="text-[var(--od-accent-text)] hover:text-[var(--od-accent-strong)]"
-                      >
-                        Privacy Policy
-                      </a>
-                      . Send me product updates occasionally.
-                    </span>
-                  </label>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => comingSoon("Password reset")}
+                    className="text-xs font-medium text-[var(--od-accent-text)] hover:text-[var(--od-accent-strong)]"
+                  >
+                    Forgot?
+                  </button>
                 )}
+              </span>
+              <input
+                type="password"
+                autoComplete={isSignup ? "new-password" : "current-password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="••••••••"
+                minLength={8}
+                required
+                className={inputClass}
+              />
+            </label>
 
-                {error && (
-                  <p className="rounded-lg border border-[var(--od-danger)]/40 bg-[var(--od-danger-soft)] px-3 py-2 text-sm text-[var(--od-danger)]">
-                    {error}
-                  </p>
-                )}
+            {isSignup && (
+              <label className="flex items-start gap-2.5 text-sm text-[#6b6878]">
+                <input
+                  type="checkbox"
+                  defaultChecked
+                  required
+                  className="mt-0.5 h-4 w-4 rounded border-[#e5dfd0] accent-[var(--od-accent)]"
+                />
+                <span>
+                  I agree to the{" "}
+                  <a
+                    href="/"
+                    className="text-[var(--od-accent-text)] hover:text-[var(--od-accent-strong)]"
+                  >
+                    Terms
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="/"
+                    className="text-[var(--od-accent-text)] hover:text-[var(--od-accent-strong)]"
+                  >
+                    Privacy Policy
+                  </a>
+                  . Send me product updates occasionally.
+                </span>
+              </label>
+            )}
 
-                <button
-                  type="submit"
-                  disabled={loading !== null}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1a1827] px-4 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#221f33] disabled:opacity-50"
-                >
-                  {loading === "email"
-                    ? "Continuing..."
-                    : isSignup
-                      ? "Create workspace →"
-                      : "Continue →"}
-                </button>
-              </form>
-
-              <p className="mt-5 text-center text-sm text-[#6b6878]">
-                <span className="text-[var(--od-accent)]">✦</span> Or get a{" "}
-                <button
-                  type="button"
-                  onClick={() => comingSoon("Magic link sign-in")}
-                  className="font-medium text-[var(--od-accent-text)] hover:text-[var(--od-accent-strong)]"
-                >
-                  magic link
-                </button>{" "}
-                sent to your email
+            {error && (
+              <p className="rounded-lg border border-[var(--od-danger)]/40 bg-[var(--od-danger-soft)] px-3 py-2 text-sm text-[var(--od-danger)]">
+                {error}
               </p>
-            </>
-          )}
+            )}
+
+            <button
+              type="submit"
+              disabled={loading !== null}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1a1827] px-4 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#221f33] disabled:opacity-50"
+            >
+              {loading === "email"
+                ? "Continuing..."
+                : isSignup
+                  ? "Create workspace →"
+                  : "Continue →"}
+            </button>
+          </form>
+
+          <p className="mt-5 text-center text-sm text-[#6b6878]">
+            <span className="text-[var(--od-accent)]">✦</span> Or get a{" "}
+            <button
+              type="button"
+              onClick={() => comingSoon("Magic link sign-in")}
+              className="font-medium text-[var(--od-accent-text)] hover:text-[var(--od-accent-strong)]"
+            >
+              magic link
+            </button>{" "}
+            sent to your email
+          </p>
         </div>
       </main>
     </div>

@@ -265,6 +265,31 @@ Use a process manager and a reverse proxy for production. The Dockerfile is the 
 - Preserve `Host`, `X-Forwarded-Proto`, and `X-Forwarded-For` headers.
 - Point health checks at `GET /api/health`. The response includes app status, version, and database/storage check results.
 
+## Custom-domain request routing
+
+Customer docs domains are routed by the incoming HTTP `Host` header. The edge
+proxy resolves verified custom domains through `/api/docs/resolve-host` and
+rewrites clean docs paths like `https://docs.customer.com/introduction` to the
+project's internal `/docs/{subdomain}/introduction` route. Unknown or unverified
+hosts are rewritten to a branded OpenDocs 404 instead of falling through to the
+application shell.
+
+DNS verification remains CNAME-based: users point their domain at
+`{subdomain}.hosting.namuh.dev`, then OpenDocs stores
+`settings.domainVerifiedAt` once verification passes. Only projects with that
+verification timestamp are eligible for Host-header routing.
+
+TLS requirements:
+
+- The platform origin needs wildcard TLS for the managed docs root, e.g.
+  `*.hosting.namuh.dev`.
+- Customer-owned domains need a certificate at the edge/load balancer before
+  HTTPS traffic can reach the app with the original `Host` header. In AWS, use
+  ACM certificates on the ALB/CloudFront layer; for a worker/edge provider, use
+  its custom-hostname certificate flow.
+- The app intentionally treats unverified hosts as 404 even if DNS already
+  points at the platform.
+
 ## Upgrading
 
 ```bash
