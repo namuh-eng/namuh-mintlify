@@ -3,7 +3,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { pages, projects } from "@/lib/db/schema";
-import { buildDocsEntryProjects } from "@/lib/docs-entry";
+import {
+  buildDocsEntryProjects,
+  type DocsEntryProject,
+  getPrimaryDocsEntryHref,
+} from "@/lib/docs-entry";
 
 export const dynamic = "force-dynamic";
 
@@ -53,8 +57,18 @@ const featureCards = [
   },
 ];
 
-export default async function DocsLandingPage() {
-  const publishedProjects = await getPublishedDocsProjects();
+interface DocsLandingContentProps {
+  publishedProjects: DocsEntryProject[];
+}
+
+export function DocsLandingContent({
+  publishedProjects,
+}: DocsLandingContentProps) {
+  const primaryDocsHref = getPrimaryDocsEntryHref(publishedProjects);
+  const primaryDocsProject = publishedProjects[0];
+  const primaryDocsLabel = primaryDocsProject
+    ? `Explore first published docs: ${primaryDocsProject.name}`
+    : "Start onboarding to create published docs";
 
   return (
     <main className="od-app-shell min-h-screen">
@@ -95,8 +109,11 @@ export default async function DocsLandingPage() {
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
               <Link
-                href={publishedProjects[0]?.href ?? "/onboarding"}
+                href={primaryDocsHref}
+                aria-label={primaryDocsLabel}
                 className="rounded-lg bg-[var(--od-accent)] px-4 py-2.5 text-sm font-medium text-[#fff] transition hover:bg-[var(--od-accent-strong)]"
+                data-docs-entry-href={primaryDocsHref}
+                data-testid="docs-primary-entry-link"
               >
                 Explore docs
               </Link>
@@ -119,13 +136,17 @@ export default async function DocsLandingPage() {
                   <Link
                     key={project.id}
                     href={project.href}
+                    aria-label={`Open ${project.name} at ${project.href}`}
                     className="block rounded-[var(--od-card-radius)] border border-[var(--od-border)] bg-[var(--od-panel-muted)] p-4 transition hover:border-[var(--od-accent-border)] hover:bg-[var(--od-accent-soft)]"
+                    data-docs-entry-href={project.href}
+                    data-docs-entry-id={project.id}
+                    data-testid="docs-entry-card-link"
                   >
                     <div className="text-sm font-semibold text-[var(--od-text)]">
                       {project.name}
                     </div>
                     <div className="mt-1 text-xs text-[var(--od-accent)]">
-                      /docs/{project.subdomain}
+                      {project.href}
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[var(--od-text-muted)]">
                       {project.pageDescription ??
@@ -163,4 +184,10 @@ export default async function DocsLandingPage() {
       </div>
     </main>
   );
+}
+
+export default async function DocsLandingPage() {
+  const publishedProjects = await getPublishedDocsProjects();
+
+  return <DocsLandingContent publishedProjects={publishedProjects} />;
 }
