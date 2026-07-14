@@ -52,7 +52,7 @@ export async function syncProjectDocsFromGitHub(params: {
   });
 
   // 3. Prepare headers (if connected)
-  const branch = branchOverride || project.repoBranch || "main";
+  const branch = branchOverride || project.repoBranch || undefined;
   let headers: HeadersInit | undefined;
   if (importAccess.status === "private_connected") {
     const installationId = (
