@@ -71,6 +71,46 @@ function renderDashboard(overrides: Partial<DashboardProps> = {}) {
 }
 
 describe("Dashboard site preview", () => {
+  it("shows sync errors instead of silently ignoring failed GitHub syncs", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ topPages: [] }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: () =>
+          Promise.resolve({ error: "GitHub import found no markdown files" }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { container, root } = renderDashboard();
+    const syncButton = container.querySelector<HTMLButtonElement>(
+      'button[title="Sync from GitHub"]',
+    );
+
+    expect(syncButton).toBeTruthy();
+    if (!syncButton) {
+      throw new Error("Sync button not found");
+    }
+
+    await act(async () => {
+      syncButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/projects/project-1/sync", {
+      method: "POST",
+    });
+    expect(
+      container.querySelector('[data-testid="sync-error-message"]')
+        ?.textContent,
+    ).toBe("GitHub import found no markdown files");
+
+    act(() => root.unmount());
+    container.remove();
+  });
+
   it("embeds the live docs site instead of showing only the placeholder", () => {
     const { container, root } = renderDashboard();
 

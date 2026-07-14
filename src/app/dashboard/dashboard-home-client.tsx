@@ -220,6 +220,7 @@ export function DashboardHomeClient({
   const [activeTab, setActiveTab] = useState<"live" | "previews">("live");
   const [triggering, setTriggering] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [creatingPreview, setCreatingPreview] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewBranch, setPreviewBranch] = useState("");
@@ -286,11 +287,24 @@ export function DashboardHomeClient({
   async function triggerSync() {
     if (!project) return;
     setSyncing(true);
+    setSyncError(null);
     try {
-      await fetch(`/api/projects/${project.id}/sync`, {
+      const response = await fetch(`/api/projects/${project.id}/sync`, {
         method: "POST",
       });
+      const data = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+
+      if (!response.ok) {
+        throw new Error(data?.error ?? "Sync from GitHub failed");
+      }
+
       router.refresh();
+    } catch (error) {
+      setSyncError(
+        error instanceof Error ? error.message : "Sync from GitHub failed",
+      );
     } finally {
       setSyncing(false);
     }
@@ -441,6 +455,16 @@ export function DashboardHomeClient({
                   Visit site
                 </a>
               </div>
+
+              {syncError && (
+                <p
+                  className="text-xs text-[var(--od-danger)]"
+                  role="status"
+                  data-testid="sync-error-message"
+                >
+                  {syncError}
+                </p>
+              )}
 
               {(repoOwner || repoPath || repoBranch) && (
                 <div className="flex items-center gap-2 rounded-lg border border-[var(--od-border)] bg-[var(--od-panel)] px-3 py-2 text-xs text-[var(--od-text-muted)]">
