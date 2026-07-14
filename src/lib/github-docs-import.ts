@@ -10,12 +10,17 @@ export interface ImportedGitHubDocPage {
   content: string;
 }
 
+type ImportedGitHubDocPageWithSource = ImportedGitHubDocPage & {
+  sourceFilePath: string;
+};
+
 export interface GitHubImportRequestOptions {
   repoUrl?: string | null;
   repoBranch?: string | null;
   repoPath?: string | null;
   fetchImpl?: typeof fetch;
   headers?: HeadersInit;
+  env?: Partial<NodeJS.ProcessEnv>;
 }
 
 export type GitHubDocsImportResult =
@@ -33,6 +38,69 @@ export type GitHubDocsImportResult =
 
 interface GitHubTreeResponse {
   tree?: { path: string; type: string }[];
+}
+
+interface GitHubRepositoryResponse {
+  default_branch?: string;
+}
+
+function headersToRecord(headers?: HeadersInit): Record<string, string> {
+  if (!headers) return {};
+
+  if (headers instanceof Headers) {
+    return Object.fromEntries(headers.entries());
+  }
+
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers.map(([key, value]) => [key, value]));
+  }
+
+  return { ...headers } as Record<string, string>;
+}
+
+function hasAuthorizationHeader(headers: Record<string, string>): boolean {
+  return Object.keys(headers).some(
+    (key) => key.toLowerCase() === "authorization",
+  );
+}
+
+function buildGitHubApiHeaders(params: {
+  headers?: HeadersInit;
+  env?: Partial<NodeJS.ProcessEnv>;
+}): Record<string, string> {
+  const provided = headersToRecord(params.headers);
+  const env = params.env ?? process.env;
+  const token =
+    env.OPENDOCS_GITHUB_TOKEN?.trim() ||
+    env.GITHUB_TOKEN?.trim() ||
+    env.GH_TOKEN?.trim();
+
+  return {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    "User-Agent": "opendocs-github-importer",
+    ...(!hasAuthorizationHeader(provided) && token
+      ? { Authorization: `Bearer ${token}` }
+      : {}),
+    ...provided,
+  };
+}
+
+async function resolveDefaultGitHubBranch(params: {
+  owner: string;
+  repo: string;
+  fetchImpl: typeof fetch;
+  headers: Record<string, string>;
+}): Promise<string | null> {
+  const response = await params.fetchImpl(
+    `https://api.github.com/repos/${params.owner}/${params.repo}`,
+    { headers: params.headers },
+  );
+
+  if (!response.ok) return null;
+
+  const data = (await response.json()) as GitHubRepositoryResponse;
+  return data.default_branch?.trim() || null;
 }
 
 function normalizeBasePath(repoPath?: string | null): string {
@@ -71,6 +139,45 @@ function toPagePath(filePath: string, basePath: string): string | null {
   }
 
   return withoutExt.toLowerCase();
+}
+
+function sourcePathSlug(filePath: string): string {
+  const withoutExt = filePath.replace(/\.(md|mdx)$/i, "");
+  const parts = withoutExt
+    .split("/")
+    .filter((part) => part && !/^index$|^readme$/i.test(part));
+  const candidate = parts[parts.length - 1] || "page";
+  return (
+    candidate
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "page"
+  );
+}
+
+function uniquifyPagePaths(
+  pages: ImportedGitHubDocPageWithSource[],
+): ImportedGitHubDocPageWithSource[] {
+  const used = new Set<string>();
+
+  return pages.map((page) => {
+    if (!used.has(page.path)) {
+      used.add(page.path);
+      return page;
+    }
+
+    const suffix = sourcePathSlug(page.sourceFilePath);
+    let candidate = `${page.path}-${suffix}`;
+    let index = 2;
+
+    while (used.has(candidate)) {
+      candidate = `${page.path}-${suffix}-${index}`;
+      index++;
+    }
+
+    used.add(candidate);
+    return { ...page, path: candidate };
+  });
 }
 
 function toTitle(markdown: string, fallbackPath: string): string {
@@ -247,16 +354,34 @@ export async function importGitHubDocs(
   }
 
   const fetchImpl = params.fetchImpl ?? fetch;
-  const branch = params.repoBranch?.trim() || "main";
-  const basePath = normalizeBasePath(params.repoPath ?? "/");
-  const treeUrl = `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
-
-  const treeResponse = await fetchImpl(treeUrl, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      ...(params.headers ?? {}),
-    },
+  const apiHeaders = buildGitHubApiHeaders({
+    headers: params.headers,
+    env: params.env,
   });
+  const explicitBranch = params.repoBranch?.trim();
+  let branch = explicitBranch || "main";
+  const basePath = normalizeBasePath(params.repoPath ?? "/");
+
+  const fetchTree = async (targetBranch: string) => {
+    const treeUrl = `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/git/trees/${encodeURIComponent(targetBranch)}?recursive=1`;
+    return fetchImpl(treeUrl, { headers: apiHeaders });
+  };
+
+  let treeResponse = await fetchTree(branch);
+
+  if (!treeResponse.ok && !explicitBranch && treeResponse.status === 404) {
+    const defaultBranch = await resolveDefaultGitHubBranch({
+      owner: parsed.owner,
+      repo: parsed.repo,
+      fetchImpl,
+      headers: apiHeaders,
+    });
+
+    if (defaultBranch && defaultBranch !== branch) {
+      branch = defaultBranch;
+      treeResponse = await fetchTree(branch);
+    }
+  }
 
   if (!treeResponse.ok) {
     return {
@@ -295,7 +420,7 @@ export async function importGitHubDocs(
     markdownFiles.map(async (filePath) => {
       const rawUrl = `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/${encodeURIComponent(branch)}/${filePath}`;
       const response = await fetchImpl(rawUrl, {
-        headers: params.headers,
+        headers: apiHeaders,
       });
       if (!response.ok) {
         throw new Error(
@@ -318,12 +443,15 @@ export async function importGitHubDocs(
         path: pagePath,
         title,
         content: normalizeMarkdownContent(content, { title }),
-      } satisfies ImportedGitHubDocPage;
+        sourceFilePath: filePath,
+      } satisfies ImportedGitHubDocPageWithSource;
     }),
   );
 
-  const importedPages = pages.filter((page): page is ImportedGitHubDocPage =>
-    Boolean(page),
+  const importedPages = uniquifyPagePaths(
+    pages.filter((page): page is ImportedGitHubDocPageWithSource =>
+      Boolean(page),
+    ),
   );
 
   if (importedPages.length === 0) {
@@ -337,14 +465,7 @@ export async function importGitHubDocs(
 
   // Rewrite relative images and links
   const processedPages = importedPages.map((page) => {
-    // Find source file by path
-    const filePath = markdownFiles.find((f) => {
-      const p = toPagePath(f, basePath);
-      return p === page.path;
-    });
-
-    if (!filePath) return page;
-
+    const filePath = page.sourceFilePath;
     const fileDir = filePath.split("/").slice(0, -1).join("/");
     const rawBase = `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/${encodeURIComponent(branch)}`;
 
@@ -426,7 +547,7 @@ export async function importGitHubDocs(
       },
     );
 
-    return { ...page, content };
+    return { path: page.path, title: page.title, content };
   });
 
   return {
