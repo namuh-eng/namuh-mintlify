@@ -520,6 +520,102 @@ Set your token.`,
     }
   });
 
+  it("falls back to the repository default branch when main is missing", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/git/trees/main")) {
+        return { ok: false, status: 404 };
+      }
+
+      if (url === "https://api.github.com/repos/BoundaryML/baml") {
+        return {
+          ok: true,
+          json: async () => ({ default_branch: "canary" }),
+        };
+      }
+
+      if (url.includes("/git/trees/canary")) {
+        return {
+          ok: true,
+          json: async () => ({
+            tree: [{ path: "fern/index.mdx", type: "blob" }],
+          }),
+        };
+      }
+
+      return {
+        ok: true,
+        text: async () =>
+          "# BAML Documentation\n\nUse BAML to build AI workflows.",
+      };
+    });
+
+    const { importGitHubDocs } = await import("@/lib/github-docs-import");
+    const result = await importGitHubDocs({
+      repoUrl: "https://github.com/BoundaryML/baml",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+      env: {},
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      status: "imported",
+      source: { branch: "canary" },
+    });
+    if (result.ok) {
+      expect(result.pages).toEqual([
+        {
+          path: "fern",
+          title: "BAML Documentation",
+          content: "# BAML Documentation\n\nUse BAML to build AI workflows.",
+        },
+      ]);
+    }
+  });
+
+  it("uses a server-side GitHub token for public import requests when configured", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/git/trees/")) {
+        return {
+          ok: true,
+          json: async () => ({ tree: [{ path: "README.md", type: "blob" }] }),
+        };
+      }
+
+      return {
+        ok: true,
+        text: async () => "# Authenticated Import",
+      };
+    });
+
+    const { importGitHubDocs } = await import("@/lib/github-docs-import");
+    const result = await importGitHubDocs({
+      repoUrl: "https://github.com/acme/docs",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+      env: { OPENDOCS_GITHUB_TOKEN: "server-token" },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("/git/trees/"),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer server-token",
+          "User-Agent": "opendocs-github-importer",
+        }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("raw.githubusercontent.com"),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer server-token",
+        }),
+      }),
+    );
+  });
+
   it("keeps short contents sections that are not markdown anchor lists", async () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (url.includes("/git/trees/")) {
