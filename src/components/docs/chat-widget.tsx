@@ -285,10 +285,16 @@ export function ChatWidget({ subdomain, currentPath }: ChatWidgetProps) {
       });
 
       if (!response.ok) {
-        dispatch({
-          type: "STREAM_ERROR",
-          error: "Failed to get a response. Please try again.",
-        });
+        let error = "Failed to get a response. Please try again.";
+        try {
+          const payload = (await response.json()) as { message?: unknown };
+          if (typeof payload.message === "string" && payload.message.trim()) {
+            error = payload.message;
+          }
+        } catch {
+          // Keep the safe generic fallback for non-JSON failures.
+        }
+        dispatch({ type: "STREAM_ERROR", error });
         return;
       }
 

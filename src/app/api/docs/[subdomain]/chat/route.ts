@@ -17,6 +17,7 @@ import {
   validateCreateMessageRequest,
 } from "@/lib/assistant";
 import { streamAssistantReply } from "@/lib/assistant-llm";
+import { recordAssistantMessageUsage } from "@/lib/billing";
 import { db } from "@/lib/db";
 import { assistantConversations, pages, projects } from "@/lib/db/schema";
 import {
@@ -71,6 +72,24 @@ export async function POST(
   const validation = validateCreateMessageRequest(body);
   if (!validation.valid) {
     return NextResponse.json({ message: validation.error }, { status: 400 });
+  }
+
+  const usageGate = await recordAssistantMessageUsage(project.id);
+  if (!usageGate.allowed) {
+    const isLimitReached = usageGate.status === "assistant_limit_reached";
+    return NextResponse.json(
+      {
+        message: isLimitReached
+          ? "This docs site's AI assistant message limit has been reached for the current billing cycle."
+          : "AI assistant is available on Growth and above.",
+        code: isLimitReached
+          ? "assistant_limit_reached"
+          : "assistant_plan_required",
+        messagesUsed: usageGate.messagesUsed ?? 0,
+        messageLimit: usageGate.messageLimit ?? 0,
+      },
+      { status: isLimitReached ? 429 : 402 },
+    );
   }
 
   // ── Retrieve relevant pages for context ────────────────────────────────────
