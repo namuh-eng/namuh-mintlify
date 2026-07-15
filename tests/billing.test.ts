@@ -1,10 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   calculateBillingUsagePercent,
+  canUseAssistant,
+  canUseCustomDomains,
   createBillingRedirect,
+  evaluateAssistantMessageGate,
+  evaluateCustomDomainGate,
+  evaluateProjectCreationGate,
   formatBillingLimit,
   getBillingAccessDecision,
   getBillingPlanDetails,
+  getEnforcedBillingPlanDetails,
   isBillingRedirectResponse,
   isStripeBillingConfigured,
   normalizeBillingPlan,
@@ -39,6 +45,47 @@ describe("billing utilities", () => {
     expect(calculateBillingUsagePercent(null, 5)).toBeNull();
     expect(calculateBillingUsagePercent(5, null)).toBeNull();
     expect(calculateBillingUsagePercent(5, 0)).toBe(0);
+  });
+
+  it("fails closed to free entitlements when billing is missing in production", () => {
+    const details = getEnforcedBillingPlanDetails(null, {
+      env: { NODE_ENV: "production" },
+      now,
+    });
+
+    expect(details.plan).toBe("free");
+    expect(details.projectLimit).toBe(1);
+    expect(details.assistantMessageLimit).toBe(0);
+    expect(
+      canUseCustomDomains(null, { env: { NODE_ENV: "production" }, now }),
+    ).toBe(false);
+    expect(
+      canUseAssistant(null, { env: { NODE_ENV: "production" }, now }),
+    ).toBe(false);
+  });
+
+  it("enforces paid feature access only for active paid billing", () => {
+    const activePro = {
+      plan: "pro",
+      status: "active",
+      currentPeriodEnd: new Date("2026-06-12T00:00:00.000Z"),
+    } as const;
+    const pastDuePro = { plan: "pro", status: "past_due" } as const;
+    const env = {
+      NODE_ENV: "production",
+      STRIPE_SECRET_KEY: "stripe-secret-present",
+    } as const;
+
+    expect(getEnforcedBillingPlanDetails(activePro, { env, now }).plan).toBe(
+      "pro",
+    );
+    expect(canUseCustomDomains(activePro, { env, now })).toBe(true);
+    expect(canUseAssistant(activePro, { env, now })).toBe(true);
+    expect(getEnforcedBillingPlanDetails(pastDuePro, { env, now }).plan).toBe(
+      "free",
+    );
+    expect(canUseCustomDomains(pastDuePro, { env, now })).toBe(false);
+    expect(canUseAssistant(pastDuePro, { env, now })).toBe(false);
   });
 
   it("validates billing redirect responses", () => {
@@ -123,6 +170,74 @@ describe("billing state normalization", () => {
       stripePriceId: "price_test",
       plan: "pro",
       status: "active",
+    });
+  });
+});
+
+describe("plan limit gates", () => {
+  const env = {
+    NODE_ENV: "production",
+    STRIPE_SECRET_KEY: "stripe-secret-present",
+  } as const;
+  const activePro = {
+    plan: "pro",
+    status: "active",
+    currentPeriodEnd: new Date("2026-06-12T00:00:00.000Z"),
+  } as const;
+
+  it("blocks free orgs and allows paid orgs for project creation", () => {
+    expect(
+      evaluateProjectCreationGate({ plan: "free", status: "free" }, 1, {
+        env,
+        now,
+      }),
+    ).toMatchObject({ allowed: false, projectLimit: 1, plan: "free" });
+    expect(
+      evaluateProjectCreationGate(activePro, 1, { env, now }),
+    ).toMatchObject({
+      allowed: true,
+      projectLimit: 5,
+      plan: "pro",
+    });
+  });
+
+  it("blocks free orgs and allows paid orgs for custom domains", () => {
+    expect(
+      evaluateCustomDomainGate({ plan: "free", status: "free" }, { env, now }),
+    ).toMatchObject({ allowed: false, plan: "free" });
+    expect(evaluateCustomDomainGate(activePro, { env, now })).toMatchObject({
+      allowed: true,
+      plan: "pro",
+    });
+  });
+
+  it("blocks free orgs, allows paid orgs, and hard-caps assistant messages", () => {
+    expect(
+      evaluateAssistantMessageGate({ plan: "free", status: "free" }, 0, {
+        env,
+        now,
+      }),
+    ).toMatchObject({
+      allowed: false,
+      status: "assistant_not_included",
+      messageLimit: 0,
+      plan: "free",
+    });
+    expect(
+      evaluateAssistantMessageGate(activePro, 4_999, { env, now }),
+    ).toMatchObject({
+      allowed: true,
+      status: "allowed",
+      messageLimit: 5_000,
+      plan: "pro",
+    });
+    expect(
+      evaluateAssistantMessageGate(activePro, 5_000, { env, now }),
+    ).toMatchObject({
+      allowed: false,
+      status: "assistant_limit_reached",
+      messageLimit: 5_000,
+      plan: "pro",
     });
   });
 });

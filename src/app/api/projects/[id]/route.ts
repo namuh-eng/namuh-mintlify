@@ -2,6 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { canUseCustomDomains, readOrganizationBilling } from "@/lib/billing";
 import { db } from "@/lib/db";
 import { orgMemberships, projects } from "@/lib/db/schema";
 import {
@@ -200,6 +201,23 @@ export async function PUT(
         | undefined
     )?.installationId ??
     null;
+
+  const requestedCustomDomain = validation.fields.customDomain;
+  if (
+    typeof requestedCustomDomain === "string" &&
+    requestedCustomDomain.trim()
+  ) {
+    const billing = await readOrganizationBilling(membership.orgId);
+    if (!canUseCustomDomains(billing)) {
+      return NextResponse.json(
+        {
+          error: "Custom domains are available on Growth and above.",
+          code: "custom_domain_plan_required",
+        },
+        { status: 403 },
+      );
+    }
+  }
 
   const settingsUpdate = validation.fields.settings as
     | Record<string, unknown>

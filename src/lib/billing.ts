@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { organizationBilling, projects } from "@/lib/db/schema";
+import { assistantUsage, organizationBilling, projects } from "@/lib/db/schema";
 
 export const BILLING_PLANS = ["free", "pro", "enterprise"] as const;
 export const BILLING_STATUSES = [
@@ -41,22 +41,19 @@ export interface BillingRedirectResponse {
   url: string;
 }
 
-export type BillingStateInput = Partial<
-  Pick<
-    OrganizationBillingRow,
-    | "orgId"
-    | "ownerUserId"
-    | "stripeCustomerId"
-    | "stripeSubscriptionId"
-    | "stripePriceId"
-    | "plan"
-    | "status"
-    | "currentPeriodEnd"
-    | "cancelAtPeriodEnd"
-    | "canceledAt"
-    | "trialEndsAt"
-  >
-> | null;
+export type BillingStateInput = {
+  orgId?: string | null;
+  ownerUserId?: string | null;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  stripePriceId?: string | null;
+  plan?: BillingPlan | string | null;
+  status?: BillingStatus | string | null;
+  currentPeriodEnd?: Date | string | null;
+  cancelAtPeriodEnd?: boolean | null;
+  canceledAt?: Date | string | null;
+  trialEndsAt?: Date | string | null;
+} | null;
 
 export type NormalizedBillingState = {
   orgId: string | null;
@@ -126,7 +123,7 @@ export const BILLING_PLAN_DETAILS: Record<BillingPlan, BillingPlanDetails> = {
     summary:
       "Run OpenDocs yourself while you evaluate the commercial hosted features.",
     projectLimit: 1,
-    assistantMessageLimit: 250,
+    assistantMessageLimit: 0,
     features: ["Self-hosted docs", "One active project", "Community support"],
   },
   pro: {
@@ -378,6 +375,232 @@ export async function readOrganizationBilling(orgId: string) {
   return normalizeBillingState(row ?? null);
 }
 
+export function getEnforcedBillingPlanDetails(
+  state: BillingStateInput,
+  options: { env?: BillingEnv; now?: Date } = {},
+) {
+  const decision = getBillingAccessDecision(state, options);
+  return getBillingPlanDetails(
+    decision.canUsePaidFeatures ? decision.plan : "free",
+  );
+}
+
+export function canUseCustomDomains(
+  state: BillingStateInput,
+  options: { env?: BillingEnv; now?: Date } = {},
+) {
+  return getBillingAccessDecision(state, options).canUsePaidFeatures;
+}
+
+export function canUseAssistant(
+  state: BillingStateInput,
+  options: { env?: BillingEnv; now?: Date } = {},
+) {
+  return getBillingAccessDecision(state, options).canUsePaidFeatures;
+}
+
+export async function readOrganizationProjectCount(orgId: string) {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(projects)
+    .where(eq(projects.orgId, orgId));
+
+  return Number(row?.count ?? 0);
+}
+
+export function evaluateProjectCreationGate(
+  state: BillingStateInput,
+  projectsUsed: number,
+  options: { env?: BillingEnv; now?: Date } = {},
+) {
+  const details = getEnforcedBillingPlanDetails(state, options);
+  const allowed =
+    details.projectLimit === null || projectsUsed < details.projectLimit;
+
+  return {
+    allowed,
+    projectsUsed,
+    projectLimit: details.projectLimit,
+    plan: details.plan,
+  };
+}
+
+export function evaluateCustomDomainGate(
+  state: BillingStateInput,
+  options: { env?: BillingEnv; now?: Date } = {},
+) {
+  return {
+    allowed: canUseCustomDomains(state, options),
+    plan: getEnforcedBillingPlanDetails(state, options).plan,
+  };
+}
+
+export function evaluateAssistantMessageGate(
+  state: BillingStateInput,
+  messagesUsed: number,
+  options: { env?: BillingEnv; now?: Date } = {},
+) {
+  const decision = getBillingAccessDecision(state, options);
+  const details = getBillingPlanDetails(
+    decision.canUsePaidFeatures ? decision.plan : "free",
+  );
+  const messageLimit = details.assistantMessageLimit;
+
+  if (!decision.canUsePaidFeatures || messageLimit === 0) {
+    return {
+      allowed: false,
+      status: "assistant_not_included" as const,
+      messagesUsed,
+      messageLimit,
+      plan: details.plan,
+    };
+  }
+
+  if (messageLimit !== null && messagesUsed >= messageLimit) {
+    return {
+      allowed: false,
+      status: "assistant_limit_reached" as const,
+      messagesUsed,
+      messageLimit,
+      plan: details.plan,
+    };
+  }
+
+  return {
+    allowed: true,
+    status: "allowed" as const,
+    messagesUsed,
+    messageLimit,
+    plan: details.plan,
+  };
+}
+
+export async function canCreateProjectForOrganization(orgId: string) {
+  const [billingRow] = await db
+    .select()
+    .from(organizationBilling)
+    .where(eq(organizationBilling.orgId, orgId))
+    .limit(1);
+  const projectsUsed = await readOrganizationProjectCount(orgId);
+
+  return evaluateProjectCreationGate(billingRow ?? null, projectsUsed);
+}
+
+export async function recordAssistantMessageUsage(projectId: string) {
+  const [projectRow] = await db
+    .select({ orgId: projects.orgId })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+
+  if (!projectRow) {
+    return { allowed: false as const, status: "project_not_found" as const };
+  }
+
+  const [billingRow] = await db
+    .select()
+    .from(organizationBilling)
+    .where(eq(organizationBilling.orgId, projectRow.orgId))
+    .limit(1);
+  const decision = getBillingAccessDecision(billingRow ?? null);
+  const details = getBillingPlanDetails(
+    decision.canUsePaidFeatures ? decision.plan : "free",
+  );
+  const messageLimit = details.assistantMessageLimit;
+
+  if (!decision.canUsePaidFeatures || messageLimit === 0) {
+    return {
+      allowed: false as const,
+      status: "assistant_not_included" as const,
+      messagesUsed: 0,
+      messageLimit,
+      plan: details.plan,
+    };
+  }
+
+  const usage = await db.transaction(async (tx) => {
+    await tx
+      .insert(assistantUsage)
+      .values({
+        projectId,
+        messagesUsed: 0,
+        messageLimit: messageLimit ?? 2_147_483_647,
+        monthlyPrice: details.plan === "pro" ? 4900 : 0,
+      })
+      .onConflictDoNothing({ target: assistantUsage.projectId });
+
+    const [current] = await tx
+      .select({
+        messagesUsed: assistantUsage.messagesUsed,
+        messageLimit: assistantUsage.messageLimit,
+      })
+      .from(assistantUsage)
+      .where(eq(assistantUsage.projectId, projectId))
+      .limit(1);
+
+    const gate = evaluateAssistantMessageGate(
+      billingRow ?? null,
+      current?.messagesUsed ?? 0,
+    );
+    if (!gate.allowed) {
+      return { row: current, incremented: false };
+    }
+
+    const effectiveMessageLimit = messageLimit ?? 2_147_483_647;
+    const [updated] = await tx
+      .update(assistantUsage)
+      .set({
+        messagesUsed: sql`${assistantUsage.messagesUsed} + 1`,
+        messageLimit: effectiveMessageLimit,
+        monthlyPrice: details.plan === "pro" ? 4900 : 0,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(assistantUsage.projectId, projectId),
+          lt(assistantUsage.messagesUsed, effectiveMessageLimit),
+        ),
+      )
+      .returning({
+        messagesUsed: assistantUsage.messagesUsed,
+        messageLimit: assistantUsage.messageLimit,
+      });
+
+    if (!updated) {
+      const [latest] = await tx
+        .select({
+          messagesUsed: assistantUsage.messagesUsed,
+          messageLimit: assistantUsage.messageLimit,
+        })
+        .from(assistantUsage)
+        .where(eq(assistantUsage.projectId, projectId))
+        .limit(1);
+      return { row: latest ?? current, incremented: false };
+    }
+
+    return { row: updated, incremented: true };
+  });
+
+  const messagesUsed = usage.row?.messagesUsed ?? 0;
+  if (!usage.incremented) {
+    return {
+      allowed: false as const,
+      status: "assistant_limit_reached" as const,
+      messagesUsed,
+      messageLimit,
+      plan: details.plan,
+    };
+  }
+
+  return {
+    allowed: true as const,
+    status: "allowed" as const,
+    messagesUsed,
+    messageLimit,
+    plan: details.plan,
+  };
+}
+
 export async function readProjectBillingAccess(projectId: string) {
   const [row] = await db
     .select({ billing: organizationBilling })
@@ -438,7 +661,7 @@ function shouldUseDevelopmentBillingBypass(env: BillingEnv = process.env) {
   return env.NODE_ENV !== "production" && !isStripeBillingConfigured(env);
 }
 
-function normalizeDate(value: Date | null | undefined) {
+function normalizeDate(value: Date | string | null | undefined) {
   if (!value) return null;
-  return value;
+  return value instanceof Date ? value : new Date(value);
 }

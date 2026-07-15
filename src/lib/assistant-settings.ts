@@ -37,7 +37,7 @@ export interface AssistantUsageData {
 
 export const DEFAULT_ASSISTANT_USAGE: AssistantUsageData = {
   messagesUsed: 0,
-  messageLimit: 250,
+  messageLimit: 0,
   billingCycleStart: null,
   billingCycleEnd: null,
   monthlyPrice: 0,

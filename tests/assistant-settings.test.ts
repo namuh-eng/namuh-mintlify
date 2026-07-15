@@ -110,7 +110,7 @@ describe("assistant-settings", () => {
   describe("DEFAULT_ASSISTANT_USAGE", () => {
     it("has expected defaults", () => {
       expect(DEFAULT_ASSISTANT_USAGE.messagesUsed).toBe(0);
-      expect(DEFAULT_ASSISTANT_USAGE.messageLimit).toBe(250);
+      expect(DEFAULT_ASSISTANT_USAGE.messageLimit).toBe(0);
       expect(DEFAULT_ASSISTANT_USAGE.monthlyPrice).toBe(0);
       expect(DEFAULT_ASSISTANT_USAGE.overageSpend).toBe(0);
     });
