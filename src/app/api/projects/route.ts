@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { enqueueDeployment } from "@/lib/async-execution";
 import { auth } from "@/lib/auth";
+import { canCreateProjectForOrganization } from "@/lib/billing";
 import { db } from "@/lib/db";
 import {
   auditLogs,
@@ -181,6 +182,22 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+  }
+
+  const projectGate = await canCreateProjectForOrganization(orgId);
+  if (!projectGate.allowed) {
+    return NextResponse.json(
+      {
+        error:
+          projectGate.projectLimit === 1
+            ? "Starter includes 1 project. Upgrade to Growth to create more projects."
+            : "Project limit reached for your current plan.",
+        code: "project_limit_reached",
+        projectsUsed: projectGate.projectsUsed,
+        projectLimit: projectGate.projectLimit,
+      },
+      { status: 403 },
+    );
   }
 
   const slug = slugifyProject(validation.name);

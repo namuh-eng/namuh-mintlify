@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { canUseCustomDomains, readOrganizationBilling } from "@/lib/billing";
 import { db } from "@/lib/db";
 import { orgMemberships, projects } from "@/lib/db/schema";
 import { generateCnameTarget } from "@/lib/domains";
@@ -44,6 +45,17 @@ export async function POST(
     return NextResponse.json(
       { error: "No custom domain configured" },
       { status: 400 },
+    );
+  }
+
+  const billing = await readOrganizationBilling(membership[0].orgId);
+  if (!canUseCustomDomains(billing)) {
+    return NextResponse.json(
+      {
+        error: "Custom domains are available on Growth and above.",
+        code: "custom_domain_plan_required",
+      },
+      { status: 403 },
     );
   }
 

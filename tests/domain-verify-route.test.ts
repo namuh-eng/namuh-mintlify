@@ -172,6 +172,18 @@ describe("POST /api/projects/[id]/domain/verify", () => {
             settings: { theme: "dark" },
           },
         ]),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([
+          {
+            orgId: "org-1",
+            plan: "pro",
+            status: "active",
+            currentPeriodEnd: new Date("2026-12-31T00:00:00.000Z"),
+          },
+        ]),
       });
 
     const whereMock = vi.fn().mockResolvedValue(undefined);
@@ -224,6 +236,18 @@ describe("POST /api/projects/[id]/domain/verify", () => {
             settings: {},
           },
         ]),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([
+          {
+            orgId: "org-1",
+            plan: "pro",
+            status: "active",
+            currentPeriodEnd: new Date("2026-12-31T00:00:00.000Z"),
+          },
+        ]),
       });
 
     const { POST } = await import(
@@ -265,6 +289,18 @@ describe("POST /api/projects/[id]/domain/verify", () => {
             subdomain: "docs",
             customDomain: "docs.example.com",
             settings: {},
+          },
+        ]),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([
+          {
+            orgId: "org-1",
+            plan: "pro",
+            status: "active",
+            currentPeriodEnd: new Date("2026-12-31T00:00:00.000Z"),
           },
         ]),
       });

@@ -38,7 +38,7 @@ export const BILLING_PLAN_DETAILS: Record<BillingPlan, BillingPlanDetails> = {
     summary:
       "Run OpenDocs yourself while you evaluate the commercial hosted features.",
     projectLimit: 1,
-    assistantMessageLimit: 250,
+    assistantMessageLimit: 0,
     features: ["Self-hosted docs", "One active project", "Community support"],
   },
   pro: {

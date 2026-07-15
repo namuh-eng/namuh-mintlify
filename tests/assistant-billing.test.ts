@@ -81,9 +81,9 @@ describe("Assistant Billing Tab — usage display logic", () => {
   });
 
   describe("default usage values", () => {
-    it("defaults to 0 messages used with 250 limit", () => {
+    it("defaults to 0 messages used with 0 limit", () => {
       expect(DEFAULT_ASSISTANT_USAGE.messagesUsed).toBe(0);
-      expect(DEFAULT_ASSISTANT_USAGE.messageLimit).toBe(250);
+      expect(DEFAULT_ASSISTANT_USAGE.messageLimit).toBe(0);
     });
 
     it("defaults to zero pricing", () => {
