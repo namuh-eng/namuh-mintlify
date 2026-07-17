@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const dbSelectMock = vi.fn();
 const transactionMock = vi.fn();
+const txUpdateMock = vi.fn();
 const resolveGitHubImportAccessMock = vi.fn();
 const importGitHubDocsMock = vi.fn();
 
@@ -25,6 +26,7 @@ vi.mock("@/lib/db/schema", () => ({
   projects: {
     id: "projects.id",
     orgId: "projects.orgId",
+    repoBranch: "projects.repoBranch",
   },
 }));
 
@@ -67,7 +69,7 @@ function mockEmptyPageTransaction() {
         where: vi.fn().mockResolvedValue([]),
       })),
       insert: vi.fn(() => ({ values: vi.fn().mockResolvedValue(undefined) })),
-      update: vi.fn(),
+      update: txUpdateMock,
       delete: vi.fn(),
     };
 
@@ -79,6 +81,9 @@ describe("syncProjectDocsFromGitHub", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    txUpdateMock.mockReturnValue({
+      set: vi.fn(() => ({ where: vi.fn().mockResolvedValue(undefined) })),
+    });
     resolveGitHubImportAccessMock.mockResolvedValue({ status: "public" });
     importGitHubDocsMock.mockResolvedValue({
       ok: true,
@@ -89,6 +94,12 @@ describe("syncProjectDocsFromGitHub", () => {
           content: "# Introduction",
         },
       ],
+      source: {
+        owner: "acme",
+        repo: "docs",
+        branch: "main",
+        path: "/",
+      },
     });
   });
 
@@ -116,6 +127,47 @@ describe("syncProjectDocsFromGitHub", () => {
         repoBranch: undefined,
       }),
     );
+  });
+
+  it("persists the resolved default branch after recovering from a stale stored branch", async () => {
+    mockProjectSelect({
+      id: "project-1",
+      orgId: "org-1",
+      repoUrl: "https://github.com/BoundaryML/baml",
+      repoBranch: "main",
+      repoPath: null,
+      settings: {},
+    });
+    importGitHubDocsMock.mockResolvedValueOnce({
+      ok: true,
+      pages: [
+        {
+          path: "introduction",
+          title: "BAML Documentation",
+          content: "# BAML Documentation",
+        },
+      ],
+      source: {
+        owner: "BoundaryML",
+        repo: "baml",
+        branch: "canary",
+        path: "/",
+      },
+    });
+    mockEmptyPageTransaction();
+
+    const { syncProjectDocsFromGitHub } = await import("@/lib/github-sync");
+    const result = await syncProjectDocsFromGitHub({
+      projectId: "project-1",
+      orgId: "org-1",
+    });
+
+    expect(result.ok).toBe(true);
+    expect(txUpdateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ repoBranch: "projects.repoBranch" }),
+    );
+    const projectUpdate = txUpdateMock.mock.results[0].value;
+    expect(projectUpdate.set).toHaveBeenCalledWith({ repoBranch: "canary" });
   });
 
   it("uses an explicit branch override for preview syncs", async () => {

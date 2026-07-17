@@ -369,7 +369,7 @@ export async function importGitHubDocs(
 
   let treeResponse = await fetchTree(branch);
 
-  if (!treeResponse.ok && !explicitBranch && treeResponse.status === 404) {
+  if (!treeResponse.ok && treeResponse.status === 404) {
     const defaultBranch = await resolveDefaultGitHubBranch({
       owner: parsed.owner,
       repo: parsed.repo,
