@@ -44,15 +44,15 @@ const CONTAINER_ENV_KEYS = [
 ] as const;
 
 export interface Env {
-  OPENDOCS_CONTAINER: Parameters<typeof getContainer<OpenDocsContainer>>[0];
+  OPENDOCS_CONTAINER: Parameters<typeof getContainer<OpenDocsContainerV2>>[0];
   [key: string]: unknown;
 }
 
 export class OpenDocsContainer extends Container<Env> {
   // Next.js standalone server (Dockerfile: ENV PORT=3000).
   defaultPort = 3000;
-  // Stop idle containers promptly; public SEO responses are cached at the edge.
-  sleepAfter = "5m";
+  // Avoid repeated cold starts until the application is migrated off Containers.
+  sleepAfter = "20m";
   // The app needs egress to Postgres, OpenAI, R2, Stripe, and GitHub.
   enableInternet = true;
 
@@ -68,6 +68,8 @@ export class OpenDocsContainer extends Container<Env> {
     this.envVars = vars;
   }
 }
+
+export class OpenDocsContainerV2 extends OpenDocsContainer {}
 
 const PUBLIC_SEO_PATHS = [
   /^\/robots\.txt$/,
