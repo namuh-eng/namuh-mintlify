@@ -15,6 +15,7 @@ vi.mock("@cloudflare/containers", () => ({
 import worker, {
   isPublicCacheResponse,
   isPublicSeoRequest,
+  safeSeoResponse,
 } from "../worker/index";
 
 const env = {} as never;
@@ -72,6 +73,44 @@ describe("worker public SEO cache", () => {
         new Request("https://docs.example.com/docs/public/getting-started"),
       ),
     ).toBe(false);
+  });
+
+  it("can fail closed at the edge without waking the container", async () => {
+    const request = new Request("https://docs.example.com/robots.txt");
+    const response = safeSeoResponse(request, true);
+
+    expect(response).not.toBeNull();
+    expect(await response?.text()).toBe(
+      "User-agent: *\nAllow: /\nDisallow: /docs/\nDisallow: /api/docs/\n",
+    );
+    expect(response?.headers.get("X-Robots-Tag")).toBe("noindex");
+
+    const workerResponse = await worker.fetch(
+      request,
+      { SAFE_ROOT_ROBOTS: "true" } as never,
+      ctx,
+    );
+    expect(await workerResponse.text()).toContain("Disallow: /docs/");
+    expect(mocks.containerFetch).not.toHaveBeenCalled();
+    expect(mocks.cacheMatch).not.toHaveBeenCalled();
+  });
+
+  it("fails closed for canonical and legacy sitemaps", async () => {
+    for (const path of [
+      "/docs/private/sitemap.xml",
+      "/api/docs/private/sitemap",
+    ]) {
+      const response = await worker.fetch(
+        new Request(`https://docs.example.com${path}`),
+        { SAFE_ROOT_ROBOTS: "true" } as never,
+        ctx,
+      );
+      expect(response.status).toBe(404);
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    }
+
+    expect(mocks.containerFetch).not.toHaveBeenCalled();
+    expect(mocks.cacheMatch).not.toHaveBeenCalled();
   });
 
   it("caches only explicitly public, cookie-free responses", () => {

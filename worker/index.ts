@@ -45,6 +45,7 @@ const CONTAINER_ENV_KEYS = [
 
 export interface Env {
   OPENDOCS_CONTAINER: Parameters<typeof getContainer<OpenDocsContainerV2>>[0];
+  SAFE_ROOT_ROBOTS?: string;
   [key: string]: unknown;
 }
 
@@ -76,6 +77,51 @@ const PUBLIC_SEO_PATHS = [
   /^\/docs\/[^/]+\/(?:robots\.txt|sitemap\.xml|llms(?:-full)?\.txt)$/,
 ];
 const LEGACY_SITEMAP_PATH = /^\/api\/docs\/([^/]+)\/sitemap\/?$/;
+
+export function safeSeoResponse(
+  request: Request,
+  enabled: boolean,
+): Response | null {
+  const url = new URL(request.url);
+  if (!enabled || (request.method !== "GET" && request.method !== "HEAD")) {
+    return null;
+  }
+
+  const isRobots =
+    url.pathname === "/robots.txt" ||
+    /^\/docs\/[^/]+\/robots\.txt\/?$/.test(url.pathname);
+  if (isRobots) {
+    const body = [
+      "User-agent: *",
+      "Allow: /",
+      "Disallow: /docs/",
+      "Disallow: /api/docs/",
+      "",
+    ].join("\n");
+    return new Response(request.method === "HEAD" ? null : body, {
+      headers: {
+        "Cache-Control": "public, max-age=300, s-maxage=300",
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Robots-Tag": "noindex",
+      },
+    });
+  }
+
+  const isSitemap =
+    LEGACY_SITEMAP_PATH.test(url.pathname) ||
+    /^\/docs\/[^/]+\/sitemap\.xml\/?$/.test(url.pathname);
+  if (isSitemap) {
+    return new Response(null, {
+      status: 404,
+      headers: {
+        "Cache-Control": "private, no-store",
+        "X-Robots-Tag": "noindex",
+      },
+    });
+  }
+
+  return null;
+}
 
 export function isPublicSeoRequest(request: Request): boolean {
   if (request.method !== "GET" && request.method !== "HEAD") {
@@ -168,6 +214,11 @@ export default {
     env: Env,
     ctx: { waitUntil(promise: Promise<unknown>): void },
   ): Promise<Response> {
+    const safeRobots = safeSeoResponse(
+      request,
+      env.SAFE_ROOT_ROBOTS === "true",
+    );
+    if (safeRobots) return safeRobots;
     const legacyRedirect = legacySitemapRedirect(request);
     if (legacyRedirect) return legacyRedirect;
 
