@@ -65,6 +65,7 @@ import {
 } from "@/lib/project-docs-access";
 import {
   filterPublicDocsVisiblePages,
+  isPublicDocsProjectIndexable,
   isPublicDocsVisiblePage,
 } from "@/lib/public-docs-curation";
 import { buildPageMetadata } from "@/lib/seo";
@@ -251,7 +252,7 @@ export async function generateMetadata({
     };
   }
 
-  if (meta.noindex) {
+  if (!isPublicDocsProjectIndexable(project.settings) || meta.noindex) {
     metadata.robots = { index: false, follow: false };
   }
 

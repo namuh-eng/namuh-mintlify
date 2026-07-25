@@ -37,6 +37,7 @@
       "!**/coverage",
       "!**/.omc",
       "!**/.omx",
+      "!**/.gjc",
       "!**/.current-feature.json",
       "!**/tests/e2e/.auth",
       "!**/drizzle",

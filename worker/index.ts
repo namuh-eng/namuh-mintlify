@@ -44,15 +44,15 @@ const CONTAINER_ENV_KEYS = [
 ] as const;
 
 export interface Env {
-  OPENDOCS_CONTAINER: DurableObjectNamespace<OpenDocsContainer>;
+  OPENDOCS_CONTAINER: Parameters<typeof getContainer<OpenDocsContainer>>[0];
   [key: string]: unknown;
 }
 
 export class OpenDocsContainer extends Container<Env> {
   // Next.js standalone server (Dockerfile: ENV PORT=3000).
   defaultPort = 3000;
-  // Keep the container warm between bursts of docs traffic.
-  sleepAfter = "20m";
+  // Stop idle containers promptly; public SEO responses are cached at the edge.
+  sleepAfter = "5m";
   // The app needs egress to Postgres, OpenAI, R2, Stripe, and GitHub.
   enableInternet = true;
 
@@ -69,9 +69,129 @@ export class OpenDocsContainer extends Container<Env> {
   }
 }
 
+const PUBLIC_SEO_PATHS = [
+  /^\/robots\.txt$/,
+  /^\/docs\/[^/]+\/(?:robots\.txt|sitemap\.xml|llms(?:-full)?\.txt)$/,
+];
+const LEGACY_SITEMAP_PATH = /^\/api\/docs\/([^/]+)\/sitemap\/?$/;
+
+export function isPublicSeoRequest(request: Request): boolean {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return false;
+  }
+
+  if (
+    request.headers.has("Authorization") ||
+    request.headers.has("Cookie") ||
+    request.headers.has("Cf-Access-Jwt-Assertion")
+  ) {
+    return false;
+  }
+
+  return PUBLIC_SEO_PATHS.some((pattern) =>
+    pattern.test(new URL(request.url).pathname),
+  );
+}
+export function legacySitemapRedirect(request: Request): Response | null {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return null;
+  }
+
+  const url = new URL(request.url);
+  const match = LEGACY_SITEMAP_PATH.exec(url.pathname);
+  if (!match) return null;
+
+  url.pathname = `/docs/${match[1]}/sitemap.xml`;
+  url.search = "";
+  url.hash = "";
+
+  return new Response(null, {
+    status: 308,
+    headers: {
+      Location: url.toString(),
+      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+    },
+  });
+}
+
+export function isPublicCacheResponse(response: Response): boolean {
+  if (response.status !== 200 || response.headers.has("Set-Cookie")) {
+    return false;
+  }
+
+  const directives = (response.headers.get("Cache-Control") ?? "")
+    .split(",")
+    .map((directive) => directive.trim().toLowerCase().split("=", 1)[0]);
+
+  return (
+    directives.includes("public") &&
+    !directives.some((directive) =>
+      ["private", "no-store", "no-cache"].includes(directive),
+    ) &&
+    response.headers.get("Vary") !== "*"
+  );
+}
+
+function cacheKeyFor(request: Request): Request {
+  const url = new URL(request.url);
+  url.search = "";
+  url.hash = "";
+  return new Request(url, { method: "GET" });
+}
+
+function responseForCache(request: Request, response: Response): Response {
+  const clonedResponse = response.clone();
+  const headers = new Headers(clonedResponse.headers);
+  if (new URL(request.url).pathname === "/robots.txt") {
+    headers.set("Cache-Control", "public, max-age=300, s-maxage=300");
+  }
+  return new Response(clonedResponse.body, {
+    status: clonedResponse.status,
+    statusText: clonedResponse.statusText,
+    headers,
+  });
+}
+
+function headResponse(response: Response): Response {
+  return new Response(null, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+}
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    // Single logical app instance for now; scale later with getRandom().
-    return getContainer(env.OPENDOCS_CONTAINER).fetch(request);
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: { waitUntil(promise: Promise<unknown>): void },
+  ): Promise<Response> {
+    const legacyRedirect = legacySitemapRedirect(request);
+    if (legacyRedirect) return legacyRedirect;
+
+    const container = getContainer(env.OPENDOCS_CONTAINER);
+    if (!isPublicSeoRequest(request)) {
+      return container.fetch(request);
+    }
+
+    const cache = (
+      caches as unknown as {
+        default: Pick<Cache, "match" | "put">;
+      }
+    ).default;
+    const cacheKey = cacheKeyFor(request);
+    const cached = await cache.match(cacheKey);
+    if (cached) {
+      return request.method === "HEAD" ? headResponse(cached) : cached;
+    }
+
+    const response = await container.fetch(request);
+    if (request.method === "GET") {
+      const cachedResponse = responseForCache(request, response);
+      if (isPublicCacheResponse(cachedResponse)) {
+        ctx.waitUntil(cache.put(cacheKey, cachedResponse));
+      }
+    }
+    return response;
   },
 };

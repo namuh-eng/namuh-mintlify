@@ -23,7 +23,7 @@
         "NEXT_PUBLIC_APP_URL": "https://docs.example.com",
         "BETTER_AUTH_URL": "https://docs.example.com"
       },
-      "instance_type": "standard-1",
+      "instance_type": "basic",
       "max_instances": 3
     }
   ],

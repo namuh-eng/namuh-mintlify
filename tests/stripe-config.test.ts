@@ -9,6 +9,9 @@ import {
 describe("Stripe config", () => {
   beforeEach(() => {
     vi.unstubAllEnvs();
+    vi.stubEnv("STRIPE_SECRET_KEY", "");
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+    vi.stubEnv("STRIPE_PRICE_ID", "");
   });
 
   it("validates the secret key only when requested", () => {

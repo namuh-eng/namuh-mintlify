@@ -3,6 +3,7 @@ import { buildDocsNav, renderMdxContent } from "@/lib/mdx-renderer";
 import {
   filterPublicDocsVisiblePages,
   isBrokenGeneratedBadge,
+  isPublicDocsProjectIndexable,
   isPublicDocsVisiblePage,
 } from "@/lib/public-docs-curation";
 
@@ -12,6 +13,8 @@ describe("public docs curation", () => {
       { path: "introduction", title: "Introduction" },
       { path: ".claude/settings", title: "Claude settings" },
       { path: "ralph/build-loop-prompt", title: "Build Loop Prompt" },
+      { path: ".handoffs/release-notes", title: "Release handoff" },
+      { path: ".gjc/plans/deploy", title: "Deployment plan" },
       {
         path: "target-docs/linear-documentation-index",
         title: "Linear Documentation Index",
@@ -26,6 +29,37 @@ describe("public docs curation", () => {
     expect(filterPublicDocsVisiblePages(pages)).toEqual([
       { path: "introduction", title: "Introduction" },
     ]);
+  });
+
+  it("requires an explicit safe project indexing setting", () => {
+    expect(isPublicDocsProjectIndexable({})).toBe(false);
+    expect(
+      isPublicDocsProjectIndexable({
+        docsConfig: { seo: { noindex: false } },
+      }),
+    ).toBe(false);
+    expect(
+      isPublicDocsProjectIndexable({
+        indexingEnabled: false,
+        docsConfig: { seo: { noindex: false } },
+      }),
+    ).toBe(false);
+    expect(
+      isPublicDocsProjectIndexable({
+        indexingEnabled: true,
+        docsConfig: { seo: { noindex: true } },
+      }),
+    ).toBe(false);
+    expect(
+      isPublicDocsProjectIndexable({
+        publication: { indexingEnabled: true },
+      }),
+    ).toBe(true);
+    expect(
+      isPublicDocsProjectIndexable({
+        docsConfig: { seo: { indexingEnabled: true } },
+      }),
+    ).toBe(true);
   });
 
   it("allows explicit public docs curation overrides", () => {
