@@ -10,8 +10,8 @@ name: Deploy (Cloudflare Workers)
 #   3. Set app secrets once: `wrangler secret put <NAME>` for DATABASE_URL,
 #      OPENAI_API_KEY, BETTER_AUTH_SECRET, AUTH_GOOGLE_ID/SECRET, S3_* and STRIPE_*.
 #
-# Manual trigger by default. `wrangler.jsonc` is gitignored, so CI must have it
-# available (commit your own, or fetch it in a prior step).
+# CI materializes the gitignored production config from wrangler.example.jsonc
+# using repository variables; no credentials are committed.
 
 on:
   workflow_dispatch:
@@ -30,8 +30,44 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
+      - name: Configure production deployment
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL }}
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+          S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
+        run: |
+          node - <<'NODE'
+          const fs = require("node:fs");
+          const required = [
+            "CLOUDFLARE_ACCOUNT_ID",
+            "PUBLIC_APP_URL",
+            "S3_BUCKET",
+            "S3_ENDPOINT",
+          ];
+          for (const name of required) {
+            if (!process.env[name]) throw new Error(`Missing repository variable ${name}`);
+          }
+          const appUrl = process.env.PUBLIC_APP_URL.replace(/\/$/, "");
+          const config = fs
+            .readFileSync("wrangler.example.jsonc", "utf8")
+            .replace(
+              '  // "account_id": "<your-cloudflare-account-id>",',
+              `  "account_id": "${process.env.CLOUDFLARE_ACCOUNT_ID}",`,
+            )
+            .replace(
+              '  // "routes": [{ "pattern": "docs.example.com", "custom_domain": true }],',
+              `  "routes": [{ "pattern": "${new URL(appUrl).host}", "custom_domain": true }],`,
+            )
+            .replaceAll("https://docs.example.com", appUrl)
+            .replace("your-doc-assets-bucket", process.env.S3_BUCKET)
+            .replace(
+              "https://<account-id>.r2.cloudflarestorage.com",
+              process.env.S3_ENDPOINT,
+            );
+          fs.writeFileSync("wrangler.jsonc", config);
+          NODE
       - name: Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler deploy
+        run: npx wrangler deploy --config wrangler.jsonc
