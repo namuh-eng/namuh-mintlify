@@ -3,6 +3,42 @@ export interface PublicDocsCurationPage {
   title?: string | null;
   frontmatter?: Record<string, unknown> | null;
 }
+function asRecord(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+/**
+ * Projects are advertised to crawlers only after an explicit indexing choice.
+ * Existing projects without SEO publication settings therefore stay out of the
+ * root robots sitemap list.
+ */
+export function isPublicDocsProjectIndexable(
+  settings?: Record<string, unknown> | null,
+): boolean {
+  const projectSettings = asRecord(settings);
+  const publication = asRecord(projectSettings.publication);
+  const docsConfig = asRecord(projectSettings.docsConfig);
+  const seo = asRecord(docsConfig.seo);
+  const robots = typeof seo.robots === "string" ? seo.robots.toLowerCase() : "";
+
+  if (
+    seo.noindex === true ||
+    /(?:^|[\s,])(?:noindex|none)(?:$|[\s,])/.test(robots)
+  ) {
+    return false;
+  }
+
+  const indexingEnabled =
+    projectSettings.indexingEnabled ??
+    publication.indexingEnabled ??
+    seo.indexingEnabled;
+
+  if (indexingEnabled !== undefined) return indexingEnabled === true;
+
+  return seo.noindex === false || /(?:^|[\s,])index(?:$|[\s,])/.test(robots);
+}
 
 const INTERNAL_PATH_PREFIXES = [
   ".claude/",
@@ -10,7 +46,11 @@ const INTERNAL_PATH_PREFIXES = [
   ".cursor/",
   ".github/",
   ".omx/",
+  ".gjc/",
+  ".handoffs/",
   "agent_docs/",
+  "gjc/",
+  "handoffs/",
   "memory/",
   "node_modules/",
   "private/",
@@ -23,8 +63,12 @@ const INTERNAL_PATH_PREFIXES = [
 
 const INTERNAL_EXACT_PATHS = new Set([
   ".claude",
+  ".gjc",
+  ".handoffs",
   "agents",
   "claude",
+  "gjc",
+  "handoffs",
   "memory",
   "soul",
   "tools",
