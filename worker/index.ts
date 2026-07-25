@@ -51,8 +51,8 @@ export interface Env {
 export class OpenDocsContainer extends Container<Env> {
   // Next.js standalone server (Dockerfile: ENV PORT=3000).
   defaultPort = 3000;
-  // Keep the container warm between bursts of docs traffic.
-  sleepAfter = "20m";
+  // Stop idle containers promptly; public SEO responses are cached at the edge.
+  sleepAfter = "5m";
   // The app needs egress to Postgres, OpenAI, R2, Stripe, and GitHub.
   enableInternet = true;
 
@@ -69,9 +69,81 @@ export class OpenDocsContainer extends Container<Env> {
   }
 }
 
+const PUBLIC_SEO_PATHS = [
+  /^\/robots\.txt$/,
+  /^\/docs\/[^/]+\/(?:robots\.txt|sitemap\.xml|llms(?:-full)?\.txt)$/,
+];
+
+export function isPublicSeoRequest(request: Request): boolean {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return false;
+  }
+
+  if (
+    request.headers.has("Authorization") ||
+    request.headers.has("Cookie") ||
+    request.headers.has("Cf-Access-Jwt-Assertion")
+  ) {
+    return false;
+  }
+
+  return PUBLIC_SEO_PATHS.some((pattern) =>
+    pattern.test(new URL(request.url).pathname),
+  );
+}
+
+export function isPublicCacheResponse(response: Response): boolean {
+  if (response.status !== 200 || response.headers.has("Set-Cookie")) {
+    return false;
+  }
+
+  const directives = (response.headers.get("Cache-Control") ?? "")
+    .split(",")
+    .map((directive) => directive.trim().toLowerCase().split("=", 1)[0]);
+
+  return (
+    directives.includes("public") &&
+    !directives.some((directive) =>
+      ["private", "no-store", "no-cache"].includes(directive),
+    ) &&
+    response.headers.get("Vary") !== "*"
+  );
+}
+
+function cacheKeyFor(request: Request): Request {
+  return new Request(request.url, { method: "GET" });
+}
+
+function headResponse(response: Response): Response {
+  return new Response(null, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+}
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    // Single logical app instance for now; scale later with getRandom().
-    return getContainer(env.OPENDOCS_CONTAINER).fetch(request);
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
+    const container = getContainer(env.OPENDOCS_CONTAINER);
+    if (!isPublicSeoRequest(request)) {
+      return container.fetch(request);
+    }
+
+    const cache = caches.default;
+    const cacheKey = cacheKeyFor(request);
+    const cached = await cache.match(cacheKey);
+    if (cached) {
+      return request.method === "HEAD" ? headResponse(cached) : cached;
+    }
+
+    const response = await container.fetch(request);
+    if (request.method === "GET" && isPublicCacheResponse(response)) {
+      ctx.waitUntil(cache.put(cacheKey, response.clone()));
+    }
+    return response;
   },
 };
