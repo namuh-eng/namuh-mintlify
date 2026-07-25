@@ -208,6 +208,7 @@ export interface DocsSeoConfig {
   description: string;
   robots: string;
   noindex: boolean;
+  indexingEnabled: boolean;
 }
 
 export interface DocsLocalizationConfig {
@@ -336,6 +337,7 @@ export const DEFAULT_SEO: DocsSeoConfig = {
   description: "",
   robots: "index,follow",
   noindex: false,
+  indexingEnabled: false,
 };
 
 export const DEFAULT_LOCALIZATION: DocsLocalizationConfig = {
@@ -692,6 +694,11 @@ export function mergeDocsConfig(
         typeof seo.noindex === "boolean"
           ? seo.noindex
           : ((partial.seo as DocsSeoConfig)?.noindex ?? DEFAULT_SEO.noindex),
+      indexingEnabled:
+        typeof seo.indexingEnabled === "boolean"
+          ? seo.indexingEnabled
+          : ((partial.seo as DocsSeoConfig)?.indexingEnabled ??
+            DEFAULT_SEO.indexingEnabled),
     },
     localization: {
       ...DEFAULT_LOCALIZATION,

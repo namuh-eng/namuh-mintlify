@@ -37,7 +37,7 @@ describe("public docs curation", () => {
       isPublicDocsProjectIndexable({
         docsConfig: { seo: { noindex: false } },
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       isPublicDocsProjectIndexable({
         indexingEnabled: false,
@@ -53,6 +53,11 @@ describe("public docs curation", () => {
     expect(
       isPublicDocsProjectIndexable({
         publication: { indexingEnabled: true },
+      }),
+    ).toBe(true);
+    expect(
+      isPublicDocsProjectIndexable({
+        docsConfig: { seo: { indexingEnabled: true } },
       }),
     ).toBe(true);
   });

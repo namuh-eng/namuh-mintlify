@@ -117,7 +117,7 @@ describe("worker public SEO cache", () => {
       }),
     );
     const request = new Request(
-      "https://docs.example.com/docs/public/sitemap.xml",
+      "https://docs.example.com/docs/public/sitemap.xml?utm_source=crawler",
     );
 
     const response = await worker.fetch(request, env, ctx);
@@ -130,9 +130,51 @@ describe("worker public SEO cache", () => {
       Response,
     ];
     expect(cacheKey.method).toBe("GET");
-    expect(cacheKey.url).toBe(request.url);
+    expect(cacheKey.url).toBe(
+      "https://docs.example.com/docs/public/sitemap.xml",
+    );
     expect(await cachedResponse.text()).toBe("sitemap");
     expect(mocks.waitUntil).toHaveBeenCalledWith(expect.any(Promise));
+  });
+  it("redirects legacy sitemap requests before waking the container", async () => {
+    const response = await worker.fetch(
+      new Request(
+        "https://docs.example.com/api/docs/public/sitemap?utm_source=old",
+      ),
+      env,
+      ctx,
+    );
+
+    expect(response.status).toBe(308);
+    expect(response.headers.get("Location")).toBe(
+      "https://docs.example.com/docs/public/sitemap.xml",
+    );
+    expect(mocks.containerFetch).not.toHaveBeenCalled();
+    expect(mocks.cacheMatch).not.toHaveBeenCalled();
+  });
+
+  it("stores root robots with a finite edge TTL", async () => {
+    mocks.containerFetch.mockResolvedValue(
+      new Response("User-agent: *", {
+        headers: {
+          "Cache-Control": "public, max-age=0, must-revalidate",
+        },
+      }),
+    );
+
+    await worker.fetch(
+      new Request("https://docs.example.com/robots.txt"),
+      env,
+      ctx,
+    );
+
+    const [, cachedResponse] = mocks.cachePut.mock.calls[0] as [
+      Request,
+      Response,
+    ];
+    expect(cachedResponse.headers.get("Cache-Control")).toBe(
+      "public, max-age=300, s-maxage=300",
+    );
   });
 
   it("serves cached HEAD requests without a body", async () => {

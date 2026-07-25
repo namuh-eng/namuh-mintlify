@@ -44,7 +44,7 @@ const CONTAINER_ENV_KEYS = [
 ] as const;
 
 export interface Env {
-  OPENDOCS_CONTAINER: DurableObjectNamespace<OpenDocsContainer>;
+  OPENDOCS_CONTAINER: Parameters<typeof getContainer<OpenDocsContainer>>[0];
   [key: string]: unknown;
 }
 
@@ -73,6 +73,7 @@ const PUBLIC_SEO_PATHS = [
   /^\/robots\.txt$/,
   /^\/docs\/[^/]+\/(?:robots\.txt|sitemap\.xml|llms(?:-full)?\.txt)$/,
 ];
+const LEGACY_SITEMAP_PATH = /^\/api\/docs\/([^/]+)\/sitemap\/?$/;
 
 export function isPublicSeoRequest(request: Request): boolean {
   if (request.method !== "GET" && request.method !== "HEAD") {
@@ -90,6 +91,27 @@ export function isPublicSeoRequest(request: Request): boolean {
   return PUBLIC_SEO_PATHS.some((pattern) =>
     pattern.test(new URL(request.url).pathname),
   );
+}
+export function legacySitemapRedirect(request: Request): Response | null {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return null;
+  }
+
+  const url = new URL(request.url);
+  const match = LEGACY_SITEMAP_PATH.exec(url.pathname);
+  if (!match) return null;
+
+  url.pathname = `/docs/${match[1]}/sitemap.xml`;
+  url.search = "";
+  url.hash = "";
+
+  return new Response(null, {
+    status: 308,
+    headers: {
+      Location: url.toString(),
+      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+    },
+  });
 }
 
 export function isPublicCacheResponse(response: Response): boolean {
@@ -111,7 +133,23 @@ export function isPublicCacheResponse(response: Response): boolean {
 }
 
 function cacheKeyFor(request: Request): Request {
-  return new Request(request.url, { method: "GET" });
+  const url = new URL(request.url);
+  url.search = "";
+  url.hash = "";
+  return new Request(url, { method: "GET" });
+}
+
+function responseForCache(request: Request, response: Response): Response {
+  const clonedResponse = response.clone();
+  const headers = new Headers(clonedResponse.headers);
+  if (new URL(request.url).pathname === "/robots.txt") {
+    headers.set("Cache-Control", "public, max-age=300, s-maxage=300");
+  }
+  return new Response(clonedResponse.body, {
+    status: clonedResponse.status,
+    statusText: clonedResponse.statusText,
+    headers,
+  });
 }
 
 function headResponse(response: Response): Response {
@@ -126,14 +164,21 @@ export default {
   async fetch(
     request: Request,
     env: Env,
-    ctx: ExecutionContext,
+    ctx: { waitUntil(promise: Promise<unknown>): void },
   ): Promise<Response> {
+    const legacyRedirect = legacySitemapRedirect(request);
+    if (legacyRedirect) return legacyRedirect;
+
     const container = getContainer(env.OPENDOCS_CONTAINER);
     if (!isPublicSeoRequest(request)) {
       return container.fetch(request);
     }
 
-    const cache = caches.default;
+    const cache = (
+      caches as unknown as {
+        default: Pick<Cache, "match" | "put">;
+      }
+    ).default;
     const cacheKey = cacheKeyFor(request);
     const cached = await cache.match(cacheKey);
     if (cached) {
@@ -141,8 +186,11 @@ export default {
     }
 
     const response = await container.fetch(request);
-    if (request.method === "GET" && isPublicCacheResponse(response)) {
-      ctx.waitUntil(cache.put(cacheKey, response.clone()));
+    if (request.method === "GET") {
+      const cachedResponse = responseForCache(request, response);
+      if (isPublicCacheResponse(cachedResponse)) {
+        ctx.waitUntil(cache.put(cacheKey, cachedResponse));
+      }
     }
     return response;
   },

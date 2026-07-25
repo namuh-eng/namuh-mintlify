@@ -35,9 +35,7 @@ export function isPublicDocsProjectIndexable(
     publication.indexingEnabled ??
     seo.indexingEnabled;
 
-  if (indexingEnabled !== undefined) return indexingEnabled === true;
-
-  return seo.noindex === false || /(?:^|[\s,])index(?:$|[\s,])/.test(robots);
+  return indexingEnabled === true;
 }
 
 const INTERNAL_PATH_PREFIXES = [

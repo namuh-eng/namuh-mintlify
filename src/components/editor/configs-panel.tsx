@@ -1039,6 +1039,8 @@ function AdvancedForm({ config, updateSection }: SectionProps) {
   const d = config.advanced;
   const update = (patch: Partial<typeof d>) =>
     updateSection("advanced", { ...d, ...patch });
+  const updateSeo = (patch: Partial<typeof config.seo>) =>
+    updateSection("seo", { ...config.seo, ...patch });
 
   const redirects: RedirectEntry[] = d.redirects ?? [];
 
@@ -1081,6 +1083,12 @@ function AdvancedForm({ config, updateSection }: SectionProps) {
           testId="config-adv-seo-desc"
         />
       </div>
+      <ToggleSwitch
+        label="Public search indexing"
+        checked={config.seo.indexingEnabled}
+        onChange={(v) => updateSeo({ indexingEnabled: v })}
+        testId="config-adv-search-indexing"
+      />
       <div>
         <FieldLabel>Custom head HTML</FieldLabel>
         <textarea

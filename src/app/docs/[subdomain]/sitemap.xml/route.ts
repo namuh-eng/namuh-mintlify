@@ -3,7 +3,10 @@ import { getPublicAppUrl } from "@/lib/app-url";
 import { db } from "@/lib/db";
 import { pages, projects } from "@/lib/db/schema";
 import { isProjectPasswordProtected } from "@/lib/project-publication-auth";
-import { filterPublicDocsVisiblePages } from "@/lib/public-docs-curation";
+import {
+  filterPublicDocsVisiblePages,
+  isPublicDocsProjectIndexable,
+} from "@/lib/public-docs-curation";
 import { generateSitemapEntries, renderSitemapXml } from "@/lib/seo";
 
 const APP_URL = getPublicAppUrl();
@@ -29,6 +32,14 @@ export async function GET(
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
         "Cache-Control": "private, no-store",
+      },
+    });
+  }
+  if (!isPublicDocsProjectIndexable(projectResult[0].settings)) {
+    return new Response(renderSitemapXml([]), {
+      headers: {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "public, max-age=300, s-maxage=300",
       },
     });
   }
