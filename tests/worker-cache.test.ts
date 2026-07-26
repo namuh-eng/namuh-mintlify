@@ -13,6 +13,7 @@ vi.mock("@cloudflare/containers", () => ({
 }));
 
 import worker, {
+  CONTAINER_ENV_KEYS,
   isPublicCacheResponse,
   isPublicSeoRequest,
   safeSeoResponse,
@@ -22,6 +23,10 @@ const env = {} as never;
 const ctx = { waitUntil: mocks.waitUntil } as never;
 
 describe("worker public SEO cache", () => {
+  it("forwards the operator metrics token into the app container", () => {
+    expect(CONTAINER_ENV_KEYS).toContain("OPS_METRICS_TOKEN");
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.cacheMatch.mockResolvedValue(undefined);

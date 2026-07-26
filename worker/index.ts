@@ -11,7 +11,7 @@
 import { Container, getContainer } from "@cloudflare/containers";
 
 /** Env keys forwarded from Worker secrets/vars into the container at runtime. */
-const CONTAINER_ENV_KEYS = [
+export const CONTAINER_ENV_KEYS = [
   "NODE_ENV",
   "APP_VERSION",
   "DATABASE_URL",
@@ -41,6 +41,7 @@ const CONTAINER_ENV_KEYS = [
   "STRIPE_PRO_PRICE_ID",
   "STRIPE_ENTERPRISE_PRICE_ID",
   "DOCS_PROXY_ALLOWED_HOSTS",
+  "OPS_METRICS_TOKEN",
 ] as const;
 
 export interface Env {
