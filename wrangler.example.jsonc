@@ -44,11 +44,14 @@
   "vars": {
     "NODE_ENV": "production",
     "DB_SSL": "true",
+    "AWS_REGION": "us-east-1",
     "S3_REGION": "auto",
     "S3_BUCKET": "your-doc-assets-bucket",
     "S3_ENDPOINT": "https://<account-id>.r2.cloudflarestorage.com",
     "BETTER_AUTH_URL": "https://docs.example.com",
     "ASSISTANT_MODEL_ID": "gpt-4o-mini",
+    // Change this value only when intentionally replacing a stuck singleton.
+    "CONTAINER_SINGLETON_NAME": "opendocs-production-v3",
     // Set to "true" to have the Worker answer every public SEO artifact itself
     // (/robots.txt, /docs/*/robots.txt, /docs/*/sitemap.xml, /docs/*/llms*.txt,
     // /api/docs/*/sitemap) so crawler traffic never wakes the container.

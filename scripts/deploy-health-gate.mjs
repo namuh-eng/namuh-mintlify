@@ -753,7 +753,16 @@ async function main() {
         requiredSuccesses: Number.isFinite(requiredSuccesses)
           ? requiredSuccesses
           : undefined,
-        fetchImpl: (target) => fetch(target, { redirect: "follow" }),
+        fetchImpl: (target) =>
+          fetch(target, {
+            redirect: "follow",
+            headers: {
+              accept: "application/json",
+              // Cloudflare Browser Integrity Check rejects Node's default UA.
+              "user-agent":
+                "Mozilla/5.0 (compatible; OpenDocsDeploymentHealth/1.0)",
+            },
+          }),
         sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
         log,
       }),

@@ -46,6 +46,7 @@ export const CONTAINER_ENV_KEYS = [
 
 export interface Env {
   OPENDOCS_CONTAINER: Parameters<typeof getContainer<OpenDocsContainerV2>>[0];
+  CONTAINER_SINGLETON_NAME?: string;
   /**
    * "true" makes the Worker answer every public SEO artifact itself, so crawler
    * traffic can never wake the container. Fail-closed: nothing is advertised.
@@ -293,7 +294,10 @@ export default {
     const legacyRedirect = legacySitemapRedirect(request);
     if (legacyRedirect) return legacyRedirect;
 
-    const container = getContainer(env.OPENDOCS_CONTAINER);
+    const container = getContainer(
+      env.OPENDOCS_CONTAINER,
+      env.CONTAINER_SINGLETON_NAME?.trim() || "opendocs-production",
+    );
     if (!isPublicSeoRequest(request)) {
       return container.fetch(request);
     }
