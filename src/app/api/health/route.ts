@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { buildHealthResponse } from "@/lib/deploy";
+import { buildHealthResponse } from "@/lib/health";
 import { createRequestId, logger } from "@/lib/logger";
 
 /**
@@ -34,10 +34,8 @@ export async function GET() {
     });
   }
 
-  // Check object storage availability (just verify env vars are set — actual
-  // S3/R2 checks are too slow for a liveness endpoint). Native AWS S3 uses
-  // AWS_REGION; S3-compatible storage such as Cloudflare R2 uses S3_REGION and
-  // S3_ENDPOINT.
+  // Keep liveness checks local: verify storage configuration without making a
+  // network request. Providers may use either a region or endpoint + region.
   storageAvailable = Boolean(
     process.env.S3_BUCKET &&
       (process.env.AWS_REGION ||
@@ -62,7 +60,6 @@ export async function GET() {
     storageAvailable,
   });
 
-  // Always return 200 for container liveness checks (ECS, K8s).
-  // Degraded status is reported in the response body for monitoring dashboards.
+  // Dependency state is reported in the body while the liveness response stays 200.
   return NextResponse.json(response, { status: 200 });
 }

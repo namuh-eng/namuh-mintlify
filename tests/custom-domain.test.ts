@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   domainVerificationStatus,
   generateCnameTarget,
@@ -77,12 +77,27 @@ describe("validateCustomDomain", () => {
 });
 
 describe("generateCnameTarget", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_DOCS_ROOT_DOMAIN", "hosting.example.com");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("generates a CNAME target from subdomain", () => {
-    expect(generateCnameTarget("my-docs")).toBe("my-docs.hosting.namuh.dev");
+    expect(generateCnameTarget("my-docs")).toBe("my-docs.hosting.example.com");
   });
 
   it("generates a CNAME target from a different subdomain", () => {
-    expect(generateCnameTarget("acme-api")).toBe("acme-api.hosting.namuh.dev");
+    expect(generateCnameTarget("acme-api")).toBe(
+      "acme-api.hosting.example.com",
+    );
+  });
+
+  it("returns null when managed docs hosting is not configured", () => {
+    vi.stubEnv("NEXT_PUBLIC_DOCS_ROOT_DOMAIN", "");
+    expect(generateCnameTarget("acme-api")).toBeNull();
   });
 });
 
@@ -125,10 +140,12 @@ describe("normalizeHostHeader", () => {
 describe("resolveManagedDocsSubdomain", () => {
   it("extracts subdomains from the configured docs root", () => {
     const previous = process.env.NEXT_PUBLIC_DOCS_ROOT_DOMAIN;
-    process.env.NEXT_PUBLIC_DOCS_ROOT_DOMAIN = "hosting.namuh.dev";
+    process.env.NEXT_PUBLIC_DOCS_ROOT_DOMAIN = "hosting.example.com";
 
-    expect(resolveManagedDocsSubdomain("acme.hosting.namuh.dev")).toBe("acme");
-    expect(resolveManagedDocsSubdomain("hosting.namuh.dev")).toBeNull();
+    expect(resolveManagedDocsSubdomain("acme.hosting.example.com")).toBe(
+      "acme",
+    );
+    expect(resolveManagedDocsSubdomain("hosting.example.com")).toBeNull();
     expect(resolveManagedDocsSubdomain("docs.example.com")).toBeNull();
 
     if (previous === undefined) {
@@ -142,10 +159,10 @@ describe("resolveManagedDocsSubdomain", () => {
 describe("isConfiguredAppHost", () => {
   it("treats localhost and configured app hosts as first-party app hosts", () => {
     const previous = process.env.NEXT_PUBLIC_APP_URL;
-    process.env.NEXT_PUBLIC_APP_URL = "https://opendocs.namuh.co";
+    process.env.NEXT_PUBLIC_APP_URL = "https://app.example.com";
 
     expect(isConfiguredAppHost("localhost")).toBe(true);
-    expect(isConfiguredAppHost("opendocs.namuh.co")).toBe(true);
+    expect(isConfiguredAppHost("app.example.com")).toBe(true);
     expect(isConfiguredAppHost("docs.customer.com")).toBe(false);
 
     if (previous === undefined) {
@@ -157,11 +174,8 @@ describe("isConfiguredAppHost", () => {
 });
 
 describe("isInternalProbeHost", () => {
-  it("treats Cloudflare's container start probe host as infrastructure-only", () => {
-    // The Container SDK probes readiness with fetch("http://containerstarthealthcheck").
-    // Resolving it as a custom docs domain makes a starting container call back through
-    // the edge hop waiting on it, so port 3000 is never exposed.
-    expect(isInternalProbeHost("containerstarthealthcheck")).toBe(true);
+  it("treats single-label readiness hosts as infrastructure-only", () => {
+    expect(isInternalProbeHost("container-readiness")).toBe(true);
   });
 
   it("treats missing, loopback, and single-label hosts as infrastructure-only", () => {
@@ -176,7 +190,7 @@ describe("isInternalProbeHost", () => {
 
   it("still allows real multi-label custom docs domains", () => {
     expect(isInternalProbeHost("docs.customer.com")).toBe(false);
-    expect(isInternalProbeHost("opendocs.namuh.co")).toBe(false);
+    expect(isInternalProbeHost("app.example.com")).toBe(false);
     expect(isInternalProbeHost("a.b.c.example.com")).toBe(false);
   });
 });

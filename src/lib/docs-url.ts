@@ -3,10 +3,8 @@ import { getPublicAppUrl } from "@/lib/app-url";
 /**
  * URL helpers for a project's public docs site.
  *
- * In production, docs live on a subdomain of NEXT_PUBLIC_DOCS_ROOT_DOMAIN
- * (e.g. acme-docs.namuh.dev). When that env var is not set (local dev),
- * docs are served from the path-based route on the app origin, so the
- * URLs we show actually work.
+ * When NEXT_PUBLIC_DOCS_ROOT_DOMAIN is configured, docs use its subdomains.
+ * Otherwise they use the path-based route on NEXT_PUBLIC_APP_URL.
  */
 
 /** Full docs site URL including protocol, e.g. for links and API clients. */

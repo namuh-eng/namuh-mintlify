@@ -60,6 +60,12 @@ export async function POST(
   }
 
   const expectedTarget = generateCnameTarget(project.subdomain ?? project.slug);
+  if (!expectedTarget) {
+    return NextResponse.json(
+      { error: "Custom domain verification is not configured" },
+      { status: 503 },
+    );
+  }
 
   // Attempt DNS resolution to check if CNAME is configured
   let verified = false;

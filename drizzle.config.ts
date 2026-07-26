@@ -10,7 +10,7 @@ export default defineConfig({
   dbCredentials: {
     url:
       needsSsl && !url.includes("sslmode")
-        ? `${url}${url.includes("?") ? "&" : "?"}sslmode=no-verify`
+        ? `${url}${url.includes("?") ? "&" : "?"}sslmode=require`
         : url,
   },
 });

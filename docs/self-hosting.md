@@ -87,22 +87,7 @@ OpenDocs boots without these values. Features that depend on an unconfigured int
 | Observability | Sentry/PostHog server and client keys | No-op; unconfigured builds make no telemetry calls. |
 | Instance usage metrics | `OPS_METRICS_TOKEN` | `GET /api/admin/usage` returns 503 and runs no queries. |
 
-#### Instance usage metrics
-
-```bash
-OPS_METRICS_TOKEN=generate-with-openssl-rand-base64-32
-```
-
-`GET /api/admin/usage` reports instance-wide aggregate counters for the operator running the deployment: registered users, users registered and active in the window, sign-ins, organizations, projects (total/active), and per-day project-creation and sign-in counts. Query `?days=` selects the window and is clamped to 1-90 (default 30).
-
-Authorization is a bearer `OPS_METRICS_TOKEN` of at least 32 characters, compared in constant time. The endpoint fails closed: with no token configured it answers 503 and issues no database queries. Per-org admin sessions are deliberately rejected, because these counts span every tenant on the instance.
-
-```bash
-curl -H "Authorization: Bearer $OPS_METRICS_TOKEN" \
-  https://docs.example.com/api/admin/usage?days=7
-```
-
-The response contains integer counts and `YYYY-MM-DD` dates only. Names, emails, user/org/project identifiers, IP addresses, user agents, and raw event rows are never included, and responses are sent `no-store`.
+`OPS_METRICS_TOKEN` enables the optional, aggregate-only instance usage endpoint. Keep this operator credential outside the application repository and manage access through your private operations process.
 
 #### Google OAuth
 
@@ -292,21 +277,9 @@ project's internal `/docs/{subdomain}/introduction` route. Unknown or unverified
 hosts are rewritten to a branded OpenDocs 404 instead of falling through to the
 application shell.
 
-DNS verification remains CNAME-based: users point their domain at
-`{subdomain}.hosting.namuh.dev`, then OpenDocs stores
-`settings.domainVerifiedAt` once verification passes. Only projects with that
-verification timestamp are eligible for Host-header routing.
+DNS verification is CNAME-based. Configure `NEXT_PUBLIC_DOCS_ROOT_DOMAIN` with the managed docs domain for your deployment, and direct users to `{subdomain}.<your-managed-docs-domain>`. Only projects with a successful verification timestamp are eligible for Host-header routing.
 
-TLS requirements:
-
-- The platform origin needs wildcard TLS for the managed docs root, e.g.
-  `*.hosting.namuh.dev`.
-- Customer-owned domains need a certificate at the edge/load balancer before
-  HTTPS traffic can reach the app with the original `Host` header. In AWS, use
-  ACM certificates on the ALB/CloudFront layer; for a worker/edge provider, use
-  its custom-hostname certificate flow.
-- The app intentionally treats unverified hosts as 404 even if DNS already
-  points at the platform.
+The edge or load balancer must terminate TLS for both the managed docs domain and any customer-owned domains before forwarding the original `Host` header to the application. Unverified hosts intentionally return 404 even when DNS already points at the platform.
 
 ## Upgrading
 

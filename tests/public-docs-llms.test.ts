@@ -16,8 +16,8 @@ import {
 
 describe("buildPublicDocsBaseUrl", () => {
   it("builds the docs-site base URL from the request origin", () => {
-    expect(buildPublicDocsBaseUrl("https://opendocs.namuh.co", "acme")).toBe(
-      "https://opendocs.namuh.co/docs/acme",
+    expect(buildPublicDocsBaseUrl("https://app.example.com", "acme")).toBe(
+      "https://app.example.com/docs/acme",
     );
   });
 

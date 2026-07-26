@@ -15,7 +15,6 @@ export const CONTAINER_ENV_KEYS = [
   "NODE_ENV",
   "APP_VERSION",
   "DATABASE_URL",
-  "DB_PASSWORD",
   "DB_SSL",
   "BETTER_AUTH_SECRET",
   "BETTER_AUTH_URL",
@@ -58,9 +57,9 @@ export interface Env {
 class OpenDocsContainerBase extends Container<Env> {
   // Next.js standalone server (Dockerfile: ENV PORT=3000).
   defaultPort = 3000;
-  // Avoid repeated cold starts until the application is migrated off Containers.
+  // Keep the application warm between request bursts.
   sleepAfter = "20m";
-  // The app needs egress to Postgres, OpenAI, R2, Stripe, and GitHub.
+  // Allow application integrations to reach external services.
   enableInternet = true;
 
   constructor(ctx: ConstructorParameters<typeof Container<Env>>[0], env: Env) {
@@ -296,7 +295,7 @@ export default {
 
     const container = getContainer(
       env.OPENDOCS_CONTAINER,
-      env.CONTAINER_SINGLETON_NAME?.trim() || "opendocs-production",
+      env.CONTAINER_SINGLETON_NAME?.trim() || "opendocs",
     );
     if (!isPublicSeoRequest(request)) {
       return container.fetch(request);

@@ -3,7 +3,14 @@
  */
 
 const DOMAIN_REGEX = /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i;
-export const HOSTING_SUFFIX = "hosting.namuh.dev";
+function hostingSuffix(): string {
+  return (
+    process.env.NEXT_PUBLIC_DOCS_ROOT_DOMAIN?.trim().replace(
+      /^\.+|\.+$/g,
+      "",
+    ) ?? ""
+  );
+}
 
 /** Validate a custom domain string. Returns error string or null if valid. */
 export function validateCustomDomain(domain: string): string | null {
@@ -19,9 +26,10 @@ export function validateCustomDomain(domain: string): string | null {
   return null;
 }
 
-/** Generate the CNAME target that users should point their domain to. */
-export function generateCnameTarget(subdomain: string): string {
-  return `${subdomain}.${HOSTING_SUFFIX}`;
+/** Generate the configured CNAME target, or null when managed hosting is off. */
+export function generateCnameTarget(subdomain: string): string | null {
+  const suffix = hostingSuffix();
+  return suffix ? `${subdomain}.${suffix}` : null;
 }
 
 /** Determine the verification status of a custom domain. */
@@ -54,14 +62,9 @@ export function isLocalAppHost(hostname: string | null | undefined) {
 }
 
 /**
- * Hosts that can never be a public custom docs domain.
- *
- * Cloudflare's Container SDK probes readiness with `fetch("http://containerstarthealthcheck")`,
- * so the container receives a single-label Host header before it is reachable from the edge.
- * Resolving such a host through the public app URL makes the container call back into the
- * very edge hop that is waiting for it to become ready, which stalls the probe past the
- * SDK's 5s budget and leaves port 3000 permanently unexposed. Public custom domains are
- * always multi-label (`docs.example.com`), so a single-label host is infrastructure-only.
+ * Hosts that can never be public custom docs domains.
+ * Public domains are multi-label; local and single-label infrastructure hosts
+ * must bypass custom-domain resolution.
  */
 export function isInternalProbeHost(hostname: string | null | undefined) {
   if (!hostname) return true;

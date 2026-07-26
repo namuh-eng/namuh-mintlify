@@ -143,10 +143,10 @@ describe("auth production origin configuration", () => {
     }
   });
 
-  it("allows localhost callbacks in development when env points at production", async () => {
+  it("allows localhost callbacks in development with a configured public URL", async () => {
     vi.resetModules();
     vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("BETTER_AUTH_URL", "https://opendocs.namuh.co");
+    vi.stubEnv("BETTER_AUTH_URL", "https://app.example.com");
 
     try {
       const { getBetterAuthBaseUrlConfig } = await import("@/lib/auth");
@@ -157,9 +157,9 @@ describe("auth production origin configuration", () => {
           "localhost:3015",
           "127.0.0.1:3015",
           "[::1]:3015",
-          "opendocs.namuh.co",
+          "app.example.com",
         ],
-        fallback: "https://opendocs.namuh.co",
+        fallback: "https://app.example.com",
         protocol: "auto",
       });
     } finally {

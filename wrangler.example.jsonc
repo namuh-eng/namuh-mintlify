@@ -51,8 +51,8 @@
     "S3_ENDPOINT": "https://<account-id>.r2.cloudflarestorage.com",
     "BETTER_AUTH_URL": "https://docs.example.com",
     "ASSISTANT_MODEL_ID": "gpt-4o-mini",
-    // Change this value only when intentionally replacing a stuck singleton.
-    "CONTAINER_SINGLETON_NAME": "opendocs-production-v4",
+    // Stable name for the deployment's singleton application container.
+    "CONTAINER_SINGLETON_NAME": "opendocs",
     // Set to "true" to have the Worker answer every public SEO artifact itself
     // (/robots.txt, /docs/*/robots.txt, /docs/*/sitemap.xml, /docs/*/llms*.txt,
     // /api/docs/*/sitemap) so crawler traffic never wakes the container.
