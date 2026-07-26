@@ -20,8 +20,9 @@ name: Deploy (Cloudflare Workers)
 #   2. Repository secret CLOUDFLARE_API_TOKEN (Workers + Containers + R2 + DNS
 #      perms; Containers require the Workers Paid plan).
 #   3. App secrets once: `wrangler secret put <NAME>` for DATABASE_URL,
-#      OPENAI_API_KEY, BETTER_AUTH_SECRET, AUTH_GOOGLE_ID/SECRET, S3_* and
-#      STRIPE_*. Secrets stay in Cloudflare and never reach this workflow.
+#      OPENAI_API_KEY, BETTER_AUTH_SECRET, AUTH_GOOGLE_ID/SECRET, S3_*,
+#      STRIPE_*, and optional OPS_METRICS_TOKEN. Secrets stay in Cloudflare
+#      and never reach this workflow.
 #
 # `wrangler.jsonc` is gitignored; the gate renders it from the committed
 # `wrangler.example.jsonc` using the non-secret repository variables above.
