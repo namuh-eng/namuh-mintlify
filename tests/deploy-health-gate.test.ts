@@ -77,7 +77,7 @@ describe("wrangler template parsing", () => {
     expect(className).toBeTruthy();
     expect(workerSource).toContain(`export class ${className}`);
     expect(config.vars.AWS_REGION).toBe("us-east-1");
-    expect(config.vars.CONTAINER_SINGLETON_NAME).toBe("opendocs-production-v3");
+    expect(config.vars.CONTAINER_SINGLETON_NAME).toBe("opendocs-production-v4");
   });
 
   it("does not treat comment markers inside strings as comments", () => {
