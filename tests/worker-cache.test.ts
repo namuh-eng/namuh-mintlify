@@ -75,18 +75,37 @@ describe("worker public SEO cache", () => {
     ).toBe(false);
   });
 
-  it("can fail closed at the edge without waking the container", async () => {
-    const request = new Request("https://docs.example.com/robots.txt");
-    const response = safeSeoResponse(request, true);
+  it("treats project robots and trailing-slash SEO artifacts as public SEO", () => {
+    for (const path of [
+      "/robots.txt",
+      "/docs/public/robots.txt",
+      "/docs/public/sitemap.xml/",
+      "/docs/public/llms.txt/",
+    ]) {
+      expect(
+        isPublicSeoRequest(new Request(`https://docs.example.com${path}`)),
+      ).toBe(true);
+    }
+  });
 
-    expect(response).not.toBeNull();
-    expect(await response?.text()).toBe(
+  it("serves robots at the edge without waking the container in safe mode", async () => {
+    const rootResponse = safeSeoResponse(
+      new Request("https://docs.example.com/robots.txt"),
+      true,
+    );
+    expect(await rootResponse?.text()).toBe(
       "User-agent: *\nAllow: /\nDisallow: /docs/\nDisallow: /api/docs/\n",
     );
-    expect(response?.headers.get("X-Robots-Tag")).toBe("noindex");
+    expect(rootResponse?.headers.get("X-Robots-Tag")).toBe("noindex");
+
+    const projectResponse = safeSeoResponse(
+      new Request("https://docs.example.com/docs/private/robots.txt"),
+      true,
+    );
+    expect(await projectResponse?.text()).toBe("User-agent: *\nDisallow: /\n");
 
     const workerResponse = await worker.fetch(
-      request,
+      new Request("https://docs.example.com/robots.txt"),
       { SAFE_ROOT_ROBOTS: "true" } as never,
       ctx,
     );
@@ -95,9 +114,11 @@ describe("worker public SEO cache", () => {
     expect(mocks.cacheMatch).not.toHaveBeenCalled();
   });
 
-  it("fails closed for canonical and legacy sitemaps", async () => {
+  it("fails closed on sitemap and llms artifacts in safe mode", async () => {
     for (const path of [
       "/docs/private/sitemap.xml",
+      "/docs/private/llms.txt",
+      "/docs/private/llms-full.txt",
       "/api/docs/private/sitemap",
     ]) {
       const response = await worker.fetch(
@@ -107,10 +128,100 @@ describe("worker public SEO cache", () => {
       );
       expect(response.status).toBe(404);
       expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+      expect(response.headers.get("X-Robots-Tag")).toBe("noindex");
     }
 
     expect(mocks.containerFetch).not.toHaveBeenCalled();
     expect(mocks.cacheMatch).not.toHaveBeenCalled();
+  });
+
+  it("leaves non-SEO routes and unsafe methods to the container in safe mode", async () => {
+    expect(
+      safeSeoResponse(
+        new Request("https://docs.example.com/docs/public/getting-started"),
+        true,
+      ),
+    ).toBeNull();
+    expect(
+      safeSeoResponse(
+        new Request("https://docs.example.com/robots.txt", { method: "POST" }),
+        true,
+      ),
+    ).toBeNull();
+    expect(
+      safeSeoResponse(
+        new Request("https://docs.example.com/robots.txt"),
+        false,
+      ),
+    ).toBeNull();
+  });
+
+  it("negatively caches public SEO 404s with a bounded TTL", async () => {
+    mocks.containerFetch.mockResolvedValue(
+      new Response("Not found", { status: 404 }),
+    );
+
+    const response = await worker.fetch(
+      new Request("https://docs.example.com/docs/missing/sitemap.xml"),
+      env,
+      ctx,
+    );
+
+    expect(response.status).toBe(404);
+    const [, cachedResponse] = mocks.cachePut.mock.calls[0] as [
+      Request,
+      Response,
+    ];
+    expect(cachedResponse.headers.get("Cache-Control")).toBe(
+      "public, max-age=60, s-maxage=60",
+    );
+    expect(cachedResponse.headers.get("X-Robots-Tag")).toBe("noindex");
+  });
+
+  it("never caches no-store SEO responses such as password-protected docs", async () => {
+    mocks.containerFetch.mockResolvedValue(
+      new Response(null, {
+        status: 404,
+        headers: { "Cache-Control": "private, no-store" },
+      }),
+    );
+
+    await worker.fetch(
+      new Request("https://docs.example.com/docs/protected/llms-full.txt"),
+      env,
+      ctx,
+    );
+
+    expect(mocks.cachePut).not.toHaveBeenCalled();
+  });
+
+  it("fails closed without caching when the container cannot serve SEO", async () => {
+    mocks.containerFetch.mockRejectedValueOnce(new Error("container asleep"));
+
+    const thrownResponse = await worker.fetch(
+      new Request("https://docs.example.com/docs/public/sitemap.xml"),
+      env,
+      ctx,
+    );
+    expect(thrownResponse.status).toBe(503);
+    expect(thrownResponse.headers.get("Retry-After")).toBe("3600");
+    expect(thrownResponse.headers.get("Cache-Control")).toBe(
+      "private, no-store",
+    );
+
+    mocks.containerFetch.mockResolvedValueOnce(
+      new Response("boom", {
+        status: 500,
+        headers: { "Cache-Control": "public, max-age=60" },
+      }),
+    );
+    const erroredResponse = await worker.fetch(
+      new Request("https://docs.example.com/docs/public/sitemap.xml"),
+      env,
+      ctx,
+    );
+    expect(erroredResponse.status).toBe(503);
+    expect(mocks.cachePut).not.toHaveBeenCalled();
   });
 
   it("caches only explicitly public, cookie-free responses", () => {
@@ -144,6 +255,33 @@ describe("worker public SEO cache", () => {
             "Cache-Control": "public, max-age=60",
             "Set-Cookie": "session=secret",
           },
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      isPublicCacheResponse(
+        new Response(null, {
+          status: 404,
+          headers: { "Cache-Control": "public, max-age=60" },
+        }),
+      ),
+    ).toBe(true);
+
+    for (const status of [301, 401, 403, 500, 503]) {
+      expect(
+        isPublicCacheResponse(
+          new Response(null, {
+            status,
+            headers: { "Cache-Control": "public, max-age=60" },
+          }),
+        ),
+      ).toBe(false);
+    }
+
+    expect(
+      isPublicCacheResponse(
+        new Response("vary", {
+          headers: { "Cache-Control": "public, max-age=60", Vary: "*" },
         }),
       ),
     ).toBe(false);

@@ -47,6 +47,11 @@
     "S3_BUCKET": "your-doc-assets-bucket",
     "S3_ENDPOINT": "https://<account-id>.r2.cloudflarestorage.com",
     "BETTER_AUTH_URL": "https://docs.example.com",
-    "ASSISTANT_MODEL_ID": "gpt-4o-mini"
+    "ASSISTANT_MODEL_ID": "gpt-4o-mini",
+    // Set to "true" to have the Worker answer every public SEO artifact itself
+    // (/robots.txt, /docs/*/robots.txt, /docs/*/sitemap.xml, /docs/*/llms*.txt,
+    // /api/docs/*/sitemap) so crawler traffic never wakes the container.
+    // Fail-closed: no documentation site is advertised while this is on.
+    "SAFE_ROOT_ROBOTS": "false"
   }
 }

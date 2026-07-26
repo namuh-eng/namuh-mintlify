@@ -53,6 +53,22 @@ export function isLocalAppHost(hostname: string | null | undefined) {
   );
 }
 
+/**
+ * Hosts that can never be a public custom docs domain.
+ *
+ * Cloudflare's Container SDK probes readiness with `fetch("http://containerstarthealthcheck")`,
+ * so the container receives a single-label Host header before it is reachable from the edge.
+ * Resolving such a host through the public app URL makes the container call back into the
+ * very edge hop that is waiting for it to become ready, which stalls the probe past the
+ * SDK's 5s budget and leaves port 3000 permanently unexposed. Public custom domains are
+ * always multi-label (`docs.example.com`), so a single-label host is infrastructure-only.
+ */
+export function isInternalProbeHost(hostname: string | null | undefined) {
+  if (!hostname) return true;
+  if (isLocalAppHost(hostname)) return true;
+  return !hostname.includes(".");
+}
+
 function configuredHostname(value: string | null | undefined) {
   if (!value) return null;
   try {

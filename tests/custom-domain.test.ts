@@ -3,6 +3,7 @@ import {
   domainVerificationStatus,
   generateCnameTarget,
   isConfiguredAppHost,
+  isInternalProbeHost,
   normalizeHostHeader,
   resolveManagedDocsSubdomain,
   validateCustomDomain,
@@ -152,5 +153,30 @@ describe("isConfiguredAppHost", () => {
     } else {
       process.env.NEXT_PUBLIC_APP_URL = previous;
     }
+  });
+});
+
+describe("isInternalProbeHost", () => {
+  it("treats Cloudflare's container start probe host as infrastructure-only", () => {
+    // The Container SDK probes readiness with fetch("http://containerstarthealthcheck").
+    // Resolving it as a custom docs domain makes a starting container call back through
+    // the edge hop waiting on it, so port 3000 is never exposed.
+    expect(isInternalProbeHost("containerstarthealthcheck")).toBe(true);
+  });
+
+  it("treats missing, loopback, and single-label hosts as infrastructure-only", () => {
+    expect(isInternalProbeHost(null)).toBe(true);
+    expect(isInternalProbeHost(undefined)).toBe(true);
+    expect(isInternalProbeHost("")).toBe(true);
+    expect(isInternalProbeHost("localhost")).toBe(true);
+    expect(isInternalProbeHost("127.0.0.1")).toBe(true);
+    expect(isInternalProbeHost("[::1]")).toBe(true);
+    expect(isInternalProbeHost("internal-probe")).toBe(true);
+  });
+
+  it("still allows real multi-label custom docs domains", () => {
+    expect(isInternalProbeHost("docs.customer.com")).toBe(false);
+    expect(isInternalProbeHost("opendocs.namuh.co")).toBe(false);
+    expect(isInternalProbeHost("a.b.c.example.com")).toBe(false);
   });
 });
