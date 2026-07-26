@@ -44,37 +44,37 @@ describe("isValidBranchName", () => {
 describe("generatePreviewUrl", () => {
   it("generates preview URL from branch and subdomain", () => {
     expect(generatePreviewUrl("feature-123", "my-docs")).toBe(
-      "https://feature-123.preview.my-docs.namuh.dev",
+      "https://feature-123.preview.my-docs.example.com",
     );
   });
 
   it("sanitizes branch names with slashes", () => {
     expect(generatePreviewUrl("feature/new-widget", "docs")).toBe(
-      "https://feature-new-widget.preview.docs.namuh.dev",
+      "https://feature-new-widget.preview.docs.example.com",
     );
   });
 
   it("lowercases branch names", () => {
     expect(generatePreviewUrl("Feature-ABC", "docs")).toBe(
-      "https://feature-abc.preview.docs.namuh.dev",
+      "https://feature-abc.preview.docs.example.com",
     );
   });
 
   it("strips leading and trailing hyphens from sanitized name", () => {
     expect(generatePreviewUrl("/feature/", "docs")).toBe(
-      "https://feature.preview.docs.namuh.dev",
+      "https://feature.preview.docs.example.com",
     );
   });
 
   it("uses 'docs' as default when subdomain is null", () => {
     expect(generatePreviewUrl("staging", null)).toBe(
-      "https://staging.preview.docs.namuh.dev",
+      "https://staging.preview.docs.example.com",
     );
   });
 
   it("handles branch names with dots", () => {
     expect(generatePreviewUrl("v1.2.3", "docs")).toBe(
-      "https://v1-2-3.preview.docs.namuh.dev",
+      "https://v1-2-3.preview.docs.example.com",
     );
   });
 });

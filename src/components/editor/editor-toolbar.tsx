@@ -423,7 +423,7 @@ export function EditorToolbar({
                     className="text-[var(--od-text-subtle)]"
                   />
                   <span className="text-[var(--od-text-muted)] truncate">
-                    {siteUrl || previewUrl || "your-project.namuh.dev"}
+                    {siteUrl || previewUrl || "your-project.example.com"}
                   </span>
                 </div>
                 <p className="text-xs leading-5 text-[var(--od-text-subtle)]">

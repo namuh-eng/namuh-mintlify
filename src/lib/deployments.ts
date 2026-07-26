@@ -136,7 +136,8 @@ export function generatePreviewUrl(
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   const base = subdomain ?? "docs";
-  return `https://${sanitized}.preview.${base}.${process.env.NEXT_PUBLIC_DOCS_ROOT_DOMAIN || "namuh.dev"}`;
+  const docsRoot = process.env.NEXT_PUBLIC_DOCS_ROOT_DOMAIN || "example.com";
+  return `https://${sanitized}.preview.${base}.${docsRoot}`;
 }
 
 /** Validate a create-preview-deployment request body. */
