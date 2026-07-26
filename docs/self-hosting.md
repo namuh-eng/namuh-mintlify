@@ -85,6 +85,24 @@ OpenDocs boots without these values. Features that depend on an unconfigured int
 | GitHub import/sync | `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_APP_SLUG`, optional `GITHUB_APP_INSTALL_URL`, `GITHUB_WEBHOOK_SECRET` | GitHub import/sync shows an unavailable state. |
 | Billing | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`, optional plan price IDs | App runs in free/dev billing state. |
 | Observability | Sentry/PostHog server and client keys | No-op; unconfigured builds make no telemetry calls. |
+| Instance usage metrics | `OPS_METRICS_TOKEN` | `GET /api/admin/usage` returns 503 and runs no queries. |
+
+#### Instance usage metrics
+
+```bash
+OPS_METRICS_TOKEN=generate-with-openssl-rand-base64-32
+```
+
+`GET /api/admin/usage` reports instance-wide aggregate counters for the operator running the deployment: registered users, users registered and active in the window, sign-ins, organizations, projects (total/active), and per-day project-creation and sign-in counts. Query `?days=` selects the window and is clamped to 1-90 (default 30).
+
+Authorization is a bearer `OPS_METRICS_TOKEN` of at least 32 characters, compared in constant time. The endpoint fails closed: with no token configured it answers 503 and issues no database queries. Per-org admin sessions are deliberately rejected, because these counts span every tenant on the instance.
+
+```bash
+curl -H "Authorization: Bearer $OPS_METRICS_TOKEN" \
+  https://docs.example.com/api/admin/usage?days=7
+```
+
+The response contains integer counts and `YYYY-MM-DD` dates only. Names, emails, user/org/project identifiers, IP addresses, user agents, and raw event rows are never included, and responses are sent `no-store`.
 
 #### Google OAuth
 

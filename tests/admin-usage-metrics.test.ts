@@ -345,6 +345,9 @@ describe("GET /api/admin/usage", () => {
       for (const method of ["from", "where", "groupBy", "orderBy"]) {
         builder[method] = vi.fn(() => builder);
       }
+      // Drizzle query builders are genuinely thenable — awaiting one runs the
+      // query. The stub must mirror that to exercise the real route path.
+      // biome-ignore lint/suspicious/noThenProperty: models a Drizzle query builder
       builder.then = (
         resolve: (value: unknown) => unknown,
         reject?: (reason: unknown) => unknown,
@@ -369,7 +372,11 @@ describe("GET /api/admin/usage", () => {
       signInsInWindow: 87,
     });
     expect(body.organizations).toEqual({ total: 9, createdInWindow: 2 });
-    expect(body.projects).toEqual({ total: 30, active: 26, createdInWindow: 4 });
+    expect(body.projects).toEqual({
+      total: 30,
+      active: 26,
+      createdInWindow: 4,
+    });
     expect(body.recentActivity.projectCreationsByDay).toEqual([
       { date: "2026-07-25", count: 2 },
     ]);
@@ -378,7 +385,12 @@ describe("GET /api/admin/usage", () => {
     ]);
 
     const serialized = JSON.stringify(body);
-    for (const forbidden of ["proj-1", "203.0.113.5", "projectId", "ipAddress"]) {
+    for (const forbidden of [
+      "proj-1",
+      "203.0.113.5",
+      "projectId",
+      "ipAddress",
+    ]) {
       expect(serialized).not.toContain(forbidden);
     }
   });
