@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useActiveProject } from "@/hooks/use-active-project";
 import { useProjectUpdater } from "@/hooks/use-project-updater";
-import { HOSTING_SUFFIX } from "@/lib/domains";
+import { generateCnameTarget } from "@/lib/domains";
 
 type VerificationStatus = "not_configured" | "pending" | "verified" | "failed";
 
@@ -38,7 +38,7 @@ export default function DomainSettingsPage() {
     if (project.customDomain) {
       setDomain(project.customDomain);
       const sub = project.subdomain ?? project.slug;
-      setCnameTarget(`${sub}.${HOSTING_SUFFIX}`);
+      setCnameTarget(generateCnameTarget(sub) ?? "");
       const verifiedAt = project.settings?.domainVerifiedAt;
       setStatus(verifiedAt ? "verified" : "pending");
       return;
@@ -64,12 +64,20 @@ export default function DomainSettingsPage() {
 
     if (domain.trim()) {
       const sub = result.data.project.subdomain ?? result.data.project.slug;
-      setCnameTarget(`${sub}.${HOSTING_SUFFIX}`);
+      const target = generateCnameTarget(sub);
+      setCnameTarget(target ?? "");
       setStatus("pending");
-      setMessage({
-        type: "success",
-        text: "Domain saved. Configure the DNS record below, then verify.",
-      });
+      setMessage(
+        target
+          ? {
+              type: "success",
+              text: "Domain saved. Configure the DNS record below, then verify.",
+            }
+          : {
+              type: "error",
+              text: "Managed custom-domain hosting is not configured.",
+            },
+      );
     } else {
       setCnameTarget("");
       setStatus("not_configured");

@@ -72,7 +72,7 @@ describe("Proxy container startup safety", () => {
   }
 
   beforeEach(() => {
-    process.env.NEXT_PUBLIC_APP_URL = "https://opendocs.namuh.co";
+    process.env.NEXT_PUBLIC_APP_URL = "https://app.example.com";
     getSessionCookieMock.mockReturnValue(null);
   });
 
@@ -85,18 +85,13 @@ describe("Proxy container startup safety", () => {
     }
   });
 
-  it("never calls back into the app for Cloudflare's container start probe", async () => {
-    // Regression: a self-referential resolve-host call during startup stalled the
-    // Container SDK readiness probe, so rebuilt images never exposed port 3000.
+  it("never resolves single-label infrastructure probe hosts", async () => {
     const fetchSpy = vi.fn(async () => new Response("{}"));
     globalThis.fetch = fetchSpy as unknown as typeof fetch;
 
     const { proxy } = await import("@/proxy");
     const response = await proxy(
-      makeHostRequest(
-        "http://containerstarthealthcheck/",
-        "containerstarthealthcheck",
-      ),
+      makeHostRequest("http://container-readiness/", "container-readiness"),
     );
 
     expect(fetchSpy).not.toHaveBeenCalled();

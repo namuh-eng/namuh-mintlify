@@ -12,7 +12,7 @@ describe("buildPublicMcpDescriptor", () => {
   it("builds Mintlify-style server metadata and tools", () => {
     const descriptor = buildPublicMcpDescriptor(
       { name: "Test Project", subdomain: "test-project" },
-      "https://opendocs.namuh.co/",
+      "https://app.example.com/",
     );
 
     expect(descriptor.server).toEqual({
@@ -34,7 +34,7 @@ describe("buildPublicMcpDescriptor", () => {
       descriptor.capabilities.tools.search_test_project.inputSchema.properties,
     ).toHaveProperty("language");
     expect(descriptor.capabilities.resources[0].uri).toBe(
-      "https://opendocs.namuh.co/docs/test-project/llms.txt",
+      "https://app.example.com/docs/test-project/llms.txt",
     );
   });
 });

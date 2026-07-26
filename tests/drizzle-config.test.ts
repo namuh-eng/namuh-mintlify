@@ -1,5 +1,5 @@
 // ABOUTME: Unit tests for DB_SSL env var behavior in drizzle.config.ts
-// Verifies sslmode=no-verify is appended when DB_SSL=true
+// Verifies sslmode=require is appended when DB_SSL=true
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -19,14 +19,14 @@ describe("drizzle.config.ts SSL configuration", () => {
     vi.unstubAllEnvs();
   });
 
-  it("appends sslmode=no-verify when DB_SSL=true", async () => {
+  it("appends sslmode=require when DB_SSL=true", async () => {
     vi.stubEnv("DB_SSL", "true");
     vi.stubEnv("DATABASE_URL", "postgresql://localhost:5432/test");
 
     const mod = await import("../drizzle.config");
 
     expect(getDbUrl(mod.default)).toBe(
-      "postgresql://localhost:5432/test?sslmode=no-verify",
+      "postgresql://localhost:5432/test?sslmode=require",
     );
   });
 

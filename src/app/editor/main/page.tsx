@@ -29,6 +29,7 @@ import {
 } from "@/components/editor/visual-editor";
 import { EmptyState } from "@/components/empty-state";
 import { useActiveProject } from "@/hooks/use-active-project";
+import { docsSiteUrl } from "@/lib/docs-url";
 import type { EditorMode, MdxSnippetKey } from "@/lib/editor";
 import {
   createAutoSave,
@@ -381,8 +382,7 @@ export default function EditorPage() {
   const siteUrl = useMemo(() => {
     if (!project) return undefined;
     if (project.customDomain) return `https://${project.customDomain}`;
-    if (project.subdomain)
-      return `https://${project.subdomain}.opendocs.namuh.co`;
+    if (project.subdomain) return docsSiteUrl(project.subdomain);
     return undefined;
   }, [project]);
 

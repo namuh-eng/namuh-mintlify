@@ -77,7 +77,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      DOCS_PROXY_ALLOWED_HOSTS: opendocs.namuh.co
+      DOCS_PROXY_ALLOWED_HOSTS: docs.example.com
     steps:
       - name: Checkout
         uses: actions/checkout@v4

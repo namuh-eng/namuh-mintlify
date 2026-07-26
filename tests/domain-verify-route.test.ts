@@ -46,6 +46,7 @@ describe("POST /api/projects/[id]/domain/verify", () => {
     vi.clearAllMocks();
     vi.resetModules();
     headersMock.mockResolvedValue(new Headers());
+    vi.stubEnv("NEXT_PUBLIC_DOCS_ROOT_DOMAIN", "hosting.example.com");
   });
 
   it("returns 401 when unauthenticated", async () => {
@@ -151,7 +152,7 @@ describe("POST /api/projects/[id]/domain/verify", () => {
 
   it("marks the domain verified when DNS matches the expected target", async () => {
     getSessionMock.mockResolvedValue({ user: { id: "user-1" } });
-    resolveCnameMock.mockResolvedValue(["docs.hosting.namuh.dev"]);
+    resolveCnameMock.mockResolvedValue(["docs.hosting.example.com"]);
 
     selectMock
       .mockReturnValueOnce({
@@ -209,7 +210,7 @@ describe("POST /api/projects/[id]/domain/verify", () => {
     await expect(response.json()).resolves.toEqual({
       status: "verified",
       domain: "docs.example.com",
-      cnameTarget: "docs.hosting.namuh.dev",
+      cnameTarget: "docs.hosting.example.com",
     });
   });
 
@@ -262,9 +263,9 @@ describe("POST /api/projects/[id]/domain/verify", () => {
     await expect(response.json()).resolves.toEqual({
       status: "pending",
       domain: "docs.example.com",
-      cnameTarget: "docs.hosting.namuh.dev",
+      cnameTarget: "docs.hosting.example.com",
       message:
-        "CNAME record for docs.example.com does not point to docs.hosting.namuh.dev",
+        "CNAME record for docs.example.com does not point to docs.hosting.example.com",
     });
   });
 
@@ -317,9 +318,9 @@ describe("POST /api/projects/[id]/domain/verify", () => {
     await expect(response.json()).resolves.toEqual({
       status: "pending",
       domain: "docs.example.com",
-      cnameTarget: "docs.hosting.namuh.dev",
+      cnameTarget: "docs.hosting.example.com",
       message:
-        "CNAME record for docs.example.com does not point to docs.hosting.namuh.dev",
+        "CNAME record for docs.example.com does not point to docs.hosting.example.com",
     });
   });
 });
