@@ -11,7 +11,7 @@
 import { Container, getContainer } from "@cloudflare/containers";
 
 /** Env keys forwarded from Worker secrets/vars into the container at runtime. */
-const CONTAINER_ENV_KEYS = [
+export const CONTAINER_ENV_KEYS = [
   "NODE_ENV",
   "APP_VERSION",
   "DATABASE_URL",
@@ -41,10 +41,11 @@ const CONTAINER_ENV_KEYS = [
   "STRIPE_PRO_PRICE_ID",
   "STRIPE_ENTERPRISE_PRICE_ID",
   "DOCS_PROXY_ALLOWED_HOSTS",
+  "OPS_METRICS_TOKEN",
 ] as const;
 
 export interface Env {
-  OPENDOCS_CONTAINER: Parameters<typeof getContainer<OpenDocsContainer>>[0];
+  OPENDOCS_CONTAINER: Parameters<typeof getContainer<OpenDocsContainerV2>>[0];
   /**
    * "true" makes the Worker answer every public SEO artifact itself, so crawler
    * traffic can never wake the container. Fail-closed: nothing is advertised.
@@ -56,8 +57,8 @@ export interface Env {
 export class OpenDocsContainer extends Container<Env> {
   // Next.js standalone server (Dockerfile: ENV PORT=3000).
   defaultPort = 3000;
-  // Stop idle containers promptly; public SEO responses are cached at the edge.
-  sleepAfter = "5m";
+  // Avoid repeated cold starts until the application is migrated off Containers.
+  sleepAfter = "20m";
   // The app needs egress to Postgres, OpenAI, R2, Stripe, and GitHub.
   enableInternet = true;
 
@@ -73,6 +74,8 @@ export class OpenDocsContainer extends Container<Env> {
     this.envVars = vars;
   }
 }
+
+export class OpenDocsContainerV2 extends OpenDocsContainer {}
 
 const ROOT_ROBOTS_PATH = /^\/robots\.txt$/;
 const PROJECT_ROBOTS_PATH = /^\/docs\/[^/]+\/robots\.txt\/?$/;

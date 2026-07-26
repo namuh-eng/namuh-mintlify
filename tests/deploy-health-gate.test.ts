@@ -21,6 +21,7 @@ import {
 
 const templateSource = readFileSync("wrangler.example.jsonc", "utf8");
 const workflowSource = readFileSync(".github/workflows/deploy.yml", "utf8");
+const workerSource = readFileSync("worker/index.ts", "utf8");
 
 const KNOWN_GOOD_DIGEST =
   "1ebd786f620fd305e59eca2bc7647b833af9a282571196ea5c5f3ef2f5a26127";
@@ -65,6 +66,15 @@ describe("wrangler template parsing", () => {
     expect(config.name).toBe("opendocs");
     expect(config.main).toBe("worker/index.ts");
     expect(config.containers).toHaveLength(1);
+  });
+
+  it("exports the Durable Object class referenced by the template", () => {
+    const config = parseJsonc(templateSource) as {
+      containers: { class_name: string }[];
+    };
+    const className = config.containers[0]?.class_name;
+    expect(className).toBeTruthy();
+    expect(workerSource).toContain(`export class ${className}`);
   });
 
   it("does not treat comment markers inside strings as comments", () => {
