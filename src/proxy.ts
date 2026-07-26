@@ -1,7 +1,11 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 import { getPublicAppUrl } from "@/lib/app-url";
-import { isConfiguredAppHost, normalizeHostHeader } from "@/lib/domains";
+import {
+  isConfiguredAppHost,
+  isInternalProbeHost,
+  normalizeHostHeader,
+} from "@/lib/domains";
 import { parsePublicMarkdownExportPath } from "@/lib/public-markdown-export";
 
 const PROTECTED_PREFIXES = [
@@ -31,6 +35,15 @@ function shouldSkipHostRouting(pathname: string) {
   );
 }
 
+/**
+ * Upper bound for the custom-domain lookup.
+ *
+ * Cloudflare's Container SDK gives a container ~5s to answer its readiness probe. This
+ * lookup is a same-origin call back through the public edge, so it must fail fast rather
+ * than hold a request open; a missed lookup only degrades to the not-found page.
+ */
+const RESOLVE_HOST_TIMEOUT_MS = 2000;
+
 async function resolveDocsSubdomainForHost(hostname: string) {
   const resolveUrl = new URL("/api/docs/resolve-host", getPublicAppUrl());
   resolveUrl.searchParams.set("host", hostname);
@@ -39,6 +52,7 @@ async function resolveDocsSubdomainForHost(hostname: string) {
     const response = await fetch(resolveUrl, {
       headers: { accept: "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(RESOLVE_HOST_TIMEOUT_MS),
     });
     if (!response.ok) return null;
 
@@ -60,6 +74,9 @@ async function handleCustomDocsHost(request: NextRequest, start: number) {
   );
 
   if (!hostname || isConfiguredAppHost(hostname)) return null;
+  // Infrastructure probes (Cloudflare's `containerstarthealthcheck`, bare hostnames)
+  // must never trigger a self-referential lookup during container startup.
+  if (isInternalProbeHost(hostname)) return null;
 
   const subdomain = await resolveDocsSubdomainForHost(hostname);
   if (!subdomain) {
