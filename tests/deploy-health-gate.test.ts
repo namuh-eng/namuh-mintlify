@@ -71,6 +71,7 @@ describe("wrangler template parsing", () => {
   it("exports the Durable Object class referenced by the template", () => {
     const config = parseJsonc(templateSource) as {
       containers: { class_name: string }[];
+      migrations: { deleted_classes?: string[] }[];
       vars: Record<string, string>;
     };
     const className = config.containers[0]?.class_name;
@@ -78,6 +79,12 @@ describe("wrangler template parsing", () => {
     expect(workerSource).toContain(`export class ${className}`);
     expect(config.vars.AWS_REGION).toBe("us-east-1");
     expect(config.vars.CONTAINER_SINGLETON_NAME).toBe("opendocs-production-v4");
+    expect(config.migrations.at(-1)?.deleted_classes).toEqual([
+      "OpenDocsContainer",
+    ]);
+    expect(config.migrations.at(-1)?.deleted_classes).not.toContain(
+      "OpenDocsContainerV2",
+    );
   });
 
   it("does not treat comment markers inside strings as comments", () => {
