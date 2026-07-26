@@ -9,9 +9,9 @@ afterEach(() => {
 
 describe("docs site url helpers", () => {
   it("uses the docs root domain subdomain when configured", () => {
-    vi.stubEnv("NEXT_PUBLIC_DOCS_ROOT_DOMAIN", "namuh.dev");
-    expect(docsSiteUrl("acme-docs")).toBe("https://acme-docs.namuh.dev");
-    expect(docsDisplayUrl("acme-docs")).toBe("acme-docs.namuh.dev");
+    vi.stubEnv("NEXT_PUBLIC_DOCS_ROOT_DOMAIN", "docs.example.com");
+    expect(docsSiteUrl("acme-docs")).toBe("https://acme-docs.docs.example.com");
+    expect(docsDisplayUrl("acme-docs")).toBe("acme-docs.docs.example.com");
   });
 
   it("falls back to a path-based URL on the app origin in dev", () => {
@@ -24,7 +24,7 @@ describe("docs site url helpers", () => {
   });
 
   it("trims stray dots and slashes from configuration", () => {
-    vi.stubEnv("NEXT_PUBLIC_DOCS_ROOT_DOMAIN", ".namuh.dev");
-    expect(docsSiteUrl("acme-docs")).toBe("https://acme-docs.namuh.dev");
+    vi.stubEnv("NEXT_PUBLIC_DOCS_ROOT_DOMAIN", ".docs.example.com");
+    expect(docsSiteUrl("acme-docs")).toBe("https://acme-docs.docs.example.com");
   });
 });
