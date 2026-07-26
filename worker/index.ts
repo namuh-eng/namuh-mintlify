@@ -55,7 +55,7 @@ export interface Env {
   [key: string]: unknown;
 }
 
-export class OpenDocsContainer extends Container<Env> {
+class OpenDocsContainerBase extends Container<Env> {
   // Next.js standalone server (Dockerfile: ENV PORT=3000).
   defaultPort = 3000;
   // Avoid repeated cold starts until the application is migrated off Containers.
@@ -76,7 +76,7 @@ export class OpenDocsContainer extends Container<Env> {
   }
 }
 
-export class OpenDocsContainerV2 extends OpenDocsContainer {}
+export class OpenDocsContainerV2 extends OpenDocsContainerBase {}
 
 const ROOT_ROBOTS_PATH = /^\/robots\.txt$/;
 const PROJECT_ROBOTS_PATH = /^\/docs\/[^/]+\/robots\.txt\/?$/;

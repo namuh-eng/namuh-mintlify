@@ -34,7 +34,8 @@
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["OpenDocsContainer"] },
-    { "tag": "v2", "new_sqlite_classes": ["OpenDocsContainerV2"] }
+    { "tag": "v2", "new_sqlite_classes": ["OpenDocsContainerV2"] },
+    { "tag": "v3", "deleted_classes": ["OpenDocsContainer"] }
   ],
   // Non-secret runtime vars. Secrets are set once with `wrangler secret put <NAME>`:
   //   DATABASE_URL, BETTER_AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET,
