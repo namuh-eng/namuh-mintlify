@@ -88,6 +88,13 @@ export async function syncProjectDocsFromGitHub(params: {
   // 5. Atomic update: diffing sync
   // We match by path to preserve IDs for comments/suggestions and avoid unnecessary timestamp resets.
   await db.transaction(async (tx) => {
+    if (!branchOverride && importResult.source.branch !== project.repoBranch) {
+      await tx
+        .update(projects)
+        .set({ repoBranch: importResult.source.branch })
+        .where(eq(projects.id, projectId));
+    }
+
     // Fetch existing pages to diff
     const existingPages = await tx
       .select({

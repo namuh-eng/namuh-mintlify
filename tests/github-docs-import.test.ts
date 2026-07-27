@@ -572,6 +572,49 @@ Set your token.`,
     }
   });
 
+  it("recovers from a stale stored branch by using the repository default branch", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/git/trees/main")) {
+        return { ok: false, status: 404 };
+      }
+
+      if (url === "https://api.github.com/repos/BoundaryML/baml") {
+        return {
+          ok: true,
+          json: async () => ({ default_branch: "canary" }),
+        };
+      }
+
+      if (url.includes("/git/trees/canary")) {
+        return {
+          ok: true,
+          json: async () => ({
+            tree: [{ path: "fern/index.mdx", type: "blob" }],
+          }),
+        };
+      }
+
+      return {
+        ok: true,
+        text: async () => "# BAML Documentation",
+      };
+    });
+
+    const { importGitHubDocs } = await import("@/lib/github-docs-import");
+    const result = await importGitHubDocs({
+      repoUrl: "https://github.com/BoundaryML/baml",
+      repoBranch: "main",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+      env: {},
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      status: "imported",
+      source: { branch: "canary" },
+    });
+  });
+
   it("uses a server-side GitHub token for public import requests when configured", async () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (url.includes("/git/trees/")) {
