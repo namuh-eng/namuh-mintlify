@@ -41,18 +41,40 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
+export function getForcedDocsTheme(): Theme | null {
+  if (typeof document === "undefined") return null;
+  const forcedTheme = document.querySelector<HTMLElement>(
+    ".docs-layout[data-theme]",
+  )?.dataset.theme;
+  return forcedTheme && VALID_THEMES.includes(forcedTheme as Theme)
+    ? (forcedTheme as Theme)
+    : null;
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
-    setTheme(getThemeFromStorage());
+    setTheme(getForcedDocsTheme() ?? getThemeFromStorage());
   }, []);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
+    const forcedTheme = getForcedDocsTheme();
+    const effectiveTheme = forcedTheme ?? theme;
+    if (forcedTheme && forcedTheme !== theme) {
+      setTheme(forcedTheme);
+    }
+    document.documentElement.setAttribute("data-theme", effectiveTheme);
   }, [theme]);
 
   const toggleTheme = useCallback(() => {
+    const forcedTheme = getForcedDocsTheme();
+    if (forcedTheme) {
+      setTheme(forcedTheme);
+      document.documentElement.setAttribute("data-theme", forcedTheme);
+      return;
+    }
+
     const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
     setThemeInStorage(next);

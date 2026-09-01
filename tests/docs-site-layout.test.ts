@@ -39,6 +39,35 @@ describe("Docs site layout — feature-014", () => {
       localStorage.setItem("docs-theme", "invalid-value");
       expect(getThemeFromStorage()).toBe("dark");
     });
+
+    it("honors a forced docs visual theme over stored user preference", async () => {
+      const { ThemeProvider } = await import(
+        "@/components/docs/theme-provider"
+      );
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      localStorage.setItem("docs-theme", "light");
+      const root = createRoot(container);
+
+      await act(async () => {
+        root.render(
+          createElement(
+            ThemeProvider,
+            null,
+            createElement("div", {
+              className: "docs-layout",
+              "data-theme": "dark",
+            }),
+          ),
+        );
+      });
+
+      expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
+      await act(async () => {
+        root.unmount();
+      });
+      document.body.removeChild(container);
+    });
   });
 
   describe("SearchModal", () => {

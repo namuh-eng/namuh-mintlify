@@ -264,8 +264,8 @@ export const DEFAULT_OVERVIEW: OverviewConfig = {
 export const DEFAULT_VISUAL_BRANDING: VisualBrandingConfig = {
   theme: "dark",
   primaryColor: "#7B8FDE",
-  lightColor: "#F8F9FC",
-  darkColor: "#0E0F18",
+  lightColor: "#F7F4ED",
+  darkColor: "#110F1D",
   logoLightPath: "",
   logoDarkPath: "",
   logoLink: "/",
@@ -756,7 +756,7 @@ export function getDocsThemeCssVars(
     "--docs-light-bg": config.visualBranding.lightColor,
     "--docs-dark-bg": config.visualBranding.darkColor,
     "--docs-bg": config.visualBranding.darkColor,
-    "--docs-bg-deep": config.visualBranding.darkColor,
+    "--docs-bg-deep": `color-mix(in srgb, ${config.visualBranding.darkColor} 88%, black)`,
     "--docs-card": `color-mix(in srgb, ${config.visualBranding.darkColor} 86%, white)`,
   };
 }

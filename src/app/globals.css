@@ -516,13 +516,13 @@ body {
   --docs-bg: var(--docs-dark-bg, #110f1d);
   --docs-bg-deep: color-mix(in srgb, var(--docs-dark-bg, #110f1d) 88%, black);
   --docs-logo-color: var(--docs-primary, #6b7fd7);
-  --docs-surface: rgba(255, 255, 255, 0.045);
-  --docs-surface-hover: rgba(255, 255, 255, 0.075);
-  --docs-border: rgba(255, 255, 255, 0.075);
-  --docs-border-strong: rgba(255, 255, 255, 0.13);
-  --docs-text: #f7faf8;
-  --docs-text-muted: #9aa39f;
-  --docs-text-subtle: #6f7874;
+  --docs-surface: rgba(244, 241, 230, 0.045);
+  --docs-surface-hover: rgba(244, 241, 230, 0.075);
+  --docs-border: rgba(244, 241, 230, 0.075);
+  --docs-border-strong: rgba(244, 241, 230, 0.13);
+  --docs-text: #f4f1e6;
+  --docs-text-muted: #a8a3b8;
+  --docs-text-subtle: #6f6b80;
   --docs-green: var(--docs-primary, #6b7fd7);
   --docs-green-soft: var(--docs-primary-soft, rgba(107, 127, 215, 0.14));
   --docs-green-border: color-mix(
@@ -596,7 +596,7 @@ body {
 .docs-topbar-title {
   font-size: 15px;
   font-weight: 600;
-  color: #f9fafb;
+  color: var(--docs-text);
 }
 
 .docs-topbar-center {
@@ -746,7 +746,7 @@ body {
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  color: #f9fafb;
+  color: var(--docs-text);
 }
 
 .docs-logo-mark {
@@ -796,6 +796,26 @@ body {
   color: var(--docs-green);
   background: var(--docs-green-soft);
   font-weight: 600;
+}
+
+.docs-nav-item-marker {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  background: var(--docs-border-strong);
+  transition:
+    background 0.15s,
+    box-shadow 0.15s;
+}
+
+.docs-nav-item:hover .docs-nav-item-marker {
+  background: color-mix(in srgb, var(--docs-primary, #6b7fd7) 48%, white);
+}
+
+.docs-nav-item.active .docs-nav-item-marker {
+  background: var(--docs-logo-color, var(--docs-primary, #6b7fd7));
+  box-shadow: 0 0 0 3px var(--docs-primary-soft, rgba(107, 127, 215, 0.14));
 }
 
 .docs-nav-group {
@@ -2209,7 +2229,7 @@ pre.mermaid svg {
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: #f9fafb;
+  color: var(--docs-text);
 }
 
 .docs-topbar-logo-icon {
@@ -2902,6 +2922,14 @@ pre.mermaid svg {
 [data-theme="light"] .docs-nav-item.active {
   color: var(--docs-logo-color, var(--docs-primary, #6b7fd7));
   background: var(--docs-primary-soft, rgba(123, 143, 222, 0.1));
+}
+
+[data-theme="light"] .docs-nav-item-marker {
+  background: rgba(31, 29, 44, 0.18);
+}
+
+[data-theme="light"] .docs-nav-item:hover .docs-nav-item-marker {
+  background: color-mix(in srgb, var(--docs-primary, #6b7fd7) 56%, #ffffff);
 }
 
 [data-theme="light"] .docs-nav-group-label {

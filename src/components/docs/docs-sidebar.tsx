@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, FileText } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useId, useState } from "react";
 import {
@@ -107,7 +107,7 @@ function NavItem({
       href={`/docs/${subdomain}/${entry.path}`}
       className={`docs-nav-item ${isActive ? "active" : ""}`}
     >
-      <FileText size={14} />
+      <span className="docs-nav-item-marker" aria-hidden="true" />
       <span>{entry.label}</span>
     </Link>
   );
