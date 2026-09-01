@@ -78,6 +78,21 @@ it("uses themeable currentColor for the default logo mark", async () => {
   expect(html).not.toContain("#16A34A");
 });
 
+it("renders non-api pages with a subtle nav marker instead of a document icon", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const html = renderToStaticMarkup(
+    <DocsSidebar
+      nav={nav}
+      activePath="guides/quickstart"
+      subdomain="test-project"
+      projectName="Test Project"
+    />,
+  );
+
+  expect(html).toContain('class="docs-nav-item-marker"');
+  expect(html).not.toContain("lucide-file-text");
+});
+
 it("uses configured docs logo image and link when provided", async () => {
   const { renderToStaticMarkup } = await import("react-dom/server");
   const html = renderToStaticMarkup(
@@ -98,4 +113,28 @@ it("uses configured docs logo image and link when provided", async () => {
   expect(html).toContain('href="https://example.com"');
   expect(html).toContain('src="/brand.svg"');
   expect(html).toContain('class="docs-sidebar-logo-image"');
+});
+
+it("uses the logo variant that matches the configured visual theme", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const html = renderToStaticMarkup(
+    <DocsSidebar
+      nav={nav}
+      activePath="introduction"
+      subdomain="test-project"
+      projectName="Test Project"
+      settings={{
+        docsConfig: {
+          visualBranding: {
+            theme: "light",
+            logoLightPath: "/logo-light.svg",
+            logoDarkPath: "/logo-dark.svg",
+          },
+        },
+      }}
+    />,
+  );
+
+  expect(html).toContain('src="/logo-light.svg"');
+  expect(html).not.toContain('src="/logo-dark.svg"');
 });

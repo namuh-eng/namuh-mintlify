@@ -24,10 +24,13 @@ export function getConfiguredDocsLogo(
   const docsConfig = mergeDocsConfig(
     rawDocsConfig as Partial<Record<string, unknown>>,
   );
-  const path =
-    docsConfig.headerTopbar.logoPath ||
-    docsConfig.visualBranding.logoDarkPath ||
-    docsConfig.visualBranding.logoLightPath;
+  const themedLogoPath =
+    docsConfig.visualBranding.theme === "light"
+      ? docsConfig.visualBranding.logoLightPath ||
+        docsConfig.visualBranding.logoDarkPath
+      : docsConfig.visualBranding.logoDarkPath ||
+        docsConfig.visualBranding.logoLightPath;
+  const path = docsConfig.headerTopbar.logoPath || themedLogoPath;
 
   if (!path) return null;
 

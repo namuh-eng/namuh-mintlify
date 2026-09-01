@@ -68,11 +68,11 @@ describe("mergeDocsConfig", () => {
       "--docs-primary": "#FF0000",
       "--docs-logo-color": "#FF0000",
       "--docs-primary-soft": "#FF000022",
-      "--docs-light-bg": "#F8F9FC",
-      "--docs-dark-bg": "#0E0F18",
-      "--docs-bg": "#0E0F18",
-      "--docs-bg-deep": "#0E0F18",
-      "--docs-card": "color-mix(in srgb, #0E0F18 86%, white)",
+      "--docs-light-bg": "#F7F4ED",
+      "--docs-dark-bg": "#110F1D",
+      "--docs-bg": "#110F1D",
+      "--docs-bg-deep": "color-mix(in srgb, #110F1D 88%, black)",
+      "--docs-card": "color-mix(in srgb, #110F1D 86%, white)",
     });
   });
 
