@@ -103,6 +103,24 @@ describe("mergeDocsConfig", () => {
     expect(result.advanced.seoTitle).toBe("My Title");
     expect(result.advanced.seoDescription).toBe(""); // default
   });
+
+  it("treats the old assistant search prompt as an empty placeholder", () => {
+    const result = mergeDocsConfig({
+      assistantSearch: { searchPrompt: "Ask anything..." },
+    });
+
+    expect(result.assistantSearch.searchPrompt).toBe("");
+  });
+
+  it("preserves a custom assistant search prompt", () => {
+    const result = mergeDocsConfig({
+      assistantSearch: { searchPrompt: "Search the fixture docs..." },
+    });
+
+    expect(result.assistantSearch.searchPrompt).toBe(
+      "Search the fixture docs...",
+    );
+  });
 });
 
 // ── validateDocsConfig ───────────────────────────────────────────────────

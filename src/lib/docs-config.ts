@@ -235,8 +235,17 @@ export const DEFAULT_CONTENT_FEATURES: ContentFeaturesConfig = {
 export const DEFAULT_ASSISTANT_SEARCH: AssistantSearchConfig = {
   assistantEnabled: true,
   searchEnabled: true,
-  searchPrompt: "Ask anything...",
+  searchPrompt: "",
 };
+
+function normalizeAssistantSearchPrompt(prompt: unknown): string {
+  if (typeof prompt !== "string") return DEFAULT_ASSISTANT_SEARCH.searchPrompt;
+
+  const trimmed = prompt.trim();
+  if (!trimmed || trimmed === "Ask anything...") return "";
+
+  return prompt;
+}
 
 export const DEFAULT_INTEGRATIONS: IntegrationsConfig = {
   ga4MeasurementId: "",
@@ -313,6 +322,9 @@ export function mergeDocsConfig(
     assistantSearch: {
       ...DEFAULT_ASSISTANT_SEARCH,
       ...((partial.assistantSearch as object) ?? {}),
+      searchPrompt: normalizeAssistantSearchPrompt(
+        (partial.assistantSearch as AssistantSearchConfig | undefined)?.searchPrompt,
+      ),
     },
     integrations: {
       ...DEFAULT_INTEGRATIONS,
