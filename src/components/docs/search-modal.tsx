@@ -129,9 +129,10 @@ interface SearchModalProps {
 export function SearchModal({
   pages,
   subdomain,
-  searchPrompt = "Search documentation...",
+  searchPrompt,
 }: SearchModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const inputPlaceholder = searchPrompt?.trim() || "Ask anything...";
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResultItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -424,7 +425,7 @@ export function SearchModal({
             aria-controls={listboxId}
             aria-activedescendant={activeDescendant}
             className="search-modal-input"
-            placeholder={searchPrompt}
+            placeholder={inputPlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
