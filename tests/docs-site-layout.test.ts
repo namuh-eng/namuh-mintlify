@@ -177,6 +177,36 @@ describe("Docs site layout — feature-014", () => {
       });
     });
 
+    it("falls back to the default placeholder for an empty configured prompt", async () => {
+      const { SearchModal } = await import("@/components/docs/search-modal");
+      const root = createRoot(container);
+
+      await act(async () => {
+        root.render(
+          createElement(SearchModal, {
+            subdomain: "test-project",
+            searchPrompt: "",
+            pages: [{ path: "quickstart", title: "Quickstart" }],
+          }),
+        );
+      });
+
+      await act(async () => {
+        document.dispatchEvent(new CustomEvent("open-search"));
+      });
+
+      const input = container.querySelector<HTMLInputElement>(
+        '[data-testid="search-input"]',
+      );
+
+      expect(input?.value).toBe("");
+      expect(input?.placeholder).toBe("Ask anything...");
+
+      await act(async () => {
+        root.unmount();
+      });
+    });
+
     it("renders search dialog with combobox and listbox semantics", async () => {
       const { SearchModal } = await import("@/components/docs/search-modal");
       const root = createRoot(container);

@@ -76,8 +76,8 @@ describe("ConfigsPanel", () => {
     );
     const knobClass = assistantToggle?.firstElementChild?.getAttribute("class");
 
-    expect(knobClass).toContain("left-0.5");
-    expect(knobClass).toContain("translate-x-[14px]");
+    expect(knobClass).toContain("left-[2px]");
+    expect(knobClass).toContain("translate-x-[18px]");
     expect(searchPrompt?.value).toBe("");
     expect(searchPrompt?.placeholder).toBe("Ask anything...");
 
