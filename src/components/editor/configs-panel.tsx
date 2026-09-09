@@ -888,7 +888,7 @@ function AssistantSearchForm({ config, updateSection }: SectionProps) {
         <TextInput
           value={searchPromptValue}
           onChange={(v) => update({ searchPrompt: v })}
-          placeholder={DEFAULT_ASSISTANT_SEARCH.searchPrompt}
+          placeholder="Ask anything..."
           testId="config-search-prompt"
         />
       </div>

@@ -605,7 +605,8 @@ export function mergeDocsConfig(
       ...DEFAULT_ASSISTANT_SEARCH,
       ...((partial.assistantSearch as object) ?? {}),
       searchPrompt: normalizeAssistantSearchPrompt(
-        (partial.assistantSearch as AssistantSearchConfig | undefined)?.searchPrompt,
+        (partial.assistantSearch as AssistantSearchConfig | undefined)
+          ?.searchPrompt,
       ),
     },
     integrations: {
